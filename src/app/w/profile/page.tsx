@@ -1,8 +1,9 @@
-import { forbidden, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { canOpen, currentSeat } from "@/db/session";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
+import { Forbidden } from "@/components/forbidden";
 
 async function leave() {
   "use server";
@@ -14,7 +15,7 @@ async function leave() {
 
 export default async function ProfilePage() {
   const seat = await currentSeat();
-  if (!canOpen(seat.roleKey, "profile")) forbidden();
+  if (!canOpen(seat.roleKey, "profile")) return <Forbidden />;
   return (
     <div className="space-y-6">
       <RuleHeading>My profile</RuleHeading>

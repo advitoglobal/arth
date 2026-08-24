@@ -1,9 +1,9 @@
-import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { searchByPhone } from "@/services/telecalling";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
+import { Forbidden } from "@/components/forbidden";
 
 export default async function SearchPage({
   searchParams,
@@ -12,7 +12,7 @@ export default async function SearchPage({
 }) {
   const { q } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "search")) forbidden();
+    if (!canOpen(seat.roleKey, "search")) return <Forbidden />;
     const rows = q ? await searchByPhone(tx, q) : [];
     return (
       <div className="space-y-6">

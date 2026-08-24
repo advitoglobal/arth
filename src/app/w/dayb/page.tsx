@@ -1,13 +1,13 @@
-import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { assignUnowned } from "@/services/assignment";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
+import { Forbidden } from "@/components/forbidden";
 
 export default async function DayPanelPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "dayb")) forbidden();
+    if (!canOpen(seat.roleKey, "dayb")) return <Forbidden />;
     const assignment = await assignUnowned(tx, seat.userId);
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listQueue(tx, seat.userId);

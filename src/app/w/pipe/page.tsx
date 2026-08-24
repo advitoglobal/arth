@@ -1,10 +1,10 @@
-import { forbidden } from "next/navigation";
 import Link from "next/link";
 import { asSeat, canOpen } from "@/db/session";
 import { listPipeline } from "@/services/telecalling";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
+import { Forbidden } from "@/components/forbidden";
 
 const LABELS: Record<string, string> = {
   new: "New",
@@ -25,7 +25,7 @@ export default async function PipePage({
 }) {
   const { stage } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "pipe")) forbidden();
+    if (!canOpen(seat.roleKey, "pipe")) return <Forbidden />;
     const rows = await listPipeline(tx, seat.userId);
     const active = STAGE_KEYS.includes(stage as (typeof STAGE_KEYS)[number])
       ? stage
@@ -64,6 +64,15 @@ export default async function PipePage({
             {active
               ? `No enquiries in ${LABELS[active]}. They appear here when the stage moves.`
               : "No enquiries are assigned to you."}
+            {!canCall && !active ? (
+              <>
+                {" "}
+                <Link href="/w/dayb" className="underline">
+                  Today is not this seat
+                </Link>
+                . Opening it states that you cannot open the screen.
+              </>
+            ) : null}
           </p>
         ) : (
           <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">

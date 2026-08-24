@@ -1,9 +1,9 @@
-import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, istDateTime } from "@/lib/format";
 import Link from "next/link";
+import { Forbidden } from "@/components/forbidden";
 
 export default async function RecPage({
   searchParams,
@@ -12,7 +12,7 @@ export default async function RecPage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "rec")) forbidden();
+    if (!canOpen(seat.roleKey, "rec")) return <Forbidden />;
     if (!id) {
       return (
         <div>

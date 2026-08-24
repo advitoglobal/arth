@@ -1,12 +1,12 @@
-import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { listNotifications, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
 import Link from "next/link";
+import { Forbidden } from "@/components/forbidden";
 
 export default async function NotifPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "notif")) forbidden();
+    if (!canOpen(seat.roleKey, "notif")) return <Forbidden />;
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listNotifications(tx, seat.userId);
     return (
