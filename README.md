@@ -16,7 +16,8 @@ npm run db:migrate
 npm run db:isolate    # must print ISOLATION_OK
 npm run db:clock      # must print CLOCK_OK
 npm run db:assign     # must print ASSIGN_OK
-npm run db:scope      # must print SCOPE_OK
+npm run db:access     # must print ACCESS_OK
+npm run db:search     # must print SEARCH_OK
 npm run dev
 ```
 
@@ -30,6 +31,6 @@ Demo seats on `/w/login`:
 
 ## API for later mobile
 
-`GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `GET /api/v1/notifications` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
+`GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `GET /api/v1/notifications` · `POST /api/v1/notifications/read` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
 
 Same `withTenant` path. No second database for a phone app.

@@ -5,6 +5,7 @@ import { StagePanel } from "@/components/stage-panel";
 import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, inr, indianMobile } from "@/lib/format";
 import { Forbidden } from "@/components/forbidden";
+import Link from "next/link";
 
 export default async function TelePage({
   searchParams,
@@ -41,6 +42,8 @@ export default async function TelePage({
     }
 
     const owns = String(lead.owner_user_id ?? "") === seat.userId;
+    const remaining = queue.filter((r) => r.id !== leadId);
+    const nextUp = remaining[0];
 
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -58,7 +61,30 @@ export default async function TelePage({
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
               Owner {lead.owner_name ?? "unassigned"} · first response due {istDateTime(lead.first_response_due)} · expected {inr(Number(lead.expected_value_paise) / 100)}
             </p>
+            <p className="mt-3">
+              <Link className="text-sm underline" href={`/w/rec?id=${leadId}`}>
+                Open enquiry record
+              </Link>
+            </p>
           </div>
+          {owns && remaining.length > 0 ? (
+            <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
+                Still in Today
+              </p>
+              <p className="mt-2 text-sm text-[var(--arth-n60)]">
+                {remaining.length} after this one. The queue decrements when you record an outcome.
+              </p>
+              {nextUp ? (
+                <p className="mt-2">
+                  Next:{" "}
+                  <Link className="underline" href={`/w/tele?id=${nextUp.id}`}>
+                    {nextUp.customer_name}
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <h2 className="mt-8 font-display text-[20px] font-semibold">History</h2>
           {events.length === 0 ? (
             <p className="mt-3 text-sm">No activity recorded yet. The first call writes the first row.</p>

@@ -3,6 +3,10 @@
 **Date:** 24 Aug 2026
 **Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 
+## Overnight (24 to 25 Aug 2026)
+
+Building continues while Advito is away. Return window: 10:00 to 11:00 IST. Preview stays on port 43127.
+
 ## What is built (this cycle)
 
 - Step 0 isolation: Postgres 16, forced RLS, `withTenant`. `npm run db:isolate` prints `ISOLATION_OK`.

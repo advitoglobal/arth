@@ -14,6 +14,12 @@ export default async function DayPanelPage() {
     const due = rows.filter(
       (r) => r.next_action_at && new Date(r.next_action_at) <= new Date(),
     );
+    const firstResponseLate = rows.filter(
+      (r) =>
+        r.first_response_due &&
+        !r.first_responded_at &&
+        new Date(r.first_response_due).getTime() < Date.now(),
+    );
 
     return (
       <div className="space-y-8">
@@ -28,7 +34,8 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {due.length} in the queue now, oldest first. Counted from next action time, today in Asia/Kolkata, plus anything already late.
+            {due.length} in the queue now, oldest first. {firstResponseLate.length} past first response.
+            Counted from next_action_at and first_response_due, today in Asia/Kolkata, plus anything already late.
             {assignment.assigned > 0
               ? ` ${assignment.assigned} unowned ${assignment.assigned === 1 ? "enquiry was" : "enquiries were"} assigned on this floor.`
               : ""}
