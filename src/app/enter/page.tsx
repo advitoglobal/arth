@@ -1,71 +1,57 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-export const metadata: Metadata = {
-  title: "Enter",
-};
+export const metadata: Metadata = { title: "Enter" };
 
 export default function EnterPage() {
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col bg-[var(--arth-n00)]">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-16 sm:px-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-primary">
-          Demo access
+      <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-8 py-16">
+        <RuleHeading>Enter Whitefield Motors</RuleHeading>
+        <p className="mt-4 max-w-[68ch] text-[var(--arth-n60)]">
+          Demo access. Production will use the tenant&apos;s identity, not this
+          screen. Choose the day you are here for.
         </p>
-        <h1 className="mt-3 font-display text-4xl tracking-tight">
-          Choose how you enter Meridian Holdings.
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          No credentials in this slice. Production will replace this with SSO
-          and tenant-bound sessions. The demo still respects role and tenant
-          scope.
-        </p>
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display text-2xl">Client</CardTitle>
-              <CardDescription>
-                Priya Raman · programme sponsor. Own outcomes and the decision
-                queue.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                nativeButton={false}
-                render={<Link href="/workspace?role=client" />}
-              >
-                Continue as client
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display text-2xl">Director</CardTitle>
-              <CardDescription>
-                Product or IT director. See health, blockers, and the audit
-                trail.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/workspace/status?role=director" />}
-              >
-                Continue as director
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="mt-10 grid max-w-3xl gap-4 md:grid-cols-2">
+          <div className="border border-[var(--arth-n10)] p-6">
+            <span className="arth-rule" />
+            <h2 className="mt-3 font-display text-[20px] font-semibold">
+              Dealer principal
+            </h2>
+            <p className="mt-2 text-sm text-[var(--arth-n60)]">
+              Ninety seconds. The Exception Cockpit ranks what needs a decision,
+              by rupee value.
+            </p>
+            <Button
+              className="mt-6"
+              nativeButton={false}
+              render={<Link href="/workspace?role=principal" />}
+            >
+              Open The Exception Cockpit
+            </Button>
+          </div>
+          <div className="border border-[var(--arth-n10)] p-6">
+            <span className="arth-rule" />
+            <h2 className="mt-3 font-display text-[20px] font-semibold">
+              Telecaller
+            </h2>
+            <p className="mt-2 text-sm text-[var(--arth-n60)]">
+              Nine hours. The day panel and the queue. What is due, what
+              carried, who owns it.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-6"
+              nativeButton={false}
+              render={<Link href="/workspace/queue?role=telecaller" />}
+            >
+              Open my queue
+            </Button>
+          </div>
         </div>
       </main>
     </div>

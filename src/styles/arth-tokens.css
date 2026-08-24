@@ -1,0 +1,63 @@
+/* THE ARTH BRAND SYSTEM v2.9 — Part 9.1 tokens. Do not add colours here. */
+:root {
+  --arth-ink: #0f2a33;
+  --arth-ink-deep: #08191f;
+  --arth-slate: #2e5c68;
+  --arth-brass: #b07f2c;
+  --arth-brass-deep: #8f6620;
+  --arth-brass-lift: #d0a155;
+  --arth-brass-wash: #f3e7ce;
+  --arth-brass-pill: #7a5716;
+
+  --arth-n00: #ffffff;
+  --arth-n05: #f1f4f4;
+  --arth-n10: #e3e9e9;
+  --arth-n20: #c9d3d4;
+  --arth-n40: #9fadb0;
+  --arth-n50: #748689;
+  --arth-n60: #5a6c71;
+  --arth-n80: #47585d;
+  --arth-n90: #263d45;
+
+  --arth-overdue: #b23b2e;
+  --arth-overdue-wash: #f6e3e0;
+  --arth-settled: #27735a;
+  --arth-settled-wash: #deede7;
+
+  --arth-display: var(--font-anek), "Anek Latin", sans-serif;
+  --arth-body: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
+  --arth-data: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  --arth-rule: 2px;
+  --arth-r-sm: 3px;
+  --arth-r-md: 5px;
+  --arth-border: 1px solid var(--arth-n10);
+
+  --arth-s1: 4px;
+  --arth-s2: 8px;
+  --arth-s3: 12px;
+  --arth-s4: 16px;
+  --arth-s5: 24px;
+  --arth-s6: 32px;
+  --arth-s7: 48px;
+  --arth-s8: 64px;
+}
+
+.arth-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.arth-rule {
+  display: block;
+  width: 72px;
+  height: var(--arth-rule);
+  background: var(--arth-brass);
+}
+
+.arth-rule-full {
+  display: block;
+  width: 100%;
+  height: var(--arth-rule);
+  background: var(--arth-brass);
+}

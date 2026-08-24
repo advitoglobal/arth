@@ -1,3 +1,3 @@
 # Arth
 
-Build the client results operating system. Follow `.cursorrules`, `docs/ARTH-ARCHITECTURE.md`, and `docs/BRAND.md`.
+Enquiry accountability for automobile dealer groups. Follow THE ARTH BRAND SYSTEM v2.9 and `.cursorrules`.

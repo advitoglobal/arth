@@ -1,0 +1,28 @@
+{
+  "version": "1.2.0-transcribed",
+  "colour_system_last_changed_in_book": "2.2",
+  "source": "THE ARTH BRAND SYSTEM v2.9 Part 9.1. Palette file 1.2.0 had not reached the product team; these values are transcribed from the book CSS block, not invented.",
+  "colours": {
+    "arth-ink": "#0F2A33",
+    "arth-ink-deep": "#08191F",
+    "arth-slate": "#2E5C68",
+    "arth-brass": "#B07F2C",
+    "arth-brass-deep": "#8F6620",
+    "arth-brass-lift": "#D0A155",
+    "arth-brass-wash": "#F3E7CE",
+    "arth-brass-pill": "#7A5716",
+    "arth-n00": "#FFFFFF",
+    "arth-n05": "#F1F4F4",
+    "arth-n10": "#E3E9E9",
+    "arth-n20": "#C9D3D4",
+    "arth-n40": "#9FADB0",
+    "arth-n50": "#748689",
+    "arth-n60": "#5A6C71",
+    "arth-n80": "#47585D",
+    "arth-n90": "#263D45",
+    "arth-overdue": "#B23B2E",
+    "arth-overdue-wash": "#F6E3E0",
+    "arth-settled": "#27735A",
+    "arth-settled-wash": "#DEEDE7"
+  }
+}

@@ -1,38 +1,24 @@
-# Status — for Product Engineering Director and IT Director
+# Status — Product Engineering and IT
 
 **Date:** 24 Aug 2026  
-**Slice:** Client results OS (demo tenant: Meridian Holdings)  
-**Owner:** Engineering (this stream)
+**Book:** THE ARTH BRAND SYSTEM v2.9 now ingested
 
-## What is live
+## What changed
 
-- Branded public site and trust page
-- Demo workspace with outcomes, workstreams, client decision queue, director status, audit table
-- Security response headers and a health check
-- App runs on `127.0.0.1:43127`
+The first slice was rebuilt to the book. The product is no longer a generic programme OS. It is enquiry accountability for auto retail.
 
-## Result for the client
+- Tokens from Part 9.1 (Ink, Brass, neutrals, Overdue, Settled)
+- Anek Latin + IBM Plex Sans + IBM Plex Mono
+- Wordmark: lowercase arth under a Brass rule
+- The Exception Cockpit (Shell C) and telecaller queue with day panel (Shell A)
+- Cost per booking table with Indian grouping
+- Homepage is the line from 1.3. The word "AI" does not appear on it.
+- Advito endorsement in the website footer only
 
-A Meridian sponsor can enter as **client**, see four named outcomes, three decisions they own, and approve or defer them in the queue. That is the empowerment loop: the gavel is in the client’s hand.
+## Still gated
 
-## Result for directors
-
-Enter as **director** for a one-page health view: what is true, what is blocked, what IT is holding, plus the audit trail.
-
-## Risks / gaps
-
-| Item | Severity | Mitigation |
-| --- | --- | --- |
-| Original brand book and architecture zip not in this environment | High (brand/spec drift) | Provisional brand documented; ingest originals next |
-| No real auth or database | Expected for slice 1 | Demo role query param only; do not treat as production access control |
-| CSP allows `'unsafe-inline'` / `'unsafe-eval'` for Next dev | Medium | Tighten on the production build pipeline |
-
-## Ask
-
-Please drop `The_Arth_Brand_System_v2.9` and the `arth-cursor` pack into the repo (or this thread) so engineering can lock tokens, IA, and any domain modules specified there.
-
-## Next gated slices
-
-1. Ingest brand + original architecture; reconcile diffs
-2. SSO + tenant-bound session
-3. Persist outcomes/decisions with RLS
+- SSO and persistence
+- Shell B (enquiry record)
+- Self-hosted WOFF2 subset (Latin + Kannada) instead of `next/font`
+- `brand/arth-palette.json` v1.2.0 from Brand — current file is transcribed from the book
+- Architecture zip / Cursor pack still not in this environment

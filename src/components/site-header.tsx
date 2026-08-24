@@ -4,20 +4,20 @@ import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" aria-label="Arth home">
+    <header className="sticky top-0 z-[100] border-b border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-8">
+        <Link href="/" aria-label="arth home">
           <ArthWordmark />
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-4">
+        <nav className="flex items-center gap-6">
           <Link
             href="/trust"
-            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            className="hidden text-sm text-[var(--arth-n60)] hover:text-[var(--arth-ink)] sm:inline"
           >
-            Trust
+            How records are kept
           </Link>
           <Button nativeButton={false} render={<Link href="/enter" />}>
-            Open workspace
+            Open the product
           </Button>
         </nav>
       </div>

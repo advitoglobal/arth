@@ -1,40 +1,27 @@
-# Arth brand — provisional v0.1
+# Arth brand — from THE ARTH BRAND SYSTEM v2.9
 
-Source of truth when available: **The Arth Brand System v2.9**. Until that file is in the repo, the product uses this lock.
+Canonical: `docs/brand/The_Arth_Brand_System_v2.9.md`
 
-## Name
+Tokens: `src/styles/arth-tokens.css` transcribed from Part 9.1. Palette JSON: `brand/arth-palette.json`.
 
-**arth** — lowercase in the wordmark. Sentence case in body copy (“Arth”). Never ARTH in UI.
+## Product
 
-Sanskrit: अर्थ — meaning, purpose, value, wealth. The product is about **results that mean something to the client**, not decoration.
+Enquiry accountability for automobile dealer groups. Not a CRM.
 
-## Voice
-
-- Direct. Global. Client first.
-- Short sentences. No lorem. No “welcome to your dashboard”.
-- The client holds the gavel. Delivery brings proof.
-
-## Colour (oklch)
-
-| Role | Token | Intent |
-| --- | --- | --- |
-| Ink field | `--background` ~ 0.17 0.018 155 | Forest ink, not generic black |
-| Ivory type | `--foreground` ~ 0.96 0.012 92 | Warm paper on ink |
-| Gold action | `--primary` ~ 0.82 0.07 82 | Value, not neon |
-| Card | slightly lifted ink | Quiet elevation |
-
-## Type
-
-- Display: **Fraunces** (headlines, wordmark)
-- UI: **Geist**
-- Mono: **Geist Mono** (audit, ids)
+The line: Other systems tell you your telecaller made forty calls. Arth tells you those forty calls cost ₹9,200 and produced one delivered car.
 
 ## Mark
 
-Gold rounded square, ink “A” constructed as a peak with a crossbar — value with a foundation.
+Lowercase **arth** hanging from a 2px Brass shirorekha. The rule sits above, never below (except tabs).
 
-## Do not
+## Colour
 
-- Purple SaaS gradients
-- Inter-on-white generic dashboards
-- Stock illustration of globes and handshakes
+Ink `#0F2A33` is primary. Brass `#B07F2C` means money is at stake — never body text, never mapped to `--accent`. Semantic states: Overdue and Settled only. No amber.
+
+## Type
+
+Anek Latin (display) · IBM Plex Sans (UI) · IBM Plex Mono (ledger). Tabular figures. Indian digit grouping.
+
+## Shells
+
+A work queue · B record · C The Exception Cockpit. Sidebar is Ink, 240px.

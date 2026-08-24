@@ -2,17 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  LayoutDashboard,
-  Target,
-  GitBranch,
-  Gavel,
-  ShieldCheck,
-  Menu,
-} from "lucide-react";
+import { Menu } from "lucide-react";
 import { ArthWordmark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -21,41 +13,66 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { TENANT } from "@/lib/arth-data";
+import { TENANT, enquiries } from "@/lib/arth-data";
 
-const links = [
-  { href: "/workspace", label: "Overview", icon: LayoutDashboard },
-  { href: "/workspace/outcomes", label: "Outcomes", icon: Target },
-  { href: "/workspace/workstreams", label: "Workstreams", icon: GitBranch },
-  { href: "/workspace/decisions", label: "Decisions", icon: Gavel },
-  { href: "/workspace/status", label: "Director status", icon: ShieldCheck },
-];
+function links(role: string) {
+  const overdue = enquiries.filter((e) => e.semantic === "overdue").length;
+  const unassigned = 4;
+  const due = enquiries.filter((e) => e.dueIn).length;
 
-function NavLinks({ role, onNavigate }: { role: string; onNavigate?: () => void }) {
+  if (role === "principal") {
+    return [
+      { href: "/workspace", label: "The Exception Cockpit", count: null },
+      { href: "/workspace/spend", label: "Cost per booking", count: null },
+      { href: "/workspace/queue", label: "Overdue", count: overdue },
+    ];
+  }
+
+  return [
+    { href: "/workspace/queue", label: "My queue", count: enquiries.length },
+    { href: "/workspace/queue", label: "Unassigned", count: unassigned, hash: "unassigned" },
+    { href: "/workspace/queue", label: "Follow-ups due", count: due },
+    { href: "/workspace/queue", label: "Overdue", count: overdue },
+  ];
+}
+
+function NavLinks({
+  role,
+  onNavigate,
+}: {
+  role: string;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const items = links(role);
 
   return (
     <nav className="flex flex-col gap-1">
-      {links.map((item) => {
+      {items.map((item) => {
         const active =
-          item.href === "/workspace"
+          item.label === "The Exception Cockpit"
             ? pathname === "/workspace"
-            : pathname.startsWith(item.href);
-        const Icon = item.icon;
+            : item.label === "Cost per booking"
+              ? pathname.startsWith("/workspace/spend")
+              : pathname.startsWith("/workspace/queue");
         return (
           <Link
-            key={item.href}
+            key={item.label}
             href={`${item.href}?role=${role}`}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+              "flex items-center justify-between rounded-[3px] px-3 py-2 text-sm",
               active
-                ? "bg-accent text-foreground"
-                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                ? "bg-[var(--arth-n90)] text-[var(--arth-n00)]"
+                : "text-[var(--arth-n20)] hover:bg-[var(--arth-n90)] hover:text-[var(--arth-n00)]",
             )}
           >
-            <Icon className="size-4" />
-            {item.label}
+            <span>{item.label}</span>
+            {item.count !== null && (
+              <span className="font-data text-[12.5px] tabular-nums">
+                {item.count}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -65,39 +82,38 @@ function NavLinks({ role, onNavigate }: { role: string; onNavigate?: () => void 
 
 export function WorkspaceNav() {
   const params = useSearchParams();
-  const role = params.get("role") === "director" ? "director" : "client";
+  const role = params.get("role") === "principal" ? "principal" : "telecaller";
 
   return (
     <>
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar p-5 lg:flex lg:flex-col">
-        <Link href="/" className="mb-8">
-          <ArthWordmark />
+      <aside className="hidden w-[240px] shrink-0 bg-[var(--arth-ink)] p-5 text-[var(--arth-n00)] lg:flex lg:flex-col">
+        <Link href="/" className="mb-8 block py-2">
+          <ArthWordmark invert />
         </Link>
-        <p className="mb-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-          Tenant
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-brass-lift)]">
+          {TENANT.workspace}
         </p>
-        <p className="mb-6 font-medium">{TENANT.name}</p>
+        <p className="mb-6 mt-1 text-sm">{TENANT.name}</p>
         <NavLinks role={role} />
-        <div className="mt-auto space-y-3 pt-8">
-          <Badge variant="outline">{role === "director" ? "Director" : "Client"}</Badge>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Demo workspace. Data is local, tenant-scoped, and not persisted.
-          </p>
-        </div>
+        <p className="mt-auto pt-8 text-[12.5px] leading-relaxed text-[var(--arth-n40)]">
+          Demo. Records are local and not persisted.
+        </p>
       </aside>
 
-      <div className="flex items-center justify-between border-b border-border px-4 py-3 lg:hidden">
+      <div className="flex items-center justify-between border-b border-[var(--arth-n10)] bg-[var(--arth-n00)] px-4 py-3 lg:hidden">
         <Link href="/">
           <ArthWordmark />
         </Link>
         <Sheet>
-          <SheetTrigger render={<Button variant="outline" size="icon" />}>
-            <Menu />
+          <SheetTrigger
+            render={<Button variant="outline" size="icon" className="size-11" />}
+          >
+            <Menu strokeWidth={1.5} />
             <span className="sr-only">Open menu</span>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-5">
+          <SheetContent side="left" className="w-[240px] bg-[var(--arth-ink)] p-5 text-[var(--arth-n00)]">
             <SheetHeader>
-              <SheetTitle>Arth</SheetTitle>
+              <SheetTitle className="text-[var(--arth-n00)]">arth</SheetTitle>
             </SheetHeader>
             <div className="mt-6">
               <NavLinks role={role} />

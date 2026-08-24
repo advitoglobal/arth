@@ -1,120 +1,50 @@
 import Link from "next/link";
-import { TENANT, decisions, outcomes } from "@/lib/arth-data";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { cockpitCards } from "@/lib/arth-data";
+import { inr } from "@/lib/format";
+import { RuleHeading } from "@/components/brand/type";
 
-function statusVariant(status: (typeof outcomes)[number]["status"]) {
-  if (status === "on-track") return "secondary" as const;
-  if (status === "watch") return "outline" as const;
-  return "destructive" as const;
-}
-
-export default function WorkspaceOverview({
-  searchParams,
-}: {
-  searchParams: Promise<{ role?: string }>;
-}) {
-  return (
-    <Overview searchParams={searchParams} />
-  );
-}
-
-async function Overview({
-  searchParams,
-}: {
-  searchParams: Promise<{ role?: string }>;
-}) {
-  const { role } = await searchParams;
-  const qs = `?role=${role === "director" ? "director" : "client"}`;
+export default function CockpitPage() {
+  const ranked = [...cockpitCards].sort((a, b) => b.amount - a.amount);
 
   return (
-    <div className="space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-[0.22em] text-primary">
-          {TENANT.programme}
-        </p>
-        <h1 className="mt-2 font-display text-4xl tracking-tight">
-          {TENANT.name} is in control of the next three decisions.
-        </h1>
-        <p className="mt-3 max-w-2xl text-muted-foreground">
-          Sponsor {TENANT.clientSponsor} · Delivery {TENANT.deliveryLead} ·{" "}
-          {TENANT.regions.join(" · ")}
-        </p>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Decisions waiting</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-4xl">{decisions.length}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Client-owned. Nothing else unblocks the Q3 ledger.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Outcomes on track</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-4xl">
-              {outcomes.filter((o) => o.status === "on-track").length}/
-              {outcomes.length}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              APAC vendor hygiene is the only watch item.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Empty theatre</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Status lives here. Friday steering is for decisions, not slides.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <section>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-2xl">Outcome pulse</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            nativeButton={false}
-            render={<Link href={`/workspace/outcomes${qs}`} />}
+    <div className="space-y-6">
+      <RuleHeading>The Exception Cockpit</RuleHeading>
+      <p className="max-w-[68ch] text-[var(--arth-n60)]">
+        Ranked by rupee value at risk. Reserved places hold a broken customer
+        promise and unowned enquiries, stated as aggregates.
+      </p>
+      <div className="grid gap-6">
+        {ranked.map((card) => (
+          <Link
+            key={card.id}
+            href={card.href}
+            className="block border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6"
           >
-            All outcomes
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {outcomes.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {item.current} · {item.region}
+            <span className="arth-rule" />
+            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="font-display text-[20px] font-semibold">
+                  {card.title}
+                </h2>
+                <p className="mt-2 max-w-[68ch] text-sm leading-relaxed text-[var(--arth-n60)]">
+                  {card.body}
                 </p>
+                {card.reason ? (
+                  <p className="mt-2 text-[12.5px] text-[var(--arth-n60)]">
+                    {card.reason}
+                  </p>
+                ) : null}
               </div>
-              <Badge variant={statusVariant(item.status)}>{item.status}</Badge>
+              <div className="shrink-0">
+                <p className="font-display text-[28px] font-semibold tabular-nums text-[var(--arth-brass-deep)]">
+                  {inr(card.amount)}
+                </p>
+                <p className="text-[12px] text-[var(--arth-n60)]">at risk</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

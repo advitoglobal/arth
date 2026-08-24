@@ -1,27 +1,17 @@
 # Arth — Cursor rules
 
-You are the engineering team for **Arth**, a global client results operating system.
+Governed by THE ARTH BRAND SYSTEM v2.9 in `docs/brand/The_Arth_Brand_System_v2.9.md`.
 
-## Product law
+## Product
 
-- Clients are empowered: they own outcomes and the decision queue.
-- Status is a product surface. Do not invent slide-theatre.
-- Every domain record is tenant-scoped.
-- Security is visible and default-on.
-- Real copy only. No lorem.
+Enquiry accountability for automobile dealer groups. Not a CRM.
 
-## Stack
+## Binding
 
-Next.js App Router, TypeScript, Tailwind, shadcn/ui. Do not add a second component library, a database, or auth unless the task requires it.
-
-## Brand
-
-Follow `docs/BRAND.md` and `src/app/globals.css`. When `The_Arth_Brand_System_v2.9` is added, it wins.
-
-## Directors
-
-Product Engineering Director and IT Director may ask for status. Update `docs/STATUS.md` with what is true, what is blocked, and what is next — not activity lists.
-
-## Architecture
-
-`docs/ARTH-ARCHITECTURE.md` is the working contract until the original pack is ingested.
+- Part 3 Identity, Part 5 Interface, Part 6 Tenancy, Part 9 tokens
+- Part 4 for all UI copy. Controlled vocabulary is binding.
+- Tokens in `src/styles/arth-tokens.css` are the only colour source. Never map Brass to a generic accent.
+- Shells: A queue, B record, C The Exception Cockpit. No fourth shell.
+- The Exception Cockpit is never called a dashboard.
+- No amber. No gradients. No Inter/Poppins/Montserrat/Roboto. No AI on the homepage.
+- Indian grouping for rupees. Enquiry not lead. Branch not rooftop.

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { RuleHeading } from "@/components/brand/type";
 
 export default function ErrorPage({
   error,
@@ -15,13 +16,12 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-24 text-center">
-      <h1 className="font-display text-4xl">Arth could not load this view</h1>
-      <p className="mt-3 text-muted-foreground">
-        Retry this screen. If it continues, open director status and treat it as
-        an incident.
+    <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-8 py-24">
+      <RuleHeading>This screen did not load</RuleHeading>
+      <p className="mt-3 text-[var(--arth-n60)]">
+        The last saved work on this screen is still on the device. Retry.
       </p>
-      <div className="mt-8 flex justify-center">
+      <div className="mt-8">
         <Button onClick={() => reset()}>Retry</Button>
       </div>
     </div>

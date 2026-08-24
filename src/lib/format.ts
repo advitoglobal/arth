@@ -1,20 +1,13 @@
-export const locale = "en-GB";
-
-export function money(amount: number, currency = "USD") {
-  return new Intl.NumberFormat(locale, {
+export function inr(amount: number) {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency,
+    currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount);
 }
 
-export function number(value: number, digits = 0) {
-  return new Intl.NumberFormat(locale, {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits,
+export function num(value: number) {
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
   }).format(value);
-}
-
-export function percent(value: number, digits = 0) {
-  return `${value > 0 ? "+" : ""}${number(value, digits)}%`;
 }
