@@ -16,7 +16,7 @@ export function SiteHeader() {
           >
             How records are kept
           </Link>
-          <Button nativeButton={false} render={<Link href="/enter" />}>
+          <Button nativeButton={false} render={<Link href="/w/login" />}>
             Open the product
           </Button>
         </nav>

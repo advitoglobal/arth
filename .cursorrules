@@ -1,17 +1,74 @@
-# Arth — Cursor rules
+# Arth — project rules
 
-Governed by THE ARTH BRAND SYSTEM v2.9 in `docs/brand/The_Arth_Brand_System_v2.9.md`.
+You are working on Arth, an enquiry accountability system for Indian car dealerships.
+Read `00-START-HERE.md` before anything else, then `ARTH-ARCHITECTURE.md`.
 
-## Product
+## Context you must hold
 
-Enquiry accountability for automobile dealer groups. Not a CRM.
+This is a clean-room build. There is no existing code to inherit or preserve. Build
+everything to the documents in this folder; they are complete and internally consistent.
 
-## Binding
+Where you find a contradiction between documents, it is a defect in the documents.
+Raise it rather than picking a side quietly.
 
-- Part 3 Identity, Part 5 Interface, Part 6 Tenancy, Part 9 tokens
-- Part 4 for all UI copy. Controlled vocabulary is binding.
-- Tokens in `src/styles/arth-tokens.css` are the only colour source. Never map Brass to a generic accent.
-- Shells: A queue, B record, C The Exception Cockpit. No fourth shell.
-- The Exception Cockpit is never called a dashboard.
-- No amber. No gradients. No Inter/Poppins/Montserrat/Roboto. No AI on the homepage.
-- Indian grouping for rupees. Enquiry not lead. Branch not rooftop.
+Build order: prove tenant isolation first (two tenants, same unfiltered SELECT, each sees
+only its own rows). Then working hours. Then the telecalling workspace per
+SCOPE-BRIEF-TELECALLING.md. Then Architecture section 7.
+
+Points and telephony are deliberately excluded from the first milestone. The 20-second
+connect floor cannot be enforced without call duration, and shipping a score before its
+anti-gaming control exists teaches a floor to game it.
+
+## Non-negotiable
+
+- Money is integer paise (BIGINT). Never float, never NUMERIC for currency.
+- Ledgers are append-only by privilege: UPDATE and DELETE are revoked. A correction is a
+  new row. A column that must be written after insert cannot exist on such a table.
+- Tenant isolation is FORCED row-level security at the database, keyed on a
+  transaction-scoped session setting. All database access goes through withTenant().
+  There is no other path.
+- Derived, never stored: chain state, exception state, Parked.
+- Nine stages: new, assigned, contacted, qualified, test_drive, quotation, negotiation,
+  booked, delivered. After booked, progress belongs to the delivery chain.
+- Stages, dispositions, chain steps, plans and thresholds are rows, not enums in code.
+  Test the config surface bidirectionally: every key has a renderer, every renderer a key.
+- Working hours gate every clock. A lead arriving outside hours starts its clock at the
+  next working open, and the delay is recorded against the branch, not the person.
+- Every colour resolves to a design token. Zero raw hex literals. Five button variants,
+  none of them green: semantic colour never decorates.
+- A connected call under 20 seconds earns no points and no penalty.
+- Difficulty band is computed at assignment and frozen. Never manager-set. Hidden from
+  executives.
+- Every date shown on a row carries the event that produced it. Never a bare date.
+- Confirmation after an action is in place, for about 1.5 seconds, not a toast. Undo
+  within that window is a correcting entry, never a deletion.
+- Salary is never visible below the dealer principal. Margin is dealer-admin only.
+- Reconciliation reports disagreements. It never silently corrects.
+- Never put a credential in a commit, a document or a chat.
+- No em dashes in PRODUCT COPY: UI strings, labels, customer-facing text, notifications.
+  This is a brand voice rule and it applies to what a user reads, not to these
+  specification documents, which use them freely. Use a comma, a colon or a full stop.
+
+## How to answer
+
+Label claims: VERIFIED (you read or ran the code), SPEC (a document says so),
+ASSUMED (you are guessing). Never state an assumption as a fact.
+
+Read REWORK-REGISTER.md before proposing a design; it lists ideas already rejected and
+the condition for revisiting each. It never blocks a fix: a defect is the work, not rework.
+
+Read DECISIONS.md before designing anything.
+
+Prefer asking over choosing when a specification is ambiguous.
+
+## Definition of done, every screen
+
+1. Every seat in its access list can open it; every seat outside receives 403, verified.
+2. Scope correct: executive sees own, manager sees team. Verified with two accounts.
+3. Lists use the standard row with column headings.
+4. Every figure carries its source and period; incomplete figures say so.
+5. Every form has a save bar; the unsaved-changes bar appears and clears.
+6. Every action gives an in-place confirmation, and an undo where destructive.
+7. Empty, error, no-permission and offline states exist and name what happens next.
+8. Every colour resolves to a token. Zero raw hexes.
+9. No horizontal scroll at 1100px. No clipped cell text.

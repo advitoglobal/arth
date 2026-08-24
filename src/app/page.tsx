@@ -24,7 +24,7 @@ export default function HomePage() {
               size="lg"
               className="h-11 px-4"
               nativeButton={false}
-              render={<Link href="/enter" />}
+              render={<Link href="/w/login" />}
             >
               Open the product
             </Button>

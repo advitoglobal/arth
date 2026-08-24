@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arth · Project Configuration Book</title>
+<style>
+:root{
+ --ink:#0F2A33; --ink-2:#16333D; --ink-3:#1B3D48; --ink-line:#2A4D57;
+ --slate:#2E5C68; --brass:#B07F2C; --brass-deep:#8F6620; --brass-lift:#D0A155;
+ --brass-wash:#F3E7CE; --brass-pill:#7A5716;
+ --n00:#FFFFFF; --n05:#F1F4F4; --n10:#E3E9E9; --n20:#C9D3D4; --n40:#9FADB0;
+ --n50:#748689; --n60:#5A6C71; --n80:#47585D; --n90:#263D45;
+ --over:#B23B2E; --over-w:#F6E3E0; --set:#27735A; --set-w:#DEEDE7;
+ --on-ink:#DCE7EA; --on-ink-mut:#9FB6BD; --on-ink-dim:#7FA0A9;
+ --disp:"Anek Latin","Segoe UI",system-ui,-apple-system,sans-serif;
+ --body:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+ --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--n90);background:var(--n05);line-height:1.62;font-size:15px}
+.wrap{max-width:980px;margin:0 auto;background:var(--n00)}
+.cover{background:var(--ink);color:#fff;padding:74px 62px 56px}
+.cover b{color:#fff}
+.mark{display:flex;align-items:flex-end;gap:14px;margin-bottom:48px}
+.mark .rule{width:74px;height:2px;background:var(--brass);margin-bottom:13px}
+.mark b{font-family:var(--disp);font-size:42px;font-weight:600;line-height:.9;color:#fff}
+.mark .dev{font-family:var(--disp);font-size:25px;color:var(--brass-lift);margin-bottom:4px}
+.cover h1{font-family:var(--disp);font-size:43px;font-weight:600;line-height:1.15;max-width:18ch;letter-spacing:-.015em}
+.cover .lede{color:var(--on-ink-mut);font-size:16.5px;margin-top:19px;max-width:56ch}
+.cover .meta{margin-top:50px;padding-top:19px;border-top:1px solid var(--ink-line);
+ display:flex;gap:38px;font-size:12.5px;color:var(--on-ink-dim);flex-wrap:wrap}
+.cover .meta b{display:block;font-size:13.5px;font-weight:500;margin-top:3px}
+.toc{padding:40px 62px;background:var(--n05);border-bottom:1px solid var(--n10)}
+.toc h2{font-family:var(--disp);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin-bottom:16px}
+.toc ol{list-style:none;counter-reset:c;column-count:2;column-gap:42px}
+.toc li{counter-increment:c;padding:4px 0;font-size:14px;break-inside:avoid}
+.toc li::before{content:counter(c,decimal-leading-zero);font-family:var(--mono);font-size:11px;color:var(--brass);margin-right:10px}
+.toc a{color:var(--n90);text-decoration:none}.toc a:hover{color:var(--brass-deep)}
+.toc .part{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+ color:var(--brass-deep);margin:14px 0 4px;break-inside:avoid}
+.toc .part:first-child{margin-top:0}
+section{padding:48px 62px;border-bottom:1px solid var(--n10)}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--brass-deep);margin-bottom:9px}
+.srule{width:52px;height:2px;background:var(--brass);margin-bottom:15px}
+h2{font-family:var(--disp);font-size:27px;font-weight:600;line-height:1.22;margin-bottom:15px;max-width:26ch}
+h3{font-family:var(--disp);font-size:17px;font-weight:600;margin:28px 0 8px;color:var(--ink)}
+h4{font-family:var(--disp);font-size:14.5px;font-weight:600;margin:18px 0 5px;color:var(--slate)}
+p{margin-bottom:13px;max-width:72ch}
+ul,ol.n{margin:0 0 15px 19px;max-width:72ch}li{margin-bottom:6px}
+b,strong{font-weight:600;color:var(--ink)}
+code{font-family:var(--mono);font-size:.87em;background:var(--n05);padding:1px 5px;border-radius:3px;color:var(--slate)}
+pre{background:var(--ink);color:var(--on-ink);padding:16px 18px;border-radius:4px;overflow-x:auto;
+ font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:16px 0}
+pre b{color:var(--brass-lift)}
+.lede2{font-size:17px;line-height:1.58;color:var(--n80);max-width:64ch;margin-bottom:20px}
+.note{background:var(--brass-wash);border-left:3px solid var(--brass);padding:13px 16px;
+ border-radius:0 4px 4px 0;margin:17px 0;font-size:14px;color:var(--brass-pill);max-width:74ch}
+.note b{color:#5C3E10}
+.warn{background:var(--over-w);border-left:3px solid var(--over);padding:13px 16px;
+ border-radius:0 4px 4px 0;margin:17px 0;font-size:14px;color:#7A2A20;max-width:74ch}
+.warn b{color:#5E1F17}
+.dark{background:var(--ink);color:var(--on-ink);padding:19px 21px;border-radius:4px;margin:19px 0;font-size:14.5px;max-width:74ch}
+.dark b{color:#fff}.dark .eyebrow{color:var(--brass-lift)}
+table{width:100%;border-collapse:collapse;margin:17px 0;font-size:13.5px}
+th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+ color:var(--slate);font-weight:600;padding:0 11px 8px 0;border-bottom:2px solid var(--ink);vertical-align:bottom}
+td{padding:9px 11px 9px 0;border-bottom:1px solid var(--n10);vertical-align:top}
+td.rt,th.rt{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+ text-transform:uppercase;padding:3px 7px;border-radius:2px;font-weight:600;white-space:nowrap}
+.p-spec{background:var(--set-w);color:var(--set)}
+.p-rep{background:#E4ECEF;color:var(--slate)}
+.p-nv{background:var(--brass-wash);color:var(--brass-pill)}
+.p-open{background:var(--over-w);color:var(--over)}
+.p-mute{background:var(--n10);color:var(--n60)}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:11px;margin:20px 0}
+.legend div{background:var(--n05);border:1px solid var(--n10);border-radius:4px;padding:13px 15px;font-size:13px}
+.legend .pill{margin-bottom:6px}
+footer{padding:36px 62px;background:var(--ink);color:var(--on-ink-dim);font-size:12.5px}
+footer b{color:#fff}
+@media(max-width:760px){.cover,section,.toc,footer{padding-left:24px;padding-right:24px}
+ .cover h1{font-size:31px}h2{font-size:23px}.toc ol{column-count:1}}
+@media print{body{background:#fff}.wrap{max-width:none}section{page-break-inside:avoid}}
+</style></head><body><div class="wrap">
+
+<div class="cover">
+  <div class="mark"><span class="rule"></span><b>arth</b><span class="dev">अर्थ</span></div>
+  <h1>Project Configuration Book</h1>
+  <p class="lede">How the programme is governed, how the environments are built, what is configurable and by whom, what each integration needs, and what to do when something breaks.</p>
+  <div class="meta">
+    <div>Edition<b>01 · 21 August 2026</b></div>
+    <div>Owner<b>Advito Global</b></div>
+    <div>Custodian<b>IT Director</b></div>
+    <div>Companions<b>Product Book · Build Specification v1.0 · Brand System v2.9</b></div>
+  </div>
+</div>
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <div class="part">Part I · How the programme is run</div>
+    <li><a href="#s1">How to read this book</a></li>
+    <li><a href="#s2">Who decides what</a></li>
+    <li><a href="#s3">The standing rules</a></li>
+    <li><a href="#s4">Work orders and cadence</a></li>
+    <div class="part">Part II · Environments and infrastructure</div>
+    <li><a href="#s5">The environments</a></li>
+    <li><a href="#s6">Repository and branching</a></li>
+    <li><a href="#s7">Secrets and credentials</a></li>
+    <li><a href="#s8">Database rules</a></li>
+    <li><a href="#s9">Deployment gates</a></li>
+    <li><a href="#s10">The instruments</a></li>
+    <div class="part">Part III · The configuration surface</div>
+    <li><a href="#s11">Who may change what</a></li>
+    <li><a href="#s12">Tenant provisioning</a></li>
+    <li><a href="#s13">The seed catalogue</a></li>
+    <li><a href="#s14">Thresholds and their bounds</a></li>
+    <div class="part">Part IV · Integrations</div>
+    <li><a href="#s15">Every external dependency</a></li>
+    <li><a href="#s16">Failure modes</a></li>
+    <div class="part">Part V · Operations</div>
+    <li><a href="#s17">Runbooks</a></li>
+    <li><a href="#s18">Backup, restore and retention</a></li>
+    <li><a href="#s19">Compliance</a></li>
+    <li><a href="#s20">The open register</a></li>
+  </ol>
+</div>
+
+<!-- 01 -->
+<section id="s1">
+  <div class="eyebrow">Chapter 01</div><div class="srule"></div>
+  <h2>How to read this book</h2>
+  <p class="lede2">Every entry carries a provenance mark. This matters more than the content, because a configuration book that cannot distinguish what is decided from what is assumed will be quoted as fact and act as one.</p>
+
+  <div class="legend">
+    <div><span class="pill p-spec">Specified</span><br>A product decision. Binding. Changing it needs a written amendment.</div>
+    <div><span class="pill p-rep">Reported</span><br>Stated to me by the IT Director or the development team. Accurate as reported; not independently checked by me.</div>
+    <div><span class="pill p-nv">Not verified</span><br>My assumption or a normal practice. <b>Treat as a question, not an instruction.</b></div>
+    <div><span class="pill p-open">Open</span><br>Nobody has decided. Named here so it is not discovered late.</div>
+  </div>
+
+  <div class="warn"><b>I have not seen the repository.</b> Everything in Part II is marked accordingly. Where a cell says <em>Not verified</em>, the IT Director should replace it with the real value rather than let mine stand. That is the intended use of this book: a frame with honest gaps, filled by the person who can see the system.</div>
+
+  <p>Three findings against me on this programme were each a case of asserting rather than checking: a control that did not exist, a colour rule contradicting the Book, and a token that already existed. <b>The marks above are the fix.</b></p>
+</section>
+
+<!-- 02 -->
+<section id="s2">
+  <div class="eyebrow">Chapter 02</div><div class="srule"></div>
+  <h2>Who decides what</h2>
+
+  <table>
+    <tr><th>Party</th><th>Decides</th><th>Cannot decide</th></tr>
+    <tr><td><b>Prem Kumar</b><br><span style="color:var(--n60)">Product owner</span></td>
+      <td>Commercial direction, pricing, what is in scope, schema authorisations, anything with a rupee cost</td>
+      <td>Nothing is above him. But he authorises in his own words, never through a proxy</td></tr>
+    <tr><td><b>IT Director</b></td>
+      <td>Schema, migrations, infrastructure, work orders, what is in a cycle, query cost, all Part II of this book</td>
+      <td>Product intent. What a screen is for</td></tr>
+    <tr><td><b>Product Engineering</b><br><span style="color:var(--n60)">this role</span></td>
+      <td>What a screen does, who sees what, workflow, the meaning of a figure, the disposition and stage sets</td>
+      <td>Anything in the repository. Anything Brand governs</td></tr>
+    <tr><td><b>Brand</b></td>
+      <td>Colour, typography, voice, the mark, the component set</td>
+      <td>Workflow, access, data</td></tr>
+    <tr><td><b>Development team</b></td>
+      <td>Implementation, structure, tooling, sequencing within a work order</td>
+      <td>Product decisions. When a specification is ambiguous, ask rather than choose</td></tr>
+  </table>
+
+  <div class="dark"><span class="eyebrow">The rule that has held all programme</span>
+    <b>A reviewer cannot approve his own submission.</b> A schema change goes to the IT Director for review, then to Prem in writing, and nothing is authored until Prem answers in his own words. This was tested once when authorisation lines arrived signed by the reviewer, and it held.</div>
+
+  <h3>When two parties disagree</h3>
+  <p>Product intent is settled by the Product Book. Implementation by the Build Specification. Visual by the Brand System. <b>Where a working document and a book disagree, the book governs.</b> Amendments are written, never verbal, and are issued by the party who owns the area.</p>
+</section>
+
+<!-- 03 -->
+<section id="s3">
+  <div class="eyebrow">Chapter 03</div><div class="srule"></div>
+  <h2>The standing rules</h2>
+  <p class="lede2">Accumulated from live findings. Each exists because something went wrong once.</p>
+
+  <table>
+    <tr><th>Rule</th><th>Origin</th></tr>
+    <tr><td><b>Rule 1 · Schema changes are reviewed, then authorised in writing</b><br>IT Director reviews, Prem authorises, nothing authored before</td>
+      <td>Standing since the programme began</td></tr>
+    <tr><td><b>The four labels</b><br>Every assertion about the system carries <code>SCHEMA</code>, <code>WORK ORDER</code>, <code>PROTOTYPE SPEC ONLY</code> or <code>NOT VERIFIED</code></td>
+      <td>Two controls were asserted that did not exist</td></tr>
+    <tr><td><b>Read the palette before proposing a token</b><br>A measurement can say a pairing fails. It cannot say the failure is already recorded and answered</td>
+      <td>A token was proposed that already existed</td></tr>
+    <tr><td><b>A safeguard whose safe path does not exist is a pressure</b></td>
+      <td>A hard rule with no legitimate exit generates an illegitimate one</td></tr>
+    <tr><td><b>A threshold about human behaviour is set from real behaviour</b><br>First pilot month, never invented in advance</td>
+      <td>Applied three times: the amber threshold, the unknown rate, and the cockpit instruments</td></tr>
+    <tr><td><b>Fail toward visibility</b><br>An access check fails closed. A suppression fails open</td>
+      <td>An access check failing closed protects the dealer; a suppression failing closed hides money from him</td></tr>
+    <tr><td><b>Report, never silently correct</b><br>Reconciliation reports disagreements and does not fix them</td>
+      <td>A silent auto-correction destroys the evidentiary value of a ledger</td></tr>
+    <tr><td><b>Configuration, not code</b><br>Stages, dispositions, chain steps, plans and thresholds are rows</td>
+      <td>If adding the third brand needs a migration, the third brand is never onboarded</td></tr>
+  </table>
+</section>
+
+<!-- 04 -->
+<section id="s4">
+  <div class="eyebrow">Chapter 04</div><div class="srule"></div>
+  <h2>Work orders and cadence</h2>
+
+  <h3>What a work order is</h3>
+  <p><span class="pill p-rep">Reported</span> Work orders are numbered <code>WO-nn</code>, issued by the IT Director, and name what is in a cycle. <b>The work order is the constraint, not the specification.</b> An eighty-screen prototype and a covering note that says "not a build list" will both be forgotten by the second week; a work order naming eight screens will not.</p>
+
+  <h4>A work order should carry</h4>
+  <ul>
+    <li>The screens or capabilities in scope, named individually.</li>
+    <li>Their data dependencies, and which are unmet.</li>
+    <li>The definition of done, per §8 of the Build Specification.</li>
+    <li>What is explicitly deferred, so it is not re-argued.</li>
+  </ul>
+
+  <h3>Cadence</h3>
+  <table>
+    <tr><th>Rhythm</th><th>What happens</th><th>Mark</th></tr>
+    <tr><td>Per work order</td><td>Scope issued, built, audited, closed with findings disclosed</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Per deploy</td><td>Migration job runs; scale thresholds reported; drift guard replays migrations</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Nightly</td><td>Reconciliation samples live records and reports disagreements</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Monthly</td><td>Price and scheme refresh proposed by agent, approved by a human</td><td><span class="pill p-spec">Specified</span></td></tr>
+    <tr><td>First pilot month</td><td>Behavioural thresholds set from measured behaviour</td><td><span class="pill p-spec">Specified</span></td></tr>
+  </table>
+
+  <div class="note"><b>On disclosure.</b> The development team has twice reported its own failures unprompted, including one command that could have reached production. <b>That is the single most valuable signal about a build.</b> It should stay explicitly welcome, because a team that hides a near-miss fails badly and late.</div>
+</section>
+
+<!-- 05 -->
+<section id="s5">
+  <div class="eyebrow">Chapter 05</div><div class="srule"></div>
+  <h2>The environments</h2>
+
+  <table>
+    <tr><th>Environment</th><th>Purpose</th><th>Data</th><th>Who may reach it</th><th>Mark</th></tr>
+    <tr><td><b>Local</b></td><td>Development</td><td>Seeded fixtures only. <b>Never a production copy</b></td><td>Developers</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td><b>Scratch</b></td><td>Throwaway experiments and repairs</td><td>Copies made for one task, then destroyed</td><td>Developers</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Staging</b></td><td>Pre-release verification</td><td>Synthetic. Structurally identical to production</td><td>Team and IT Director</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td><b>Production</b></td><td>Live</td><td>Real dealer data</td><td>IT Director. Application role only for the app</td><td><span class="pill p-rep">Reported</span></td></tr>
+  </table>
+
+  <div class="warn"><b>The scratch-to-production incident.</b> A delete aimed at a scratch database read its connection from a file and connected to production. It was stopped by a guard written earlier for an unrelated purpose, <b>which is luck rather than design.</b>
+  <br><br><b>Required</b> <span class="pill p-spec">Specified</span> Any destructive command must take its target from an explicit environment argument and refuse to run without one. A connection read from a file is not a target; it is whatever the file happened to contain.</div>
+
+  <h3>Hosting</h3>
+  <table>
+    <tr><th>Component</th><th>Where</th><th>Mark</th></tr>
+    <tr><td>Database</td><td>Managed Postgres, Singapore region</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Application</td><td>Managed container hosting</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Source</td><td>GitHub organisation</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Data residency for dealer data</td><td><b>India, and it is a sales claim</b></td><td><span class="pill p-open">Open</span></td></tr>
+  </table>
+
+  <div class="warn"><b>Residency is unresolved and it is commercial, not technical.</b> The login screen states that data is held in Mumbai. If the database is in Singapore, that claim is wrong and a dealer's compliance officer will find it. <b>Either move the region or change the claim. Do not ship both.</b></div>
+</section>
+
+<!-- 06 -->
+<section id="s6">
+  <div class="eyebrow">Chapter 06</div><div class="srule"></div>
+  <h2>Repository and branching</h2>
+  <p><span class="pill p-nv">Not verified</span> This chapter reflects normal practice for a team of this size. <b>The IT Director should replace it with what is actually in use.</b></p>
+
+  <h3>What matters regardless of the model chosen</h3>
+  <ul>
+    <li><b>Main is always deployable.</b> If it is not, the deploy gates in Chapter 09 mean nothing.</li>
+    <li><b>Migrations are forward-only and never edited after they are applied anywhere.</b> A migration that has run in production is history.</li>
+    <li><b>One work order, one branch, one merge.</b> A branch spanning three work orders cannot be reverted cleanly.</li>
+    <li><b>Pilot branch naming has never been settled</b> <span class="pill p-open">Open</span> and it was raised during the Phase 4 work. Name a convention before the first pilot, not during it.</li>
+  </ul>
+
+  <h3>What must never be committed</h3>
+  <p>Credentials of any kind, dealer data of any kind, connection strings, generated build artefacts, and <code>.env</code> files. <span class="pill p-spec">Specified</span></p>
+
+  <div class="note"><b>An API key was shared in conversation earlier in this programme and was advised to be rotated.</b> Whether it was rotated is <span class="pill p-open">Open</span>. Keys must never be pasted into a chat, a document, or a ticket. If one is, treat it as compromised and rotate it the same day.</div>
+</section>
+
+<!-- 07 -->
+<section id="s7">
+  <div class="eyebrow">Chapter 07</div><div class="srule"></div>
+  <h2>Secrets and credentials</h2>
+  <p class="lede2">The register below is the shape. The values live in the secret store and never in this book.</p>
+
+  <table>
+    <tr><th>Secret</th><th>Used for</th><th>Held by</th><th>Rotation</th><th>Mark</th></tr>
+    <tr><td>Database connection, app role</td><td>Application runtime</td><td>Host secret store</td><td>On staff change</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td>Database connection, control role</td><td>Migrations, reconciliation</td><td>IT Director</td><td>On staff change</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td>Meta Marketing API</td><td>Spend and lead ingestion</td><td>Advito ad account</td><td>Per Meta policy</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Google Data Manager API</td><td>Spend and conversions</td><td>Advito ad account</td><td>Per Google policy</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>WhatsApp Cloud API</td><td>Customer messaging</td><td>Per dealer, Advito managed</td><td>On dealer offboarding</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Telephony provider</td><td>Call recording, click to call</td><td>Not yet selected</td><td>n/a</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td>Vehicle record lookup</td><td>Registration verification</td><td>Advito</td><td>Per provider</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td>Speech to text</td><td>Sampled transcription</td><td>Advito</td><td>Per provider</td><td><span class="pill p-rep">Reported</span></td></tr>
+  </table>
+
+  <h3>Four rules</h3>
+  <ol class="n">
+    <li><b>No human ever holds the application role credential.</b> It is injected at runtime.</li>
+    <li><b>Every secret has a named owner.</b> An unowned secret is an unrotatable secret.</li>
+    <li><b>A secret that appears in any written channel is compromised.</b> Rotate the same day, no exceptions, no judgement call.</li>
+    <li><b>Dealer-scoped secrets are destroyed at offboarding</b>, and the destruction is recorded in the dealer's own audit log.</li>
+  </ol>
+</section>
+
+<!-- 08 -->
+<section id="s8">
+  <div class="eyebrow">Chapter 08</div><div class="srule"></div>
+  <h2>Database rules</h2>
+
+  <h3>Tenant isolation</h3>
+  <p><span class="pill p-rep">Reported</span> Row-level security is enabled and forced on tenant tables, with policies keyed on a session setting. <b>Isolation is enforced by the database, not by application code</b>, so a missing <code>WHERE</code> clause cannot leak one dealer's data to another.</p>
+
+  <h3>Ledgers</h3>
+  <p>Append-only tables are append-only by <b>privilege</b>, not by convention:</p>
+<pre>REVOKE UPDATE, DELETE ON "<b>table</b>" FROM arth_app;
+REVOKE UPDATE, DELETE ON "<b>table</b>" FROM arth_control;</pre>
+  <p>Under <code>FORCE ROW LEVEL SECURITY</code> even the table owner has no update or delete. <b>A column that must be written after insert cannot exist on such a table.</b> The correction is a new row. This was found the hard way when a proposed acknowledgement table carried two unwritable columns.</p>
+
+  <table>
+    <tr><th>Ledger</th><th>Holds</th><th>State</th></tr>
+    <tr><td><code>audit_logs</code></td><td>Access, permission and export events</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><code>lead_events</code></td><td>Everything that happened to an enquiry</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><code>point_entries</code></td><td>Points earned and lost, with cause</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><code>credit_transactions</code></td><td>Billing movements</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><code>delivery_promises</code></td><td>Every promised date and who set it</td><td><span class="pill p-open">Required, Phase 5</span></td></tr>
+    <tr><td><code>exception_events</code></td><td>Cockpit decisions</td><td><span class="pill p-open">DDL issued, awaiting authorisation</span></td></tr>
+  </table>
+
+  <h3>Money</h3>
+  <p><span class="pill p-spec">Specified</span> <b>Integer minor units. Paise. Never floating point, anywhere.</b> A group's aggregate exposure clears a 32-bit integer at ₹2.1 crore, so aggregate columns are <code>BIGINT</code>.</p>
+
+  <h3>Derived, never stored</h3>
+  <p>Chain state, exception state, the Parked condition, and chain lineage counts. <b>An immutable table cannot repair a bad snapshot</b>, so a computed value written wrong on an append-only row is wrong permanently and propagates forward. Same reasoning as the palette refusing to store contrast ratios.</p>
+
+  <h3>Polymorphic references</h3>
+  <p>Where a column points at several tables it can carry no foreign key. <span class="pill p-spec">Specified</span> <b>Every such column requires a stated rule for deletion, merge and rename, and a sweep that closes orphans and reports them.</b> The database cannot enforce it, so something has to look.</p>
+</section>
+
+<!-- 09 -->
+<section id="s9">
+  <div class="eyebrow">Chapter 09</div><div class="srule"></div>
+  <h2>Deployment gates</h2>
+  <p class="lede2">A gate that can be waived under time pressure is not a gate. The list below is short deliberately.</p>
+
+  <table>
+    <tr><th>Gate</th><th>Fails when</th><th>Mark</th></tr>
+    <tr><td><b>Raw colour rule</b></td><td>Any colour literal appears outside the palette file</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Palette completeness</b></td><td>A published colour has no token, or a token has no published colour</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Contrast suite</b></td><td>A text and ground pairing measures below its floor</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Migration drift guard</b></td><td>Replayed migrations do not produce the current schema</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Scale thresholds</b></td><td>A watched table passes its ceiling</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Config key assertion</b></td><td>A configuration key has no renderer, <b>or a renderer has no key</b></td><td><span class="pill p-spec">Specified</span></td></tr>
+    <tr><td><b>Threshold bounds</b></td><td>A tenant setting is outside its permitted range</td><td><span class="pill p-spec">Specified</span></td></tr>
+  </table>
+
+  <div class="dark"><span class="eyebrow">Two properties every gate needs</span>
+    <b>Bidirectional.</b> A one-directional check catches the typo that creates an orphan key and misses the renderer left behind looking live.<br><br>
+    <b>No exemption list.</b> The moment a gate acquires a file of exceptions, it stops being read and starts being appended to. If a gate is wrong, fix the gate.</div>
+
+  <h3>What a green build does not prove</h3>
+  <p>A test against a fixture proves the events that exist add up. <b>It cannot prove every write path emitted one.</b> That is why reconciliation runs against live data nightly, and why a passing suite is a floor rather than a finish.</p>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <div class="eyebrow">Chapter 10</div><div class="srule"></div>
+  <h2>The instruments</h2>
+  <p class="lede2">What watches the system when nobody is looking.</p>
+
+  <table>
+    <tr><th>Instrument</th><th>Runs</th><th>Reports</th><th>Mark</th></tr>
+    <tr><td><b>Nightly reconciliation</b></td><td>Nightly, sampled per tenant</td><td>Records rebuilt from the ledger that disagree with current state. <b>Reports, never corrects</b></td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Orphan sweep</b></td><td>Nightly, plus enqueued on scope change</td><td>Polymorphic references pointing at nothing</td><td><span class="pill p-spec">Specified</span></td></tr>
+    <tr><td><b>Scale thresholds</b></td><td>Every deploy</td><td>Row counts against ceilings</td><td><span class="pill p-rep">Reported</span></td></tr>
+    <tr><td><b>Third-party watch</b></td><td>Continuous</td><td>API deprecations, policy changes, latency</td><td><span class="pill p-spec">Specified</span></td></tr>
+    <tr><td><b>Deferral share</b></td><td>Per tenant, per period</td><td>Whether the cockpit is nagging</td><td><span class="pill p-spec">Specified, Phase 7</span></td></tr>
+    <tr><td><b>Age of unexited cards</b></td><td>Per tenant, per period</td><td><b>Whether a screen is being read and ignored</b></td><td><span class="pill p-spec">Specified, Phase 7</span></td></tr>
+    <tr><td><b>Onboarding time</b></td><td>Per dealer</td><td>The best churn predictor available before go-live</td><td><span class="pill p-spec">Specified</span></td></tr>
+  </table>
+
+  <div class="note"><b>Why the enqueued sweep does not replace the nightly one.</b> An enqueue is a message and messages are lost. If the enqueue fails, an acknowledgement outlives its scope with nothing scheduled to notice. <b>Fast path and guarantee, not fast path instead of guarantee</b>, and the nightly run must report the orphans the enqueue should have caught, or a broken enqueue looks exactly like a working one.</div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <div class="eyebrow">Chapter 11</div><div class="srule"></div>
+  <h2>Who may change what</h2>
+  <p class="lede2">Four tiers. Anything not on this list is code and needs a release.</p>
+
+  <table>
+    <tr><th>Setting</th><th>Dealer admin</th><th>Advito</th><th>Nobody</th></tr>
+    <tr><td>Working hours, shifts, weekly off</td><td><b>Yes</b></td><td>Assists</td><td></td></tr>
+    <tr><td>First-response targets and SLAs</td><td><b>Yes</b></td><td>Assists</td><td></td></tr>
+    <tr><td>Escalation ladders, all four rungs</td><td><b>Yes</b></td><td>Assists</td><td></td></tr>
+    <tr><td>Lead visibility between colleagues</td><td><b>Yes</b></td><td></td><td></td></tr>
+    <tr><td>Points weights and difficulty multipliers</td><td><b>Yes</b></td><td></td><td></td></tr>
+    <tr><td>Targets and their basis</td><td><b>Yes</b></td><td></td><td></td></tr>
+    <tr><td>Prices, schemes, model catalogue</td><td><b>Yes</b></td><td>Can import</td><td></td></tr>
+    <tr><td>Figure visibility, per figure</td><td><b>Yes</b></td><td></td><td></td></tr>
+    <tr><td>Cockpit trigger thresholds</td><td><b>Within bounds</b></td><td>Sets the bounds</td><td></td></tr>
+    <tr><td>Stage list, disposition set, chain steps</td><td>Requests</td><td><b>Yes</b></td><td></td></tr>
+    <tr><td>Plans, pricing, negotiated rates</td><td></td><td><b>Founder only</b></td><td></td></tr>
+    <tr><td><b>Salary visible below the principal</b></td><td></td><td></td><td><b>Never</b></td></tr>
+    <tr><td><b>Margin visible below dealer admin</b></td><td></td><td></td><td><b>Never</b></td></tr>
+    <tr><td><b>Two-step verification switched off</b></td><td></td><td></td><td><b>Never</b></td></tr>
+    <tr><td><b>Lead-assigned and commitment-due notifications</b></td><td></td><td></td><td><b>Never off</b></td></tr>
+    <tr><td><b>An audit or ledger row edited</b></td><td></td><td></td><td><b>Impossible</b></td></tr>
+  </table>
+
+  <div class="warn"><b>A control with a dial the subject can turn is not a control.</b> Cockpit thresholds are bounded, the bounds are asserted in the suite, and <b>the setting is logged and printed on the card it was loosened to delay.</b> The lever is not removed; it is made impossible to pull quietly.</div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <div class="eyebrow">Chapter 12</div><div class="srule"></div>
+  <h2>Tenant provisioning</h2>
+  <p class="lede2">Seven steps. Target twenty-one days. Onboarding time is the best churn predictor available before a dealer has ever used the product.</p>
+
+  <table>
+    <tr><th></th><th>Step</th><th>Owner</th><th>Blocks</th></tr>
+    <tr><td class="rt">1</td><td>Brands and rooftops, the org tree</td><td>Advito with the dealer</td><td>Everything</td></tr>
+    <tr><td class="rt">2</td><td>Positions and people</td><td>Dealer, Advito reviews</td><td>Assignment, escalation</td></tr>
+    <tr><td class="rt">3</td><td><b>Working hours and shifts</b></td><td>Dealer</td><td><b>Every clock in the product</b></td></tr>
+    <tr><td class="rt">4</td><td>Prices and schemes</td><td>Dealer, Advito can import</td><td>Quotations</td></tr>
+    <tr><td class="rt">5</td><td>Lead sources and ad accounts</td><td>Advito</td><td>Attribution</td></tr>
+    <tr><td class="rt">6</td><td>WhatsApp numbers and templates</td><td>Advito</td><td>All customer messaging</td></tr>
+    <tr><td class="rt">7</td><td>Existing customer and vehicle data</td><td>Advito with the dealer</td><td>Household, service history</td></tr>
+  </table>
+
+  <div class="note"><b>Step 3 is the one that stalls, and it looks like the dullest.</b> Without working hours the system penalises a telecaller for a lead that arrived at 21:40, and the floor stops trusting the screen in its first week. <b>Nothing should go live until step 3 is complete for every branch.</b> A dealer stalled at step 3 after four requests is the strongest pre-launch churn signal there is.</p>
+
+  <h3>Migration, honestly</h3>
+  <p>A dealer's existing data will contain the same person three times with three spellings and two numbers. <b>Arth shows the duplicates and the dealer decides.</b> An automatic merge that joins two households cannot be unpicked later. Expect a week, expect tedium, and treat any vendor promising a one-click import as either not migrating much or about to corrupt a database.</p>
+
+  <h3>What provisioning creates</h3>
+  <p>Templates are <b>copied at provisioning, never referenced.</b> A dealer changing his disposition list must not affect another dealer's. <span class="pill p-spec">Specified</span></p>
+
+  <h3>Offboarding</h3>
+  <p><span class="pill p-open">Open</span> Not yet specified. It needs: a full data export in a documented format, destruction of dealer-scoped secrets, WhatsApp number release, ad account access removal, and a retention decision for the ledgers. <b>The contract promises free export; the mechanism does not exist.</b></p>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <div class="eyebrow">Chapter 13</div><div class="srule"></div>
+  <h2>The seed catalogue</h2>
+  <p class="lede2">Everything below is rows. If adding to any of it requires a migration, the design has failed.</p>
+
+  <table>
+    <tr><th>Set</th><th>Default</th><th>Changed by</th></tr>
+    <tr><td><b>Stages</b></td><td>Nine: New, Assigned, Contacted, Qualified, Test drive, Quotation, Negotiation, Booked, Delivered</td><td>Advito</td></tr>
+    <tr><td><b>Dispositions</b></td><td>Per department. Sales carries connected, not-connected and closed sets. Service, insurance, used car and delivery each carry their own</td><td>Advito</td></tr>
+    <tr><td><b>Lost reasons</b></td><td>Seven, controlled. Each demands a specific fact</td><td>Advito</td></tr>
+    <tr><td><b>Chain steps</b></td><td>Twelve across three lanes. EV adds two, commercial vehicle three, two-wheeler removes one</td><td>Advito</td></tr>
+    <tr><td><b>Difficulty bands</b></td><td>Hot ×1.0, warm ×1.5, cold ×2.5, very cold ×3.5</td><td>Dealer admin, bounded</td></tr>
+    <tr><td><b>Points per outcome</b></td><td>Test drive 8, visit 5, quotation 4, follow-up 1, postponed 1</td><td>Dealer admin</td></tr>
+    <tr><td><b>Roles and landing workspaces</b></td><td>Twenty-two seats</td><td>Advito</td></tr>
+    <tr><td><b>Exception types</b></td><td>Nine aggregate types. <b>A config key, not an enum</b></td><td>Advito</td></tr>
+    <tr><td><b>Plans</b></td><td>Core, Growth, Scale, plus per-brand multipliers</td><td>Founder only</td></tr>
+    <tr><td><b>Defect taxonomy</b></td><td><span class="pill p-open">Open</span> Required in Phase 5. Controlled from the first job card or the recurring-failure card is unbuildable at any price</td><td>Advito</td></tr>
+  </table>
+
+  <div class="dark"><span class="eyebrow">The test for anything proposed as an enum</span>
+    <b>Will there ever be a tenth?</b> If yes it is configuration. Nine exception types will become eleven, and if adding one needs a migration, adding one will not happen.<br><br>
+    The safeguard is a <b>bidirectional assertion in the test suite</b>: every key has a renderer and every renderer has a key.</div>
+</section>
+
+<!-- 14 -->
+<section id="s14">
+  <div class="eyebrow">Chapter 14</div><div class="srule"></div>
+  <h2>Thresholds and their bounds</h2>
+
+  <table>
+    <tr><th>Threshold</th><th>Default</th><th>Bound</th><th>Set from</th></tr>
+    <tr><td>First response target</td><td>30 minutes</td><td>Dealer choice</td><td>Dealer preference</td></tr>
+    <tr><td>Unassigned auto-assign</td><td>2 hours</td><td>Dealer choice</td><td>Dealer preference</td></tr>
+    <tr><td>Connected call floor</td><td>20 seconds</td><td><b>Fixed</b></td><td>Anti-gaming. Not configurable</td></tr>
+    <tr><td>Callback needing a reason</td><td>Beyond 14 days</td><td>Dealer choice</td><td>Dealer preference</td></tr>
+    <tr><td>Cockpit magnitude, this deferral</td><td>1.5×</td><td>1.2× to 2.5×</td><td>Bounded, logged, shown on the card</td></tr>
+    <tr><td>Cockpit magnitude, chain origin</td><td>2×</td><td>1.5× to 3×</td><td>Bounded, logged</td></tr>
+    <tr><td>Consecutive deferral count</td><td>3</td><td>2 to 3</td><td>Bounded, logged</td></tr>
+    <tr><td>Used car ageing</td><td>45 days</td><td>Dealer choice</td><td>Floor-plan rate</td></tr>
+    <tr><td>Export flagged to admin</td><td>200 records</td><td>Dealer choice</td><td>Visible, never blocked</td></tr>
+    <tr><td>Deferral share alarm</td><td><span class="pill p-open">Unset</span></td><td>n/a</td><td><b>First pilot month</b></td></tr>
+    <tr><td>Age of unexited cards</td><td><span class="pill p-open">Unset</span></td><td>n/a</td><td><b>First pilot month</b></td></tr>
+    <tr><td>Stage probability table</td><td>Seeded defaults</td><td>n/a</td><td><b>Replaced by the dealer's own after month one</b></td></tr>
+  </table>
+
+  <div class="note"><b>The standing pattern, applied four times now:</b> a threshold about human behaviour is set from the first month of real behaviour. A number invented in advance will be defended later on no evidence, and nobody has measured what a healthy deferral share looks like at an Indian dealership.</div>
+</section>
+
+<!-- 15 -->
+<section id="s15">
+  <div class="eyebrow">Chapter 15</div><div class="srule"></div>
+  <h2>Every external dependency</h2>
+
+  <table>
+    <tr><th>Dependency</th><th>Needed for</th><th>Owned by</th><th>State</th></tr>
+    <tr><td><b>Meta Marketing API</b></td><td>Spend, lead forms, click identifiers, audience suppression</td><td>Advito ad account</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><b>Meta Conversions API</b></td><td>Feeding bookings and deliveries back</td><td>Advito</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><b>Google Data Manager API</b></td><td>Spend and conversions. <b>Migrated off the Ads API</b></td><td>Advito</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><b>WhatsApp Cloud API</b></td><td>All customer messaging</td><td>Per dealer, Advito managed</td><td><span class="pill p-rep">Live, policy volatile</span></td></tr>
+    <tr><td><b>Lead portals</b></td><td>CarDekho and similar</td><td>Dealer subscription</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td><b>Vehicle record lookup</b></td><td>Registration verification, lapse detection</td><td>Advito</td><td><span class="pill p-rep">Live, latency watched</span></td></tr>
+    <tr><td><b>Speech to text</b></td><td>Sampled transcription, 20% default</td><td>Advito</td><td><span class="pill p-rep">Live</span></td></tr>
+    <tr><td><b>Telephony</b></td><td>Recording, click to call, screen pop, missed-call recovery</td><td>Not selected</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td><b>Payment links</b></td><td>Insurance renewal, booking amounts</td><td>Not selected</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td><b>Manufacturer DMS</b></td><td>Stock, invoicing, warranty</td><td>Dealer</td><td><span class="pill p-open">Read strategy undecided</span></td></tr>
+    <tr><td><b>OEM survey schedule</b></td><td>Ranking complaints inside the survey window</td><td>Manufacturer</td><td><span class="pill p-open">No route identified</span></td></tr>
+  </table>
+
+  <h3>The two that gate features</h3>
+  <p><b>Telephony gates the points engine</b>, because the twenty-second connect floor cannot be enforced without call duration, and shipping points without it teaches a floor to game a score before the control exists.</p>
+  <p><b>The OEM survey schedule gates a principal-level card.</b> Without it, complaint ranking is a service feature rather than a dealer principal one. <b>Better a service card built on fact than a principal card built on a guess.</b></p>
+</section>
+
+<!-- 16 -->
+<section id="s16">
+  <div class="eyebrow">Chapter 16</div><div class="srule"></div>
+  <h2>Failure modes</h2>
+  <p class="lede2">Each of these will happen. The question is only whether it is planned for.</p>
+
+  <table>
+    <tr><th>Failure</th><th>Effect</th><th>Response</th></tr>
+    <tr><td><b>WhatsApp template rejected</b><br>Policy changed under us</td><td>Messages stop for affected tenants</td><td>Fall back to the previous approved template. Alert engineering. <b>Never silently drop a message</b></td></tr>
+    <tr><td><b>Ad platform API version deprecated</b></td><td>Spend data stops arriving; attribution goes stale</td><td>Third-party watch flags it months ahead. Migrate on their schedule, not ours</td></tr>
+    <tr><td><b>Vehicle lookup slow or down</b></td><td>Registration verification stalls</td><td>Secondary provider takes traffic. Degrade to manual entry, flagged as unverified</td></tr>
+    <tr><td><b>Reconciliation finds a disagreement</b></td><td>A record and its ledger differ</td><td><b>Report. Never auto-correct.</b> Investigate the write path</td></tr>
+    <tr><td><b>Enqueued sweep does not run</b></td><td>An acknowledgement outlives its scope</td><td>Nightly sweep catches it <b>and reports that the enqueue failed</b></td></tr>
+    <tr><td><b>A tenant crosses its scale ceiling</b></td><td>Query paths degrade</td><td>Red build at the next deploy, before a user notices</td></tr>
+    <tr><td><b>Destructive command aimed at the wrong environment</b></td><td>Potential data loss</td><td>Explicit environment argument required. <b>Refuse to run without one</b></td></tr>
+    <tr><td><b>A dealer's staff stop logging in</b></td><td>Churn in slow motion</td><td>Adoption per role is watched. <b>This is a visit, not a ticket</b></td></tr>
+    <tr><td><b>Consent withdrawn</b></td><td>Legal exposure if a message goes out</td><td>Suppression across calls, WhatsApp, SMS and ad audiences within minutes, verified</td></tr>
+  </table>
+</section>
+
+<!-- 17 -->
+<section id="s17">
+  <div class="eyebrow">Chapter 17</div><div class="srule"></div>
+  <h2>Runbooks</h2>
+  <p class="lede2">Six. Each should exist as a written procedure before it is needed, not during.</p>
+
+  <table>
+    <tr><th>Runbook</th><th>Must cover</th><th>State</th></tr>
+    <tr><td><b>Production incident</b></td><td>Who is called, how a tenant is isolated, how a rollback is decided, who tells the dealer</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td><b>Data correction</b></td><td>How a wrong record is corrected on an append-only table. <b>By a correcting entry, never an edit.</b> Who authorises it</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td><b>Tenant onboarding</b></td><td>The seven steps of Chapter 12, with the responsible party per step</td><td><span class="pill p-nv">Partly written</span></td></tr>
+    <tr><td><b>Tenant offboarding</b></td><td>Export, secret destruction, number release, retention decision</td><td><span class="pill p-open">Open</span></td></tr>
+    <tr><td><b>Access grant and revoke</b></td><td>Adding a person, removing a leaver, <b>the structured handover of their open work</b></td><td><span class="pill p-spec">Specified in product</span></td></tr>
+    <tr><td><b>Advito entering a dealer's account</b></td><td>Ticket reference, time limit, masking, and the log the dealer sees</td><td><span class="pill p-spec">Specified in product</span></td></tr>
+  </table>
+
+  <div class="warn"><b>Four of six do not exist.</b> The two that do are specified in the product because they are screens. <b>The four missing ones are the ones needed on the worst day of the programme</b>, and the incident runbook in particular should be written before the first dealer goes live rather than during the first outage.</div>
+
+  <h3>The leaver runbook, since it is the most frequent</h3>
+  <p>A resignation is a <b>structured handover, not a bulk reassign.</b> Open commitments transfer with their deadlines. The WhatsApp number stays with the dealership. Every session is invalidated immediately on deactivation. The customer receives a message naming their new point of contact. <span class="pill p-spec">Specified</span></p>
+</section>
+
+<!-- 18 -->
+<section id="s18">
+  <div class="eyebrow">Chapter 18</div><div class="srule"></div>
+  <h2>Backup, restore and retention</h2>
+
+  <table>
+    <tr><th>Item</th><th>Position</th><th>State</th></tr>
+    <tr><td>Database backups</td><td>Managed provider, automatic</td><td><span class="pill p-nv">Not verified</span></td></tr>
+    <tr><td><b>Restore, tested</b></td><td>A backup that has never been restored is a hope</td><td><span class="pill p-open">Never tested</span></td></tr>
+    <tr><td>Recovery point objective</td><td>How much data may be lost</td><td><span class="pill p-open">Undefined</span></td></tr>
+    <tr><td>Recovery time objective</td><td>How long a dealer may be down</td><td><span class="pill p-open">Undefined</span></td></tr>
+  </table>
+
+  <h3>Retention</h3>
+  <table>
+    <tr><th>Data</th><th>Held</th><th>Note</th></tr>
+    <tr><td>Call recordings, ordinary</td><td>90 days</td><td>Storage cost dominates</td></tr>
+    <tr><td><b>Call recordings attached to a case</b></td><td><b>24 months</b></td><td>Evidence in a dispute. <b>Exempt from the purge, and a scheduled job that removes one is a serious failure</b></td></tr>
+    <tr><td>Ledgers and audit</td><td>7 years</td><td>Never purged</td></tr>
+    <tr><td>Identity documents</td><td>Purpose only, then purged</td><td>Held for a finance application, destroyed at close. Every view logged</td></tr>
+    <tr><td>Registration, invoices</td><td>Life of the vehicle with us</td><td>Attached to the vehicle, not the deal</td></tr>
+  </table>
+
+  <div class="warn"><b>The untested restore is the second-largest risk on the programme, behind the trademark.</b> It sits alongside single-person infrastructure and no named successor. Neither is urgent this month and both are on the post-launch audit list for a reason.</div>
+</section>
+
+<!-- 19 -->
+<section id="s19">
+  <div class="eyebrow">Chapter 19</div><div class="srule"></div>
+  <h2>Compliance</h2>
+
+  <h3>Consent</h3>
+  <p><b>One row per purpose, never one tick for everything.</b> Sales enquiry, service reminders, insurance renewal and offers are four separate permissions. A customer who agreed to service reminders has not agreed to a festive broadcast, and <b>the system refuses to send it</b> rather than leaving that judgement to whoever builds the campaign.</p>
+
+  <h3>Data subject requests</h3>
+  <table>
+    <tr><th>Request</th><th>Response</th><th>Window</th></tr>
+    <tr><td>Copy of my data</td><td>One export across every department, because there is one customer record</td><td>14 days</td></tr>
+    <tr><td>Delete my data</td><td><b>Partly refusable.</b> Marketing data erased; tax invoices retained with the statutory reason recorded and told to the customer</td><td>14 days</td></tr>
+    <tr><td>Stop contacting me</td><td>Every channel and every ad audience, within minutes</td><td>Immediate</td></tr>
+  </table>
+
+  <div class="warn"><b>The migrated records are the real exposure.</b> Customers imported from a dealer's old system arrive with no consent record. They may be contacted about a vehicle they own, which is a service obligation. <b>They may not be added to any campaign audience.</b> The only clean fix is to ask them once on the next legitimate contact.</div>
+
+  <h3>Certification</h3>
+  <p><span class="pill p-open">Open</span> No ISO 27001, no SOC 2, no external penetration test. Not required by the current segment; <b>required by any enterprise dealer group</b>, and the penetration test is deferred with a named trigger at the second client.</p>
+</section>
+
+<!-- 20 -->
+<section id="s20">
+  <div class="eyebrow">Chapter 20</div><div class="srule"></div>
+  <h2>The open register</h2>
+  <p class="lede2">Everything this book found that nobody has decided. Ordered by cost of delay.</p>
+
+  <table>
+    <tr><th></th><th>Open item</th><th>With</th><th>Cost of delay</th></tr>
+    <tr><td class="rt">1</td><td><b>Trademark search, classes 9 and 42</b></td><td>Prem</td><td><b>Rises weekly.</b> The only risk with nothing holding it</td></tr>
+    <tr><td class="rt">2</td><td><b>Production seed not run</b><br>One login, ageing data</td><td>Prem</td><td>Nothing can be demonstrated</td></tr>
+    <tr><td class="rt">3</td><td>Data residency claim versus actual region</td><td>Prem and IT Director</td><td>A compliance officer will find it</td></tr>
+    <tr><td class="rt">4</td><td><b>Restore never tested</b></td><td>IT Director</td><td>Unknown until the worst day</td></tr>
+    <tr><td class="rt">5</td><td>Incident and data-correction runbooks</td><td>IT Director</td><td>Needed on the worst day</td></tr>
+    <tr><td class="rt">6</td><td><code>ExceptionEvent</code> authorisation</td><td>Prem</td><td>Blocks Phase 7 only</td></tr>
+    <tr><td class="rt">7</td><td>Eight palette tokens, and the on-dark scale</td><td>Brand</td><td>Blocks front-end build gates</td></tr>
+    <tr><td class="rt">8</td><td>Telephony provider</td><td>Prem</td><td>Gates the points engine</td></tr>
+    <tr><td class="rt">9</td><td>Defect taxonomy</td><td>Advito</td><td><b>Impossible to retrofit</b></td></tr>
+    <tr><td class="rt">10</td><td>Offboarding mechanism</td><td>IT Director</td><td>Contract promises free export</td></tr>
+    <tr><td class="rt">11</td><td>Pilot branch naming</td><td>IT Director</td><td>Small, and raised twice</td></tr>
+    <tr><td class="rt">12</td><td>Whether the shared API key was rotated</td><td>IT Director</td><td>Assume compromised until confirmed</td></tr>
+    <tr><td class="rt">13</td><td>Advito three-surface split</td><td>Unscoped</td><td>Not this cycle</td></tr>
+    <tr><td class="rt">14</td><td>Bus factor, no named successor</td><td>Prem</td><td>Structural</td></tr>
+  </table>
+
+  <div class="dark"><span class="eyebrow">The two that need somebody today</span>
+    <b>The trademark search</b> needs nothing that is not ready and only Prem can start it. Today an unavailable mark costs a brand book, a palette and a domain. After Phase 5 it costs seven workspaces and the name on the signage.<br><br>
+    <b>The production seed</b> is built and rehearsed. Until it runs, the access model that distinguishes Arth from a shared spreadsheet cannot be shown to anybody.</div>
+</section>
+
+<footer>
+  <b>Arth · Project Configuration Book · Edition 01</b><br>
+  Advito Global · 21 August 2026. Custodian: the IT Director. Companions: Product Book, Build Specification v1.0, Brand System v2.9, <code>Arth-Platform.html</code>.<br><br>
+  <b>Every entry marked Not verified is a question, not an instruction.</b> Replace it with the real value rather than let it stand. Amendments in writing, by the party who owns the area.
+</footer>
+
+</div></body></html>

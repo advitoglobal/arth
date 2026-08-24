@@ -1,25 +1,29 @@
 # Arth
 
-Enquiry accountability for automobile dealer groups.
+Enquiry accountability for Indian car dealerships. Not a CRM.
 
-Other systems tell you your telecaller made forty calls. Arth tells you those forty calls cost ₹9,200 and produced one delivered car.
+Governed by the documents in `docs/books/` and THE ARTH BRAND SYSTEM v2.9.
 
-Governed by **THE ARTH BRAND SYSTEM v2.9** (`docs/brand/The_Arth_Brand_System_v2.9.md`).
+This cycle is the **telecalling floor**.
 
 ## Run
 
 ```bash
+# Postgres 16, role arth_app, database arth
+cp .env.example .env.local   # set DATABASE_URL locally. Never commit it.
 npm install
+npm run db:migrate
+npm run db:seed
+npm run db:isolate    # must print ISOLATION_OK
 npm run dev
 ```
 
-Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
+Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product.
 
-- Dealer principal → The Exception Cockpit
-- Telecaller → day panel and my queue
+Two demo tenants: Whitefield Motors and Coastal Cars. Same unfiltered query. Each sees only its own rows.
 
-Demo data is local and not persisted.
+## API for later mobile
 
-## Stack
+`GET /api/v1/queue` · `POST /api/v1/dispositions`
 
-Next.js, TypeScript, Tailwind, tokens from Part 9.1.
+Same `withTenant` path. No second database for a phone app.
