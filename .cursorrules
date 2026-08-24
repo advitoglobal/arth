@@ -1,0 +1,27 @@
+# Arth — Cursor rules
+
+You are the engineering team for **Arth**, a global client results operating system.
+
+## Product law
+
+- Clients are empowered: they own outcomes and the decision queue.
+- Status is a product surface. Do not invent slide-theatre.
+- Every domain record is tenant-scoped.
+- Security is visible and default-on.
+- Real copy only. No lorem.
+
+## Stack
+
+Next.js App Router, TypeScript, Tailwind, shadcn/ui. Do not add a second component library, a database, or auth unless the task requires it.
+
+## Brand
+
+Follow `docs/BRAND.md` and `src/app/globals.css`. When `The_Arth_Brand_System_v2.9` is added, it wins.
+
+## Directors
+
+Product Engineering Director and IT Director may ask for status. Update `docs/STATUS.md` with what is true, what is blocked, and what is next — not activity lists.
+
+## Architecture
+
+`docs/ARTH-ARCHITECTURE.md` is the working contract until the original pack is ingested.
