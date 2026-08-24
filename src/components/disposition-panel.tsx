@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function DispositionPanel({
@@ -12,13 +12,35 @@ export function DispositionPanel({
   dispositions: { key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[];
   lostReasons: { key: string; label: string }[];
 }) {
-  const [key, setKey] = useState(dispositions[0]?.key ?? "no_answer");
+  const initial = dispositions[0]?.key ?? "no_answer";
+  const [key, setKey] = useState(initial);
   const [revisit, setRevisit] = useState("");
   const [lost, setLost] = useState("");
   const [note, setNote] = useState("");
+  const [callbackReason, setCallbackReason] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const farCallback =
+    revisit !== "" &&
+    new Date(revisit).getTime() - Date.now() > 14 * 24 * 60 * 60 * 1000;
+  const dirty =
+    note !== "" ||
+    revisit !== "" ||
+    lost !== "" ||
+    callbackReason !== "" ||
+    key !== initial;
   const selected = dispositions.find((d) => d.key === key);
+  const showRevisit = selected?.requires_revisit || selected?.key === "connected_callback";
+
+  useEffect(() => {
+    if (!confirm || !eventId) return;
+    const t = window.setTimeout(() => {
+      setConfirm(null);
+      setEventId(null);
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, [confirm, eventId]);
 
   async function save() {
     setError(null);
@@ -31,6 +53,7 @@ export function DispositionPanel({
         note,
         revisitAt: revisit || undefined,
         lostReasonKey: lost || undefined,
+        callbackReason: callbackReason || undefined,
       }),
     });
     const data = await res.json();
@@ -38,8 +61,28 @@ export function DispositionPanel({
       setError(data.error ?? "Not saved.");
       return;
     }
+    setEventId(data.eventId ?? null);
     setConfirm(`${data.recorded}. Next action is on the queue.`);
-    window.setTimeout(() => setConfirm(null), 1500);
+    setNote("");
+    setRevisit("");
+    setLost("");
+    setCallbackReason("");
+  }
+
+  async function undo() {
+    if (!eventId) return;
+    const res = await fetch("/api/v1/undo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId, eventId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Undo failed.");
+      return;
+    }
+    setConfirm(null);
+    setEventId(null);
   }
 
   if (confirm) {
@@ -47,14 +90,22 @@ export function DispositionPanel({
       <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
         <p className="font-medium">{confirm}</p>
         <p className="mt-2 text-sm text-[var(--arth-n60)]">
-          Undo in this window writes a correcting entry. It does not delete the original.
+          Undo writes a correcting entry. The original row stays.
         </p>
+        <Button className="mt-4" variant="outline" onClick={undo}>
+          Undo
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
+      {dirty ? (
+        <p className="bg-[var(--arth-n05)] px-3 py-2 text-sm">
+          Unsaved changes. Record outcome or they stay on this screen.
+        </p>
+      ) : null}
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Disposition
       </p>
@@ -72,7 +123,7 @@ export function DispositionPanel({
           ))}
         </select>
       </label>
-      {selected?.requires_revisit ? (
+      {showRevisit ? (
         <label className="block text-sm">
           Revisit at
           <input
@@ -80,6 +131,16 @@ export function DispositionPanel({
             className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
             value={revisit}
             onChange={(e) => setRevisit(e.target.value)}
+          />
+        </label>
+      ) : null}
+      {farCallback ? (
+        <label className="block text-sm">
+          Reason the callback is more than 14 days away
+          <input
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={callbackReason}
+            onChange={(e) => setCallbackReason(e.target.value)}
           />
         </label>
       ) : null}
@@ -110,7 +171,9 @@ export function DispositionPanel({
         />
       </label>
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-      <Button onClick={save}>Record outcome</Button>
+      <div className="flex gap-2">
+        <Button onClick={save}>Record outcome</Button>
+      </div>
     </div>
   );
 }

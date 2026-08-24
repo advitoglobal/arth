@@ -1,12 +1,12 @@
+import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { listPipeline } from "@/services/telecalling";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
-import { Forbidden } from "@/components/forbidden";
 
 export default async function PipePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "pipe")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "pipe")) forbidden();
     const rows = await listPipeline(tx, seat.userId);
     return (
       <div className="space-y-6">

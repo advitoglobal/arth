@@ -13,17 +13,23 @@ This cycle is the **telecalling floor**.
 cp .env.example .env.local   # set DATABASE_URL locally. Never commit it.
 npm install
 npm run db:migrate
-npm run db:seed
 npm run db:isolate    # must print ISOLATION_OK
+npm run db:clock      # must print CLOCK_OK
+npm run db:assign     # must print ASSIGN_OK
+npm run db:access     # must print ACCESS_OK
 npm run dev
 ```
 
 Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product.
 
-Two demo tenants: Whitefield Motors and Coastal Cars. Same unfiltered query. Each sees only its own rows.
+Demo seats on `/w/login`:
+
+- Whitefield Motors · A. Iyer and K. Nair (telecallers, own books)
+- Coastal Cars · M. Pinto (other tenant)
+- Whitefield Motors · S. Rao (sales consultant, 403 on Today)
 
 ## API for later mobile
 
-`GET /api/v1/queue` · `POST /api/v1/dispositions`
+`GET /api/v1/queue` · `GET /api/v1/search` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo`
 
 Same `withTenant` path. No second database for a phone app.

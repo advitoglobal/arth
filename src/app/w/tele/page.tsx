@@ -1,8 +1,8 @@
+import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { getLead, listQueue } from "@/services/telecalling";
 import { DispositionPanel } from "@/components/disposition-panel";
 import { RuleHeading } from "@/components/brand/type";
-import { Forbidden } from "@/components/forbidden";
 
 export default async function TelePage({
   searchParams,
@@ -11,7 +11,7 @@ export default async function TelePage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "tele")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "tele")) forbidden();
     const queue = await listQueue(tx, seat.userId);
     const leadId = id ?? queue[0]?.id;
     const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[]>`

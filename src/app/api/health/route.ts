@@ -8,7 +8,7 @@ export async function GET() {
       service: "arth",
       status: "ok",
       db: row.n === "1" ? "up" : "unknown",
-      slice: "telecalling-m1",
+      slice: "telecalling-m2",
       time: new Date().toISOString(),
     });
   } catch {

@@ -1,7 +1,7 @@
+import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
-import { Forbidden } from "@/components/forbidden";
 
 export default async function RecPage({
   searchParams,
@@ -10,12 +10,14 @@ export default async function RecPage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "rec")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "rec")) forbidden();
     if (!id) {
       return <p>Open a record from a row. It is not a menu item.</p>;
     }
     const { lead, events } = await getLead(tx, id);
-    if (!lead) return <Forbidden />;
+    if (!lead) {
+      return <p>This enquiry is not in your tenant.</p>;
+    }
     return (
       <div className="space-y-6">
         <RuleHeading>Enquiry record</RuleHeading>

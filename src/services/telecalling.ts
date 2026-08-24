@@ -1,5 +1,6 @@
 import type { Tx } from "@/db/with-tenant";
-import { isParked } from "@/domain/clock";
+import { isOnDayQueue, isParked, needsCallbackReason } from "@/domain/clock";
+import { scheduleNextAction } from "@/services/assignment";
 
 export type LeadRow = {
   id: string;
@@ -55,9 +56,15 @@ export async function listQueue(tx: Tx, ownerId: string) {
     ) e ON true
     WHERE l.owner_user_id = ${ownerId}
       AND l.stage_key <> 'delivered'
+      AND l.lost_reason_key IS NULL
     ORDER BY l.next_action_at ASC NULLS LAST
   `;
-  return rows.filter((r) => !isParked(r) || (r.next_action_at && new Date(r.next_action_at) <= new Date()));
+  return rows.filter((r) => {
+    if (isParked(r) && r.next_action_at && new Date(r.next_action_at) > new Date()) {
+      return false;
+    }
+    return isOnDayQueue(r.next_action_at);
+  });
 }
 
 export async function listPipeline(tx: Tx, ownerId: string) {
@@ -160,6 +167,7 @@ export async function recordDisposition(
     note: string;
     revisitAt?: string;
     lostReasonKey?: string;
+    callbackReason?: string;
   },
 ) {
   const [disp] = await tx<{
@@ -178,11 +186,26 @@ export async function recordDisposition(
   if (disp.requires_lost_reason && !input.lostReasonKey) {
     throw new Error("A lost reason is needed before this enquiry can be closed.");
   }
+  if (needsCallbackReason(input.revisitAt ?? null) && !input.callbackReason?.trim()) {
+    throw new Error("A reason is required when the callback is more than 14 days away.");
+  }
 
-  await tx`
+  const [before] = await tx<{ next_action_at: Date | null; stage_key: string }[]>`
+    SELECT next_action_at, stage_key FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+
+  const previous = {
+    previous_next_action_at: before?.next_action_at
+      ? new Date(before.next_action_at).toISOString()
+      : null,
+    previous_stage_key: before?.stage_key ?? null,
+    callback_reason: input.callbackReason ?? null,
+  };
+
+  const [inserted] = await tx<{ id: string }[]>`
     INSERT INTO lead_events (
       tenant_id, lead_id, event_type, actor_type, actor_id,
-      disposition_key, revisit_at, note
+      disposition_key, revisit_at, note, payload
     )
     VALUES (
       current_setting('app.tenant_id')::uuid,
@@ -192,8 +215,10 @@ export async function recordDisposition(
       ${input.userId}::uuid,
       ${input.dispositionKey},
       ${input.revisitAt ?? null},
-      ${input.note}
+      ${input.note},
+      ${tx.json(previous)}
     )
+    RETURNING id::text
   `;
 
   if (disp.requires_lost_reason) {
@@ -203,22 +228,79 @@ export async function recordDisposition(
           next_action_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
-  } else if (disp.requires_revisit && input.revisitAt) {
-    await tx`
-      UPDATE leads SET next_action_at = ${input.revisitAt}::timestamptz
-      WHERE id = ${input.leadId}::uuid
-    `;
-  } else {
+  } else if (input.revisitAt) {
+    const revisit = await scheduleNextAction(
+      tx,
+      input.leadId,
+      new Date(input.revisitAt),
+    );
     await tx`
       UPDATE leads SET
         first_responded_at = COALESCE(first_responded_at, now()),
         stage_key = CASE WHEN stage_key IN ('new','assigned') THEN 'contacted' ELSE stage_key END,
-        next_action_at = now() + interval '1 day'
+        next_action_at = ${revisit.toISOString()}::timestamptz
+      WHERE id = ${input.leadId}::uuid
+    `;
+  } else {
+    const next = await scheduleNextAction(
+      tx,
+      input.leadId,
+      new Date(Date.now() + 24 * 60 * 60 * 1000),
+    );
+    await tx`
+      UPDATE leads SET
+        first_responded_at = COALESCE(first_responded_at, now()),
+        stage_key = CASE WHEN stage_key IN ('new','assigned') THEN 'contacted' ELSE stage_key END,
+        next_action_at = ${next.toISOString()}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
   }
 
-  return { recorded: disp.label };
+  return { recorded: disp.label, eventId: inserted?.id };
+}
+
+export async function undoDisposition(
+  tx: Tx,
+  input: { leadId: string; userId: string; eventId: string },
+) {
+  const [event] = await tx<{
+    id: string;
+    payload: {
+      previous_next_action_at?: string | null;
+      previous_stage_key?: string | null;
+    } | null;
+  }[]>`
+    SELECT id::text, payload
+    FROM lead_events
+    WHERE id = ${input.eventId}::bigint AND lead_id = ${input.leadId}::uuid
+  `;
+  if (!event) throw new Error("Nothing to undo.");
+
+  const undoOf = { undo_of: input.eventId };
+  await tx`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'correction',
+      'USER',
+      ${input.userId}::uuid,
+      'Undo of last disposition. Original row stands.',
+      ${tx.json(undoOf)}
+    )
+  `;
+
+  const prev = event.payload?.previous_next_action_at ?? null;
+  const stage = event.payload?.previous_stage_key ?? null;
+  await tx`
+    UPDATE leads SET
+      next_action_at = ${prev}::timestamptz,
+      stage_key = COALESCE(${stage}, stage_key),
+      lost_reason_key = NULL
+    WHERE id = ${input.leadId}::uuid
+  `;
+  return { recorded: "Correction written" };
 }
 
 export async function listNotifications(tx: Tx, userId: string) {

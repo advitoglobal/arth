@@ -9,7 +9,10 @@
     "lint": "eslint",
     "db:migrate": "npx tsx scripts/migrate.ts",
     "db:seed": "npx tsx scripts/seed.ts",
-    "db:isolate": "npx tsx scripts/prove-isolation.ts"
+    "db:isolate": "npx tsx scripts/prove-isolation.ts",
+    "db:clock": "npx tsx scripts/prove-clock.ts",
+    "db:assign": "npx tsx scripts/prove-assign.ts",
+    "db:access": "npx tsx scripts/prove-access.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

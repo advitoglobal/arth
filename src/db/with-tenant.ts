@@ -12,7 +12,7 @@ export const sql = postgres(url, {
   connect_timeout: 10,
 });
 
-export type Tx = postgres.TransactionSql;
+export type Tx = postgres.TransactionSql<Record<string, unknown>>;
 
 export async function withTenant<T>(
   ctx: { tenantId: string; userId: string },

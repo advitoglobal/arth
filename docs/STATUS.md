@@ -5,15 +5,17 @@
 
 ## What is built (this cycle)
 
-- Step 0 isolation: Postgres 16, forced RLS, `withTenant`. Test output: `ISOLATION_OK`. Whitefield sees 4 enquiries. Coastal sees 1. Cross-tenant SELECT returns 0.
-- Step 1 working hours seeded Mon-Sat 09:30-18:30, Sunday closed. Clocks go through `src/domain/clock.ts`.
-- Telecalling seven screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`
-- Round-robin assignment is in seed (option A). Points and telephony deferred per brief.
-- `/api/v1/queue` and `/api/v1/dispositions` for a future mobile client
+- Step 0 isolation: Postgres 16, forced RLS, `withTenant`. `npm run db:isolate` prints `ISOLATION_OK`.
+- Working hours Mon-Sat 09:30-18:30 IST, Sunday closed. `npm run db:clock` prints `CLOCK_OK`. Sunday 21:40 IST starts Monday 09:30 IST. First response due Monday 10:00 IST.
+- Round-robin assignment (option A) by current open-book load. After-hours delay is a `clock_deferred` event charged to the **branch**. `npm run db:assign` prints `ASSIGN_OK`. Anita Desai lands on K. Nair, not A. Iyer.
+- Lost reasons and dispositions seeded. Postponed needs a revisit. Lost needs a reason. A callback more than 14 days away needs a reason.
+- Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. Queue is due today plus breaching. Parked is derived.
+- Demo seats: A. Iyer, K. Nair (same tenant, own books), M. Pinto (Coastal), S. Rao (sales, 403 on Today). `npm run db:access` prints `ACCESS_OK`.
+- APIs: `GET /api/v1/queue`, `GET /api/v1/search`, `POST /api/v1/assign`, `POST /api/v1/dispositions`, `POST /api/v1/undo`. Same tenant path for a later mobile client.
 
 ## Contradiction raised (SPEC)
 
-Build Spec Appendix B lists Search as `adv`, `sales`. SCOPE-BRIEF-TELECALLING includes Search as a telecaller screen. This cycle grants `tele` access so the floor can be tested. Brand should reconcile Appendix B.
+Build Spec Appendix B lists Search as `adv`/`sales`. SCOPE-BRIEF-TELECALLING includes Search as a telecaller screen. This cycle grants `tele` access so the floor can be tested. Brand should reconcile Appendix B.
 
 ## Out of scope this cycle (SPEC)
 
