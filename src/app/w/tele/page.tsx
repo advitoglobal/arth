@@ -17,8 +17,8 @@ export default async function TelePage({
     const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[]>`
       SELECT key, label, requires_revisit, requires_lost_reason FROM config_dispositions ORDER BY sort_order
     `;
-    const lostReasons = await tx<{ key: string; label: string }[]>`
-      SELECT key, label FROM config_lost_reasons
+    const lostReasons = await tx<{ key: string; label: string; requires_fact: string }[]>`
+      SELECT key, label, requires_fact FROM config_lost_reasons
     `;
     if (!leadId) {
       return (

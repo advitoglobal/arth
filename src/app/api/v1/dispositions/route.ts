@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         revisitAt: body.revisitAt,
         lostReasonKey: body.lostReasonKey,
         callbackReason: body.callbackReason,
+        lostFact: body.lostFact,
       });
       return NextResponse.json(result);
     });

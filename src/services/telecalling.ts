@@ -168,6 +168,7 @@ export async function recordDisposition(
     revisitAt?: string;
     lostReasonKey?: string;
     callbackReason?: string;
+    lostFact?: string;
   },
 ) {
   const [disp] = await tx<{
@@ -186,6 +187,14 @@ export async function recordDisposition(
   if (disp.requires_lost_reason && !input.lostReasonKey) {
     throw new Error("A lost reason is needed before this enquiry can be closed.");
   }
+  if (disp.requires_lost_reason && input.lostReasonKey) {
+    const [reason] = await tx<{ requires_fact: string; label: string }[]>`
+      SELECT requires_fact, label FROM config_lost_reasons WHERE key = ${input.lostReasonKey}
+    `;
+    if (reason && reason.requires_fact !== "none" && !input.lostFact?.trim()) {
+      throw new Error(`Record the ${reason.requires_fact} before closing as lost.`);
+    }
+  }
   if (needsCallbackReason(input.revisitAt ?? null) && !input.callbackReason?.trim()) {
     throw new Error("A reason is required when the callback is more than 14 days away.");
   }
@@ -200,6 +209,7 @@ export async function recordDisposition(
       : null,
     previous_stage_key: before?.stage_key ?? null,
     callback_reason: input.callbackReason ?? null,
+    lost_fact: input.lostFact ?? null,
   };
 
   const [inserted] = await tx<{ id: string }[]>`

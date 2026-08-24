@@ -10,7 +10,7 @@ export function DispositionPanel({
 }: {
   leadId: string;
   dispositions: { key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[];
-  lostReasons: { key: string; label: string }[];
+  lostReasons: { key: string; label: string; requires_fact: string }[];
 }) {
   const initial = dispositions[0]?.key ?? "no_answer";
   const [key, setKey] = useState(initial);
@@ -18,6 +18,7 @@ export function DispositionPanel({
   const [lost, setLost] = useState("");
   const [note, setNote] = useState("");
   const [callbackReason, setCallbackReason] = useState("");
+  const [lostFact, setLostFact] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +30,11 @@ export function DispositionPanel({
     revisit !== "" ||
     lost !== "" ||
     callbackReason !== "" ||
+    lostFact !== "" ||
     key !== initial;
   const selected = dispositions.find((d) => d.key === key);
+  const selectedLost = lostReasons.find((r) => r.key === lost);
+  const showLostFact = selected?.requires_lost_reason && selectedLost && selectedLost.requires_fact !== "none";
   const showRevisit = selected?.requires_revisit || selected?.key === "connected_callback";
 
   useEffect(() => {
@@ -54,6 +58,7 @@ export function DispositionPanel({
         revisitAt: revisit || undefined,
         lostReasonKey: lost || undefined,
         callbackReason: callbackReason || undefined,
+        lostFact: lostFact || undefined,
       }),
     });
     const data = await res.json();
@@ -67,6 +72,7 @@ export function DispositionPanel({
     setRevisit("");
     setLost("");
     setCallbackReason("");
+    setLostFact("");
   }
 
   async function undo() {
@@ -159,6 +165,16 @@ export function DispositionPanel({
               </option>
             ))}
           </select>
+        </label>
+      ) : null}
+      {showLostFact ? (
+        <label className="block text-sm">
+          {selectedLost?.requires_fact}
+          <input
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={lostFact}
+            onChange={(e) => setLostFact(e.target.value)}
+          />
         </label>
       ) : null}
       <label className="block text-sm">
