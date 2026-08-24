@@ -11,3 +11,28 @@ export function num(value: number) {
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+const IST = "Asia/Kolkata";
+
+export function istDate(value: Date | string | null | undefined) {
+  if (!value) return "Not recorded";
+  return new Date(value).toLocaleString("en-IN", {
+    timeZone: IST,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export function istDateTime(value: Date | string | null | undefined) {
+  if (!value) return "Not recorded";
+  return new Date(value).toLocaleString("en-IN", {
+    timeZone: IST,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+}

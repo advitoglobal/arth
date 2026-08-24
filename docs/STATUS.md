@@ -9,9 +9,9 @@
 - Working hours Mon-Sat 09:30-18:30 IST, Sunday closed. `npm run db:clock` prints `CLOCK_OK`. Sunday 21:40 IST starts Monday 09:30 IST. First response due Monday 10:00 IST.
 - Round-robin assignment (option A) by current open-book load. After-hours delay is a `clock_deferred` event charged to the **branch**. `npm run db:assign` prints `ASSIGN_OK`. Anita Desai lands on K. Nair, not A. Iyer.
 - Lost reasons and dispositions seeded. Postponed needs a revisit. Lost needs a reason and that reason's fact (price needs the quoted amount). A callback more than 14 days away needs a reason.
-- Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. Queue is due today plus breaching. Parked is derived.
-- Demo seats: A. Iyer, K. Nair (same tenant, own books), M. Pinto (Coastal), S. Rao (sales, 403 on Today). `npm run db:access` prints `ACCESS_OK`.
-- APIs: `GET /api/v1/queue`, `GET /api/v1/search`, `POST /api/v1/assign`, `POST /api/v1/dispositions`, `POST /api/v1/undo`. Same tenant path for a later mobile client.
+- Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. Queue is due today plus breaching. Parked is derived. My enquiries filters the nine stages. Enquiry record is the ledger. First-response breach writes a notification that names why it arrived.
+- Demo seats: A. Iyer, K. Nair (same tenant, own books), M. Pinto (Coastal), S. Rao (sales, 403 on Today). `npm run db:access` prints `ACCESS_OK`. `npm run db:scope` prints `SCOPE_OK`.
+- APIs: `GET /api/v1/queue` `GET /api/v1/pipeline` `GET /api/v1/search` `GET /api/v1/leads/:id` `GET /api/v1/notifications` `POST /api/v1/assign` `POST /api/v1/dispositions` `POST /api/v1/undo` `POST /api/v1/stage`.
 
 ## Contradiction raised (SPEC)
 

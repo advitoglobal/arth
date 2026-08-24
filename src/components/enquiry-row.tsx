@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { inr } from "@/lib/format";
+import { StatusStamp } from "@/components/brand/type";
+import { isParked } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
 
 function eventDate(row: LeadRow) {
   if (!row.last_event_at) return "No activity recorded";
   const d = new Date(row.last_event_at).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
   });
@@ -14,7 +17,11 @@ function eventDate(row: LeadRow) {
 function nextDue(row: LeadRow): { text: string; overdue: boolean } {
   if (!row.next_action_at) return { text: "No next action", overdue: false };
   const due = new Date(row.next_action_at);
-  const d = due.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  const d = due.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+  });
   const overdue = due.getTime() < Date.now();
   return {
     text: `Follow-up due · ${d}`,
@@ -25,16 +32,34 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
 export function EnquiryRow({
   row,
   showBand,
+  canCall,
 }: {
   row: LeadRow;
   showBand: boolean;
+  canCall: boolean;
 }) {
   const next = nextDue(row);
+  const parked = isParked(row);
+  const firstResponseLate =
+    !!row.first_response_due &&
+    !row.first_responded_at &&
+    new Date(row.first_response_due).getTime() < Date.now();
+  const settled = row.stage_key === "delivered";
+
   return (
     <div className="grid grid-cols-1 gap-2 border-b border-[var(--arth-n10)] px-4 py-3 lg:grid-cols-[repeat(9,minmax(0,1fr))] lg:items-center">
       <div className="min-w-0">
         <p className="truncate font-semibold" title={row.customer_name}>{row.customer_name}</p>
         <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">{row.phone}</p>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {settled ? <StatusStamp state="settled" /> : null}
+          {!settled && (next.overdue || firstResponseLate) ? <StatusStamp state="overdue" /> : null}
+          {parked ? (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--arth-n60)]">
+              Parked
+            </span>
+          ) : null}
+        </div>
       </div>
       <div className="min-w-0">
         <p className="truncate">{row.model_interest}</p>
@@ -50,22 +75,25 @@ export function EnquiryRow({
           {row.stage_order ? `${row.stage_order} of 9` : ""}
         </p>
       </div>
-      <div className="min-w-0 truncate text-[12.5px]">{eventDate(row)}</div>
+      <div className="min-w-0 truncate text-[12.5px]" title={eventDate(row)}>{eventDate(row)}</div>
       <div
         className={
           next.overdue
             ? "min-w-0 truncate font-semibold text-[var(--arth-overdue)]"
             : "min-w-0 truncate font-medium"
         }
+        title={next.text}
       >
         {next.text}
       </div>
       <div className="min-w-0 truncate">{showBand ? row.difficulty_band : ""}</div>
       <div className="arth-num min-w-0 truncate font-data">{inr(Number(row.expected_value_paise) / 100)}</div>
       <div className="flex gap-2">
-        <Link className="text-sm underline" href={`/w/tele?id=${row.id}`}>
-          Call
-        </Link>
+        {canCall && !settled && !row.lost_reason_key ? (
+          <Link className="text-sm underline" href={`/w/tele?id=${row.id}`}>
+            Call
+          </Link>
+        ) : null}
         <Link className="text-sm underline" href={`/w/rec?id=${row.id}`}>
           Record
         </Link>

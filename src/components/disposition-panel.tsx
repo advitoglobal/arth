@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export function DispositionPanel({
@@ -13,6 +14,7 @@ export function DispositionPanel({
   lostReasons: { key: string; label: string; requires_fact: string }[];
 }) {
   const initial = dispositions[0]?.key ?? "no_answer";
+  const router = useRouter();
   const [key, setKey] = useState(initial);
   const [revisit, setRevisit] = useState("");
   const [lost, setLost] = useState("");
@@ -42,9 +44,10 @@ export function DispositionPanel({
     const t = window.setTimeout(() => {
       setConfirm(null);
       setEventId(null);
+      router.refresh();
     }, 1500);
     return () => window.clearTimeout(t);
-  }, [confirm, eventId]);
+  }, [confirm, eventId, router]);
 
   async function save() {
     setError(null);
@@ -89,6 +92,7 @@ export function DispositionPanel({
     }
     setConfirm(null);
     setEventId(null);
+    router.refresh();
   }
 
   if (confirm) {

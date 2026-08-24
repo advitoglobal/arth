@@ -1,6 +1,6 @@
 import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
-import { listQueue } from "@/services/telecalling";
+import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { assignUnowned } from "@/services/assignment";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
@@ -9,6 +9,7 @@ export default async function DayPanelPage() {
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "dayb")) forbidden();
     const assignment = await assignUnowned(tx, seat.userId);
+    await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listQueue(tx, seat.userId);
     const due = rows.filter(
       (r) => r.next_action_at && new Date(r.next_action_at) <= new Date(),
@@ -20,6 +21,7 @@ export default async function DayPanelPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
             {seat.name} ·{" "}
             {new Date().toLocaleDateString("en-IN", {
+              timeZone: "Asia/Kolkata",
               weekday: "long",
               day: "numeric",
               month: "long",
@@ -42,7 +44,7 @@ export default async function DayPanelPage() {
           <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
             <RowHead />
             {rows.map((row) => (
-              <EnquiryRow key={row.id} row={row} showBand={false} />
+              <EnquiryRow key={row.id} row={row} showBand={false} canCall />
             ))}
           </div>
         )}

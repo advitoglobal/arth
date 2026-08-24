@@ -1,12 +1,13 @@
 import { forbidden } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
-import { listNotifications } from "@/services/telecalling";
+import { listNotifications, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
 import Link from "next/link";
 
 export default async function NotifPage() {
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "notif")) forbidden();
+    await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listNotifications(tx, seat.userId);
     return (
       <div className="space-y-6">

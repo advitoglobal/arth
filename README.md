@@ -30,6 +30,6 @@ Demo seats on `/w/login`:
 
 ## API for later mobile
 
-`GET /api/v1/queue` · `GET /api/v1/search` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo`
+`GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `GET /api/v1/notifications` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
 
 Same `withTenant` path. No second database for a phone app.

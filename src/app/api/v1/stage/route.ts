@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
-import { recordDisposition } from "@/services/telecalling";
+import { advanceStage } from "@/services/telecalling";
 import { requireScreen } from "@/lib/http";
 
 export async function POST(req: Request) {
@@ -9,15 +9,10 @@ export async function POST(req: Request) {
     return await asSeat(async (tx, seat) => {
       const denied = requireScreen(seat, "tele");
       if (denied) return denied;
-      const result = await recordDisposition(tx, {
+      const result = await advanceStage(tx, {
         leadId: body.leadId,
         userId: seat.userId,
-        dispositionKey: body.dispositionKey,
-        note: body.note ?? "",
-        revisitAt: body.revisitAt,
-        lostReasonKey: body.lostReasonKey,
-        callbackReason: body.callbackReason,
-        lostFact: body.lostFact,
+        to: String(body.to ?? ""),
       });
       return NextResponse.json(result);
     });

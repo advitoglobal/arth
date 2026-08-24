@@ -1,5 +1,5 @@
 import type { Tx } from "@/db/with-tenant";
-import { isOnDayQueue, isParked, needsCallbackReason } from "@/domain/clock";
+import { isOnDayQueue, isParked, needsCallbackReason, STAGE_KEYS } from "@/domain/clock";
 import { scheduleNextAction } from "@/services/assignment";
 
 export type LeadRow = {
@@ -21,6 +21,9 @@ export type LeadRow = {
   owner_user_id: string | null;
   disposition_key: string | null;
   revisit_at: Date | null;
+  first_response_due: Date | null;
+  first_responded_at: Date | null;
+  lost_reason_key: string | null;
 };
 
 export async function listQueue(tx: Tx, ownerId: string) {
@@ -43,7 +46,10 @@ export async function listQueue(tx: Tx, ownerId: string) {
       l.expected_value_paise::text,
       l.owner_user_id,
       e.disposition_key,
-      e.revisit_at
+      e.revisit_at,
+      l.first_response_due,
+      l.first_responded_at,
+      l.lost_reason_key
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -87,7 +93,10 @@ export async function listPipeline(tx: Tx, ownerId: string) {
       l.expected_value_paise::text,
       l.owner_user_id,
       e.disposition_key,
-      e.revisit_at
+      e.revisit_at,
+      l.first_response_due,
+      l.first_responded_at,
+      l.lost_reason_key
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -125,7 +134,10 @@ export async function searchByPhone(tx: Tx, q: string) {
       l.expected_value_paise::text,
       l.owner_user_id,
       e.disposition_key,
-      e.revisit_at
+      e.revisit_at,
+      l.first_response_due,
+      l.first_responded_at,
+      l.lost_reason_key
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -147,15 +159,33 @@ export async function getLead(tx: Tx, id: string) {
     SELECT
       l.*,
       c.full_name AS customer_name,
-      c.phone
+      c.phone,
+      u.full_name AS owner_name,
+      s.label AS stage_label
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
+    LEFT JOIN users u ON u.id = l.owner_user_id
+    LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
     WHERE l.id = ${id}::uuid
   `;
   const events = await tx`
-    SELECT * FROM lead_events WHERE lead_id = ${id}::uuid ORDER BY created_at DESC
+    SELECT e.*, u.full_name AS actor_name
+    FROM lead_events e
+    LEFT JOIN users u ON u.id = e.actor_id
+    WHERE e.lead_id = ${id}::uuid
+    ORDER BY e.created_at DESC
   `;
   return { lead: row, events };
+}
+
+async function assertOwner(tx: Tx, leadId: string, userId: string) {
+  const [lead] = await tx<{ owner_user_id: string | null }[]>`
+    SELECT owner_user_id::text FROM leads WHERE id = ${leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (lead.owner_user_id && lead.owner_user_id !== userId) {
+    throw new Error("You do not own this enquiry. Only the owner can log an outcome.");
+  }
 }
 
 export async function recordDisposition(
@@ -181,6 +211,7 @@ export async function recordDisposition(
     FROM config_dispositions WHERE key = ${input.dispositionKey}
   `;
   if (!disp) throw new Error("Unknown disposition");
+  await assertOwner(tx, input.leadId, input.userId);
   if (disp.requires_revisit && !input.revisitAt) {
     throw new Error("A revisit date is required for postponed.");
   }
@@ -311,6 +342,75 @@ export async function undoDisposition(
     WHERE id = ${input.leadId}::uuid
   `;
   return { recorded: "Correction written" };
+}
+
+export async function advanceStage(
+  tx: Tx,
+  input: { leadId: string; userId: string; to: string },
+) {
+  await assertOwner(tx, input.leadId, input.userId);
+  const [lead] = await tx<{ stage_key: string }[]>`
+    SELECT stage_key FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  const from = STAGE_KEYS.indexOf(lead.stage_key as (typeof STAGE_KEYS)[number]);
+  const to = STAGE_KEYS.indexOf(input.to as (typeof STAGE_KEYS)[number]);
+  if (from < 0 || to < 0) throw new Error("Unknown stage.");
+  if (to !== from + 1) {
+    throw new Error("Stage moves one step forward. It is not edited.");
+  }
+  await tx`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'stage_change',
+      'USER',
+      ${input.userId}::uuid,
+      ${"Moved to " + input.to.replaceAll("_", " ") + "."},
+      ${tx.json({ from: lead.stage_key, to: input.to })}
+    )
+  `;
+  await tx`
+    UPDATE leads SET stage_key = ${input.to} WHERE id = ${input.leadId}::uuid
+  `;
+  return { recorded: `Stage is now ${input.to.replaceAll("_", " ")}` };
+}
+
+export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
+  const rows = await tx<{ id: string; customer_name: string }[]>`
+    SELECT l.id::text, c.full_name AS customer_name
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE l.owner_user_id = ${userId}::uuid
+      AND l.first_response_due IS NOT NULL
+      AND l.first_response_due < now()
+      AND l.first_responded_at IS NULL
+      AND l.lost_reason_key IS NULL
+      AND l.stage_key <> 'delivered'
+  `;
+  let raised = 0;
+  for (const row of rows) {
+    const href = `/w/rec?id=${row.id}`;
+    const existing = await tx<{ n: string }[]>`
+      SELECT count(*)::text AS n FROM notifications
+      WHERE user_id = ${userId}::uuid AND href = ${href} AND read_at IS NULL
+    `;
+    if (Number(existing[0]?.n) > 0) continue;
+    await tx`
+      INSERT INTO notifications (tenant_id, user_id, title, why, href)
+      VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${userId}::uuid,
+        ${row.customer_name + " is past first response"},
+        'You own this enquiry and first response is overdue. The clock ran through working hours.',
+        ${href}
+      )
+    `;
+    raised += 1;
+  }
+  return { raised };
 }
 
 export async function listNotifications(tx: Tx, userId: string) {
