@@ -3,7 +3,7 @@ import { getLead, listQueue } from "@/services/telecalling";
 import { DispositionPanel } from "@/components/disposition-panel";
 import { StagePanel } from "@/components/stage-panel";
 import { RuleHeading } from "@/components/brand/type";
-import { istDateTime, inr } from "@/lib/format";
+import { istDateTime, inr, indianMobile } from "@/lib/format";
 import { Forbidden } from "@/components/forbidden";
 
 export default async function TelePage({
@@ -16,8 +16,8 @@ export default async function TelePage({
     if (!canOpen(seat.roleKey, "tele")) return <Forbidden />;
     const queue = await listQueue(tx, seat.userId);
     const leadId = id ?? queue[0]?.id;
-    const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[]>`
-      SELECT key, label, requires_revisit, requires_lost_reason FROM config_dispositions ORDER BY sort_order
+    const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean; connected: boolean }[]>`
+      SELECT key, label, requires_revisit, requires_lost_reason, connected FROM config_dispositions ORDER BY sort_order
     `;
     const lostReasons = await tx<{ key: string; label: string; requires_fact: string }[]>`
       SELECT key, label, requires_fact FROM config_lost_reasons
@@ -51,7 +51,7 @@ export default async function TelePage({
           </p>
           <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
             <p className="font-display text-[28px] font-semibold">{lead.customer_name}</p>
-            <p className="font-data mt-1">{lead.phone}</p>
+            <p className="font-data mt-1">{indianMobile(String(lead.phone))}</p>
             <p className="mt-3 text-sm">
               {lead.model_interest} · {lead.stage_label ?? lead.stage_key}
             </p>

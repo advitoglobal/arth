@@ -24,6 +24,13 @@ export function istDate(value: Date | string | null | undefined) {
   });
 }
 
+export function indianMobile(phone: string | null | undefined) {
+  if (!phone) return "";
+  const d = phone.replace(/\D/g, "");
+  if (d.length === 10) return `${d.slice(0, 5)} ${d.slice(5)}`;
+  return phone;
+}
+
 export function istDateTime(value: Date | string | null | undefined) {
   if (!value) return "Not recorded";
   return new Date(value).toLocaleString("en-IN", {

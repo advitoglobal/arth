@@ -10,7 +10,13 @@ export function DispositionPanel({
   lostReasons,
 }: {
   leadId: string;
-  dispositions: { key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean }[];
+  dispositions: {
+    key: string;
+    label: string;
+    requires_revisit: boolean;
+    requires_lost_reason: boolean;
+    connected: boolean;
+  }[];
   lostReasons: { key: string; label: string; requires_fact: string }[];
 }) {
   const initial = dispositions[0]?.key ?? "no_answer";
@@ -121,17 +127,22 @@ export function DispositionPanel({
       </p>
       <label className="block text-sm">
         Outcome
-        <select
-          className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] bg-[var(--arth-n00)] px-2"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-        >
-          {dispositions.map((d) => (
-            <option key={d.key} value={d.key}>
-              {d.label}
-            </option>
-          ))}
-        </select>
+          <select
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] bg-[var(--arth-n00)] px-2"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+          >
+            <optgroup label="Connected">
+              {dispositions.filter((d) => d.connected).map((d) => (
+                <option key={d.key} value={d.key}>{d.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Not connected">
+              {dispositions.filter((d) => !d.connected).map((d) => (
+                <option key={d.key} value={d.key}>{d.label}</option>
+              ))}
+            </optgroup>
+          </select>
       </label>
       {showRevisit ? (
         <label className="block text-sm">

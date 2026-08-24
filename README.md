@@ -16,7 +16,7 @@ npm run db:migrate
 npm run db:isolate    # must print ISOLATION_OK
 npm run db:clock      # must print CLOCK_OK
 npm run db:assign     # must print ASSIGN_OK
-npm run db:access     # must print ACCESS_OK
+npm run db:scope      # must print SCOPE_OK
 npm run dev
 ```
 

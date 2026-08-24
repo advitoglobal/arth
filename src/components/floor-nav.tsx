@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArthWordmark } from "@/components/brand/logo";
 import { canOpen, type Seat } from "@/db/session";
+import { FloorLinks } from "@/components/floor-links";
+import { LeaveFloor } from "@/components/leave-floor";
 
 const items = [
   { href: "/w/dayb", screen: "dayb", label: "Today" },
@@ -12,7 +14,9 @@ const items = [
 ];
 
 export function FloorNav({ seat }: { seat: Seat }) {
-  const visible = items.filter((item) => canOpen(seat.roleKey, item.screen));
+  const visible = items
+    .filter((item) => canOpen(seat.roleKey, item.screen))
+    .map(({ href, label }) => ({ href, label }));
   return (
     <>
       <aside className="hidden w-[240px] shrink-0 bg-[var(--arth-ink)] p-5 text-[var(--arth-n00)] lg:flex lg:flex-col">
@@ -24,19 +28,16 @@ export function FloorNav({ seat }: { seat: Seat }) {
         </p>
         <p className="mb-6 mt-1 text-sm">{seat.tenantName}</p>
         <nav className="flex flex-col gap-1">
-          {visible.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-[3px] px-3 py-2 text-sm text-[var(--arth-n20)] hover:bg-[var(--arth-n90)] hover:text-[var(--arth-n00)]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          <FloorLinks items={visible} invert />
         </nav>
-        <p className="mt-auto pt-8 text-[12.5px] text-[var(--arth-n40)]">
-          {seat.name} · {seat.roleLabel}
-        </p>
+        <div className="mt-auto pt-8">
+          <p className="text-[12.5px] text-[var(--arth-n40)]">
+            {seat.name} · {seat.roleLabel}
+          </p>
+          <div className="mt-2">
+            <LeaveFloor invert />
+          </div>
+        </div>
       </aside>
       <div className="border-b border-[var(--arth-n10)] bg-[var(--arth-ink)] px-4 py-3 text-[var(--arth-n00)] lg:hidden">
         <Link href="/" className="block w-fit">
@@ -46,12 +47,11 @@ export function FloorNav({ seat }: { seat: Seat }) {
           {seat.name} · {seat.roleLabel}
         </p>
         <nav className="mt-3 flex flex-wrap gap-3">
-          {visible.map((item) => (
-            <Link key={item.href} href={item.href} className="text-sm underline">
-              {item.label}
-            </Link>
-          ))}
+          <FloorLinks items={visible} invert={false} />
         </nav>
+        <div className="mt-2">
+          <LeaveFloor invert />
+        </div>
       </div>
     </>
   );

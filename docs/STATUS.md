@@ -11,7 +11,8 @@
 - Lost reasons and dispositions seeded. Postponed needs a revisit. Lost needs a reason and that reason's fact (price needs the quoted amount). A callback more than 14 days away needs a reason.
 - Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. Queue is due today plus breaching. Parked is derived. My enquiries filters the nine stages. Enquiry record is the ledger. First-response breach writes a notification that names why it arrived.
 - Demo seats: A. Iyer, K. Nair (same tenant, own books), M. Pinto (Coastal), S. Rao (sales). Opening Today as S. Rao keeps `/w/dayb` and shows *You cannot open this screen* (not a silent return to My enquiries). Queue API remains HTTP 403.
-- APIs: `GET /api/v1/queue` `GET /api/v1/pipeline` `GET /api/v1/search` `GET /api/v1/leads/:id` `GET /api/v1/notifications` `POST /api/v1/assign` `POST /api/v1/dispositions` `POST /api/v1/undo` `POST /api/v1/stage`.
+- Search: phone, name, source, stage, overdue, parked, vehicle. `GET /api/v1/search` carries the same filters. Iyer's book now has all nine stages plus a derived Parked row (Joseph Abel).
+- Profile shows branch working hours from `working_hours`. Notifications mark read on open. Leave this floor is on the nav.
 
 ## Contradiction raised (SPEC)
 

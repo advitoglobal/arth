@@ -113,9 +113,29 @@ export async function listPipeline(tx: Tx, ownerId: string) {
 }
 
 export async function searchByPhone(tx: Tx, q: string) {
-  const needle = q.replace(/\D/g, "");
-  if (needle.length < 4) return [];
-  return tx<LeadRow[]>`
+  return searchEnquiries(tx, { q });
+}
+
+export type SearchFilters = {
+  q?: string;
+  source?: string;
+  stage?: string;
+  overdue?: string;
+  parked?: string;
+  model?: string;
+};
+
+export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
+  const q = filters.q ?? "";
+  const digits = q.replace(/\D/g, "");
+  const name = q.replace(/\d/g, "").trim();
+  const hasQ = digits.length >= 4 || name.length >= 3;
+  const hasFilter = Boolean(
+    filters.source || filters.stage || filters.overdue || filters.parked || filters.model,
+  );
+  if (!hasQ && !hasFilter) return [];
+
+  const rows = await tx<LeadRow[]>`
     SELECT
       l.id,
       c.full_name AS customer_name,
@@ -148,10 +168,34 @@ export async function searchByPhone(tx: Tx, q: string) {
       ORDER BY created_at DESC
       LIMIT 1
     ) e ON true
-    WHERE c.phone LIKE ${"%" + needle + "%"}
     ORDER BY l.created_at DESC
-    LIMIT 20
+    LIMIT 80
   `;
+
+  return rows.filter((r) => {
+    if (digits.length >= 4 && !r.phone.includes(digits)) return false;
+    if (name.length >= 3 && !r.customer_name.toLowerCase().includes(name.toLowerCase())) {
+      return false;
+    }
+    if (filters.source && r.source_key !== filters.source) return false;
+    if (filters.stage && r.stage_key !== filters.stage) return false;
+    if (filters.model) {
+      const m = filters.model.toLowerCase();
+      const hay = `${r.model_interest ?? ""} ${r.variant_interest ?? ""}`.toLowerCase();
+      if (!hay.includes(m)) return false;
+    }
+    const late =
+      (!!r.next_action_at && new Date(r.next_action_at).getTime() < Date.now()) ||
+      (!!r.first_response_due &&
+        !r.first_responded_at &&
+        new Date(r.first_response_due).getTime() < Date.now());
+    if (filters.overdue === "yes" && !late) return false;
+    if (filters.overdue === "no" && late) return false;
+    const parked = isParked(r);
+    if (filters.parked === "yes" && !parked) return false;
+    if (filters.parked === "no" && parked) return false;
+    return true;
+  });
 }
 
 export async function getLead(tx: Tx, id: string) {
@@ -419,4 +463,41 @@ export async function listNotifications(tx: Tx, userId: string) {
     WHERE user_id = ${userId}::uuid
     ORDER BY created_at DESC
   `;
+}
+
+export async function markNotificationRead(
+  tx: Tx,
+  userId: string,
+  id: string,
+) {
+  await tx`
+    UPDATE notifications
+    SET read_at = COALESCE(read_at, now())
+    WHERE id = ${id}::uuid AND user_id = ${userId}::uuid
+  `;
+  return { recorded: "Marked read" };
+}
+
+export async function branchHoursForUser(tx: Tx, userId: string) {
+  const hours = await tx<{
+    day_of_week: number;
+    opens_at: string | null;
+    closes_at: string | null;
+    branch: string;
+    timezone: string;
+  }[]>`
+    SELECT
+      wh.day_of_week,
+      wh.opens_at::text,
+      wh.closes_at::text,
+      b.name AS branch,
+      b.timezone
+    FROM users u
+    JOIN positions p ON p.id = u.position_id
+    JOIN branches b ON b.id = p.branch_id
+    JOIN working_hours wh ON wh.branch_id = b.id
+    WHERE u.id = ${userId}::uuid
+    ORDER BY wh.day_of_week
+  `;
+  return hours;
 }

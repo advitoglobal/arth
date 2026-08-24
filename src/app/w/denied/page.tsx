@@ -1,5 +1,5 @@
-import { forbidden } from "next/navigation";
+import { Forbidden } from "@/components/forbidden";
 
 export default function DeniedPage() {
-  forbidden();
+  return <Forbidden />;
 }

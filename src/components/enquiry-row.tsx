@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { inr } from "@/lib/format";
+import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
@@ -50,7 +50,7 @@ export function EnquiryRow({
     <div className="grid grid-cols-1 gap-2 border-b border-[var(--arth-n10)] px-4 py-3 lg:grid-cols-[repeat(9,minmax(0,1fr))] lg:items-center">
       <div className="min-w-0">
         <p className="truncate font-semibold" title={row.customer_name}>{row.customer_name}</p>
-        <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">{row.phone}</p>
+        <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">{indianMobile(row.phone)}</p>
         <div className="mt-1 flex flex-wrap gap-1">
           {settled ? <StatusStamp state="settled" /> : null}
           {!settled && (next.overdue || firstResponseLate) ? <StatusStamp state="overdue" /> : null}

@@ -1,7 +1,7 @@
 import { asSeat, canOpen } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
-import { inr, istDateTime } from "@/lib/format";
+import { inr, istDateTime, indianMobile } from "@/lib/format";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 
@@ -48,7 +48,7 @@ export default async function RecPage({
             {settled ? <StatusStamp state="settled" /> : null}
             {overdue && !settled ? <StatusStamp state="overdue" /> : null}
           </div>
-          <p className="font-data">{lead.phone}</p>
+          <p className="font-data">{indianMobile(String(lead.phone))}</p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Vehicle</dt>
