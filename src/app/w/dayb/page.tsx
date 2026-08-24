@@ -26,7 +26,7 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {due.length} in the queue now, oldest first.
+            {due.length} in the queue now, oldest first. Counted from next action time, today in Asia/Kolkata, plus anything already late.
             {assignment.assigned > 0
               ? ` ${assignment.assigned} unowned ${assignment.assigned === 1 ? "enquiry was" : "enquiries were"} assigned on this floor.`
               : ""}
