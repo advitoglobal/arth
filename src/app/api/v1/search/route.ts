@@ -15,9 +15,12 @@ export async function GET(req: Request) {
       overdue: p.get("overdue") ?? "",
       parked: p.get("parked") ?? "",
       model: p.get("model") ?? "",
+      from: p.get("from") ?? "",
+      to: p.get("to") ?? "",
+      on: p.get("on") ?? "",
     });
     return NextResponse.json({
-      source: "customers and leads",
+      source: "customers and enquiries",
       period: "current tenant",
       rows,
     });

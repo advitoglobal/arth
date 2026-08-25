@@ -1,6 +1,7 @@
 import type { Tx } from "@/db/with-tenant";
 import { isOnDayQueue, isParked, needsCallbackReason, STAGE_KEYS } from "@/domain/clock";
 import { scheduleNextAction } from "@/services/assignment";
+import { enquiryNo } from "@/lib/labels";
 
 export type LeadRow = {
   id: string;
@@ -24,6 +25,7 @@ export type LeadRow = {
   first_response_due: Date | null;
   first_responded_at: Date | null;
   lost_reason_key: string | null;
+  created_at?: Date | null;
 };
 
 export async function listQueue(tx: Tx, ownerId: string) {
@@ -151,16 +153,48 @@ export type SearchFilters = {
   overdue?: string;
   parked?: string;
   model?: string;
+  from?: string;
+  to?: string;
+  on?: string;
 };
 
+function istDay(value: Date | string | null | undefined) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+}
+
+function present(value?: string) {
+  const v = value?.trim() ?? "";
+  return v.length ? v : "";
+}
+
+function matchesSearchBox(row: LeadRow, q: string) {
+  const raw = q.trim();
+  if (!raw) return true;
+  const digits = raw.replace(/\D/g, "");
+  const text = raw.toLowerCase();
+  const compact = raw.replace(/-/g, "").toLowerCase();
+  const hay = `${row.customer_name} ${row.model_interest ?? ""} ${row.variant_interest ?? ""}`.toLowerCase();
+  const id = String(row.id).replace(/-/g, "").toLowerCase();
+  const phoneHit = digits.length >= 4 && String(row.phone).includes(digits);
+  const textHit = text.length >= 2 && hay.includes(text);
+  const no = enquiryNo(String(row.id)).toLowerCase();
+  const idHit = compact.length >= 8 && (id.includes(compact) || no === compact);
+  return phoneHit || textHit || idHit;
+}
+
 export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
-  const q = filters.q ?? "";
-  const digits = q.replace(/\D/g, "");
-  const name = q.replace(/\d/g, "").trim();
-  const hasQ = digits.length >= 4 || name.length >= 3;
-  const hasFilter = Boolean(
-    filters.source || filters.stage || filters.overdue || filters.parked || filters.model,
-  );
+  const q = present(filters.q);
+  const source = present(filters.source);
+  const stage = present(filters.stage);
+  const overdue = present(filters.overdue);
+  const parked = present(filters.parked);
+  const model = present(filters.model);
+  const from = present(filters.from);
+  const to = present(filters.to);
+  const on = present(filters.on);
+  const hasQ = q.length >= 2;
+  const hasFilter = Boolean(source || stage || overdue || parked || model || from || to);
   if (!hasQ && !hasFilter) return [];
 
   const rows = await tx<LeadRow[]>`
@@ -185,7 +219,8 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
       e.revisit_at,
       l.first_response_due,
       l.first_responded_at,
-      l.lost_reason_key
+      l.lost_reason_key,
+      l.created_at AS created_at
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -215,14 +250,11 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
   `;
 
   return rows.filter((r) => {
-    if (digits.length >= 4 && !r.phone.includes(digits)) return false;
-    if (name.length >= 3 && !r.customer_name.toLowerCase().includes(name.toLowerCase())) {
-      return false;
-    }
-    if (filters.source && r.source_key !== filters.source) return false;
-    if (filters.stage && r.stage_key !== filters.stage) return false;
-    if (filters.model) {
-      const m = filters.model.toLowerCase();
+    if (!matchesSearchBox(r, q)) return false;
+    if (source && r.source_key !== source) return false;
+    if (stage && r.stage_key !== stage) return false;
+    if (model) {
+      const m = model.toLowerCase();
       const hay = `${r.model_interest ?? ""} ${r.variant_interest ?? ""}`.toLowerCase();
       if (!hay.includes(m)) return false;
     }
@@ -231,11 +263,15 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
       (!!r.first_response_due &&
         !r.first_responded_at &&
         new Date(r.first_response_due).getTime() < Date.now());
-    if (filters.overdue === "yes" && !late) return false;
-    if (filters.overdue === "no" && late) return false;
-    const parked = isParked(r);
-    if (filters.parked === "yes" && !parked) return false;
-    if (filters.parked === "no" && parked) return false;
+    if (overdue === "yes" && !late) return false;
+    if (overdue === "no" && late) return false;
+    const isParkedRow = isParked(r);
+    if (parked === "yes" && !isParkedRow) return false;
+    if (parked === "no" && isParkedRow) return false;
+    const pivot = on === "due" ? r.next_action_at : (r.created_at ?? null);
+    const day = istDay(pivot);
+    if (from && (!day || day < from)) return false;
+    if (to && (!day || day > to)) return false;
     return true;
   });
 }

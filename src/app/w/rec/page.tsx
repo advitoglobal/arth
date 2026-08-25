@@ -3,7 +3,7 @@ import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, istDateTime, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
-import { sourceLabel } from "@/lib/labels";
+import { enquiryNo, sourceLabel } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
 import { Forbidden } from "@/components/forbidden";
 
@@ -51,6 +51,9 @@ export default async function RecPage({
             {overdue && !settled ? <StatusStamp state="overdue" /> : null}
           </div>
           <p className="font-data">{indianMobile(String(lead.phone))}</p>
+          <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
+            Enquiry {enquiryNo(String(lead.id))}
+          </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Vehicle</dt>

@@ -45,3 +45,9 @@ export function actorLabel(type: string | null | undefined) {
   if (type === "USER") return "Seat";
   return type ?? "";
 }
+
+/** Short enquiry number used on paperwork and in Search. Last eight of the id. */
+export function enquiryNo(id: string | null | undefined) {
+  if (!id) return "";
+  return id.replaceAll("-", "").slice(-8).toUpperCase();
+}
