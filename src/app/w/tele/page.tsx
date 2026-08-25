@@ -106,6 +106,8 @@ export default async function TelePage({
             <>
               <DispositionPanel
                 leadId={leadId}
+                nextLeadId={nextUp?.id}
+                nextName={nextUp?.customer_name}
                 dispositions={dispositions}
                 lostReasons={lostReasons}
               />

@@ -5,7 +5,7 @@
 
 ## Overnight (24 to 25 Aug 2026)
 
-Building continues while Advito is away. Return window: 10:00 to 11:00 IST. Preview stays on port 43127.
+Advito returning 10:00 to 11:00 IST. Preview on port 43127. Work continued.
 
 ## What is built (this cycle)
 

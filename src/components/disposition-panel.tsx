@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 
 export function DispositionPanel({
   leadId,
+  nextLeadId,
+  nextName,
   dispositions,
   lostReasons,
 }: {
   leadId: string;
+  nextLeadId?: string;
+  nextName?: string;
   dispositions: {
     key: string;
     label: string;
@@ -50,10 +54,14 @@ export function DispositionPanel({
     const t = window.setTimeout(() => {
       setConfirm(null);
       setEventId(null);
-      router.refresh();
+      if (nextLeadId) {
+        router.push(`/w/tele?id=${nextLeadId}`);
+      } else {
+        router.refresh();
+      }
     }, 1500);
     return () => window.clearTimeout(t);
-  }, [confirm, eventId, router]);
+  }, [confirm, eventId, router, nextLeadId]);
 
   async function save() {
     setError(null);
@@ -107,6 +115,9 @@ export function DispositionPanel({
         <p className="font-medium">{confirm}</p>
         <p className="mt-2 text-sm text-[var(--arth-n60)]">
           Undo writes a correcting entry. The original row stays.
+          {nextName
+            ? ` After this window the next enquiry is ${nextName}.`
+            : " After this window you stay on Today if nothing else is due."}
         </p>
         <Button className="mt-4" variant="outline" onClick={undo}>
           Undo
