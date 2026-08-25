@@ -1,6 +1,8 @@
 # Status
 
-**Date:** 24 Aug 2026
+**Date:** 25 Aug 2026
+**Agent status:** working. If work stops or waits on Advito, the chat will say STOPPED or WAITING.
+
 **Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 
 ## Overnight (24 to 25 Aug 2026)

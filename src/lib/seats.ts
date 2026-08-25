@@ -44,6 +44,14 @@ export const DEMO_USERS = {
 export type SeatKey = keyof typeof DEMO_USERS;
 export type Seat = (typeof DEMO_USERS)[SeatKey];
 
+export function hasDemoSession(
+  rawSeat: string | undefined,
+  rawTenant: string | undefined,
+): boolean {
+  if (rawSeat && rawSeat in DEMO_USERS) return true;
+  return rawTenant === "coastal" || rawTenant === "whitefield";
+}
+
 export function resolveSeatKey(
   rawSeat: string | undefined,
   rawTenant: string | undefined,
