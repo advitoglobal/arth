@@ -10,12 +10,14 @@ export function SiteHeader() {
           <ArthWordmark />
         </Link>
         <nav className="flex items-center gap-6">
-          <Link
-            href="/trust"
-            className="hidden text-sm text-[var(--arth-n60)] hover:text-[var(--arth-ink)] sm:inline"
+          <Button
+            variant="outline"
+            className="hidden h-9 sm:inline-flex"
+            nativeButton={false}
+            render={<Link href="/trust" />}
           >
             How records are kept
-          </Link>
+          </Button>
           <Button nativeButton={false} render={<Link href="/w/login" />}>
             Open the product
           </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function NotificationOpen({
   id,
@@ -21,16 +21,8 @@ export function NotificationOpen({
     router.refresh();
   }
   return (
-    <button type="button" className="text-sm underline" onClick={open}>
-      Open
-    </button>
-  );
-}
-
-export function NotificationLinkFallback({ href }: { href: string }) {
-  return (
-    <Link className="text-sm underline" href={href}>
-      Open
-    </Link>
+    <Button type="button" variant="outline" size="sm" className="mt-2 h-9 px-3" onClick={open}>
+      Open record
+    </Button>
   );
 }

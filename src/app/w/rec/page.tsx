@@ -2,7 +2,7 @@ import { asSeat, canOpen } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, istDateTime, indianMobile } from "@/lib/format";
-import Link from "next/link";
+import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 
 export default async function RecPage({
@@ -96,11 +96,11 @@ export default async function RecPage({
             </div>
           </dl>
           {canOpen(seat.roleKey, "tele") && String(lead.owner_user_id ?? "") === seat.userId ? (
-            <p className="mt-6">
-              <Link className="underline" href={`/w/tele?id=${lead.id}`}>
-                Open On a call
-              </Link>
-            </p>
+            <div className="mt-6">
+              <ActionButton href={`/w/tele?id=${lead.id}`} variant="default">
+                On a call
+              </ActionButton>
+            </div>
           ) : null}
         </div>
         <h2 className="font-display text-[20px] font-semibold">Activity ledger</h2>

@@ -22,10 +22,16 @@ async function enter(formData: FormData) {
 export default function LoginPage() {
   return (
     <div className="mx-auto max-w-xl space-y-8 py-8">
-      <RuleHeading>Sign in to a floor</RuleHeading>
+      <RuleHeading>Sign in to the telecalling floor</RuleHeading>
       <p className="text-[var(--arth-n60)]">
-        Demo seats. Production uses a server session. Two telecallers on Whitefield exist so own-book scope can be proved. The sales seat receives 403 on Today.
+        This build is one department, ready to test. An enquiry has an owner, a clock, a call outcome, and a ledger that cannot be quietly edited. Scores and call recording are not in this release.
       </p>
+      <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--arth-n60)]">
+        <li>A. Iyer: Today, call Ramesh Kumar, log an outcome, open the record.</li>
+        <li>K. Nair: own book. Anita Desai, not Ramesh Kumar.</li>
+        <li>M. Pinto: Coastal only. Fazal Ahmed. Cannot see Whitefield.</li>
+        <li>S. Rao: sales. My enquiries. Today is refused.</li>
+      </ul>
       <form action={enter} className="space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
         <label className="block text-sm">
           Seat

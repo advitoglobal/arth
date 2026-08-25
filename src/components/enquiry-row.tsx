@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ActionButton } from "@/components/action-button";
 import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
@@ -88,15 +88,13 @@ export function EnquiryRow({
       </div>
       <div className="min-w-0 truncate">{showBand ? row.difficulty_band : ""}</div>
       <div className="arth-num min-w-0 truncate font-data">{inr(Number(row.expected_value_paise) / 100)}</div>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         {canCall && !settled && !row.lost_reason_key ? (
-          <Link className="text-sm underline" href={`/w/tele?id=${row.id}`}>
+          <ActionButton href={`/w/tele?id=${row.id}`} variant="default">
             Call
-          </Link>
+          </ActionButton>
         ) : null}
-        <Link className="text-sm underline" href={`/w/rec?id=${row.id}`}>
-          Record
-        </Link>
+        <ActionButton href={`/w/rec?id=${row.id}`}>Record</ActionButton>
       </div>
     </div>
   );

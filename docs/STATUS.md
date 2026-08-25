@@ -1,7 +1,7 @@
 # Status
 
 **Date:** 25 Aug 2026
-**Agent status:** working. If work stops or waits on Advito, the chat will say STOPPED or WAITING.
+**What you get this cycle:** a testable telecalling floor. Seven screens. An enquiry has an owner, a working-hours clock, a recorded outcome, and an append-only ledger. Not sales, not the Exception Cockpit, not points, not telephony.
 
 **Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 

@@ -4,8 +4,8 @@ import { DispositionPanel } from "@/components/disposition-panel";
 import { StagePanel } from "@/components/stage-panel";
 import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, inr, indianMobile } from "@/lib/format";
+import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
-import Link from "next/link";
 
 export default async function TelePage({
   searchParams,
@@ -61,11 +61,9 @@ export default async function TelePage({
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
               Owner {lead.owner_name ?? "unassigned"} · first response due {istDateTime(lead.first_response_due)} · expected {inr(Number(lead.expected_value_paise) / 100)}
             </p>
-            <p className="mt-3">
-              <Link className="text-sm underline" href={`/w/rec?id=${leadId}`}>
-                Open enquiry record
-              </Link>
-            </p>
+            <div className="mt-4">
+              <ActionButton href={`/w/rec?id=${leadId}`}>Open record</ActionButton>
+            </div>
           </div>
           {owns && remaining.length > 0 ? (
             <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
@@ -76,12 +74,11 @@ export default async function TelePage({
                 {remaining.length} after this one. The queue decrements when you record an outcome.
               </p>
               {nextUp ? (
-                <p className="mt-2">
-                  Next:{" "}
-                  <Link className="underline" href={`/w/tele?id=${nextUp.id}`}>
-                    {nextUp.customer_name}
-                  </Link>
-                </p>
+                <div className="mt-3">
+                  <ActionButton href={`/w/tele?id=${nextUp.id}`} variant="default">
+                    Next: {nextUp.customer_name}
+                  </ActionButton>
+                </div>
               ) : null}
             </div>
           ) : null}

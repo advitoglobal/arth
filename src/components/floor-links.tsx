@@ -20,10 +20,10 @@ export function FloorLinks({
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-[3px] px-3 py-2 text-sm ${
+              className={`rounded-[3px] border px-3 py-2 text-sm ${
                 on
-                  ? "bg-[var(--arth-n90)] text-[var(--arth-n00)]"
-                  : "text-[var(--arth-n20)] hover:bg-[var(--arth-n90)] hover:text-[var(--arth-n00)]"
+                  ? "border-[var(--arth-n00)] bg-[var(--arth-n90)] text-[var(--arth-n00)]"
+                  : "border-[var(--arth-n80)] text-[var(--arth-n20)] hover:bg-[var(--arth-n90)] hover:text-[var(--arth-n00)]"
               }`}
             >
               {item.label}
@@ -34,7 +34,11 @@ export function FloorLinks({
           <Link
             key={item.href}
             href={item.href}
-            className={`text-sm ${on ? "font-semibold underline" : "underline"}`}
+            className={`rounded-[3px] border px-3 py-1.5 text-sm ${
+              on
+                ? "border-[var(--arth-n00)] bg-[var(--arth-n90)] font-semibold"
+                : "border-[var(--arth-n80)]"
+            }`}
           >
             {item.label}
           </Link>

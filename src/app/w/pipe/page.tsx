@@ -4,7 +4,7 @@ import { listPipeline } from "@/services/telecalling";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
-import { Forbidden } from "@/components/forbidden";
+import { ActionButton } from "@/components/action-button";
 
 const LABELS: Record<string, string> = {
   new: "New",
@@ -65,13 +65,9 @@ export default async function PipePage({
               ? `No enquiries in ${LABELS[active]}. They appear here when the stage moves.`
               : "No enquiries are assigned to you."}
             {!canCall && !active ? (
-              <>
-                {" "}
-                <Link href="/w/dayb" className="underline">
-                  Today is not this seat
-                </Link>
-                . Opening it states that you cannot open the screen.
-              </>
+              <span className="mt-3 inline-block">
+                <ActionButton href="/w/dayb">Open Today</ActionButton>
+              </span>
             ) : null}
           </p>
         ) : (
