@@ -2,7 +2,7 @@ import { asSeat, canOpen } from "@/db/session";
 import { listNotifications, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
-import { NotificationOpen } from "@/components/notification-open";
+import { NotificationOpen, MarkAllRead } from "@/components/notification-open";
 
 export default async function NotifPage() {
   return asSeat(async (tx, seat) => {
@@ -18,7 +18,9 @@ export default async function NotifPage() {
         {rows.length === 0 ? (
           <p>No notifications. New ones appear when an enquiry you own needs you.</p>
         ) : (
-          <ul className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+          <>
+            {rows.some((n) => !n.read_at) ? <MarkAllRead /> : null}
+            <ul className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
             {rows.map((n) => (
               <li key={String(n.id)} className="border-b border-[var(--arth-n10)] px-4 py-3">
                 <p className="font-medium">{String(n.title)}</p>
@@ -31,7 +33,8 @@ export default async function NotifPage() {
                 ) : null}
               </li>
             ))}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     );

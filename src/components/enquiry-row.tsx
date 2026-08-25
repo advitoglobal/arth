@@ -3,7 +3,7 @@ import { ActionButton } from "@/components/action-button";
 import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
-import { sourceLabel } from "@/lib/labels";
+import { sourceLabel, enquiryNo } from "@/lib/labels";
 import type { LeadRow } from "@/services/telecalling";
 
 function eventDate(row: LeadRow) {
@@ -103,6 +103,9 @@ export function EnquiryRow({
           </p>
           <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
             {indianMobile(row.phone)}
+          </p>
+          <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
+            Enquiry {enquiryNo(row.id)}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-1">

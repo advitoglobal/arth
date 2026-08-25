@@ -27,7 +27,7 @@ export default async function ProfilePage() {
         <div className="max-w-lg space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p><span className="text-[var(--arth-n60)]">Name </span>{seat.name}</p>
           <p><span className="text-[var(--arth-n60)]">Seat </span>{seat.roleLabel}</p>
-          <p><span className="text-[var(--arth-n60)]">Landing </span>{seat.workspaceKey}</p>
+          <p><span className="text-[var(--arth-n60)]">Opens on </span>{seat.workspaceKey === "dayb" ? "Today" : seat.workspaceKey === "pipe" ? "My enquiries" : "Log a call"}</p>
           <p><span className="text-[var(--arth-n60)]">Tenant </span>{seat.tenantName}</p>
           <p><span className="text-[var(--arth-n60)]">Branch </span>{branch}</p>
           <p className="text-sm text-[var(--arth-n60)]">

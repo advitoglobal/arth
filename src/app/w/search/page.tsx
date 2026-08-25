@@ -55,7 +55,7 @@ export default async function SearchPage({
       <div className="space-y-6">
         <RuleHeading>Search</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Search is one box. Filters are a separate panel. This tenant only.
+          Type a mobile number, a name, an enquiry number, or a model. Use Filter underneath to narrow the list by source, stage, date, and the rest.
         </p>
         <form method="get" className="space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
@@ -91,7 +91,7 @@ export default async function SearchPage({
           {keep("q", q || undefined)}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block text-sm">
-              Lead source
+              Source
               <select
                 name="source"
                 defaultValue={filters.source ?? ""}

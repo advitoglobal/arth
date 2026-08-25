@@ -14,7 +14,7 @@
 - Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. File enquiry at `/w/new` when Search finds no match.
 - Queue is due today plus breaching. Parked is derived. Difficulty band is stored and hidden from the telecaller row.
 - Demo seats: A. Iyer, K. Nair, M. Pinto, S. Rao. Opening Today as S. Rao keeps `/w/dayb` and shows *You cannot open this screen*.
-- Search: phone, name, source, stage, overdue, parked, vehicle. Ledger shows lost-reason labels and facts, not keys.
+- Search: one box for phone, name, enquiry number, or model. A separate Filter panel for source, stage, overdue, parked, and arrived or follow-up dates. Enquiry numbers show on the tile and the record.
 
 ## Contradiction raised (SPEC)
 

@@ -569,6 +569,15 @@ export async function markNotificationRead(
   return { recorded: "Marked read" };
 }
 
+export async function markAllNotificationsRead(tx: Tx, userId: string) {
+  await tx`
+    UPDATE notifications
+    SET read_at = COALESCE(read_at, now())
+    WHERE user_id = ${userId}::uuid AND read_at IS NULL
+  `;
+  return { recorded: "All marked read" };
+}
+
 export async function branchHoursForUser(tx: Tx, userId: string) {
   const hours = await tx<{
     day_of_week: number;

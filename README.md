@@ -33,7 +33,7 @@ Demo seats:
 | Log a call | `/w/tele` | Dial on the desk phone, record the outcome |
 | My enquiries | `/w/pipe` | Nine stages, add enquiry |
 | Enquiry record | `/w/rec?id=` | Opens from the customer name |
-| Search | `/w/search` | Phone first, six filters |
+| Search | `/w/search` | One search box, then Filter with dates |
 | File enquiry | `/w/new` | When Search finds nothing |
 | Notifications | `/w/notif` | Each row says why it arrived |
 | My profile | `/w/profile` | Seat and working hours |
