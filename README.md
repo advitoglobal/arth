@@ -29,10 +29,10 @@ Demo seats:
 
 | Screen | Route | Job |
 |---|---|---|
-| Today | `/w/dayb` | Queue: breaching and promised |
-| On a call | `/w/tele` | Disposition, stage, history |
+| Today | `/w/dayb` | Late calls first, then due later today |
+| Log a call | `/w/tele` | Dial on the desk phone, record the outcome |
 | My enquiries | `/w/pipe` | Nine stages, add enquiry |
-| Enquiry record | `/w/rec?id=` | Ledger. Opens from a row |
+| Enquiry record | `/w/rec?id=` | Opens from the customer name |
 | Search | `/w/search` | Phone first, six filters |
 | File enquiry | `/w/new` | When Search finds nothing |
 | Notifications | `/w/notif` | Each row says why it arrived |

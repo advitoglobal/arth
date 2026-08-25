@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ActionButton } from "@/components/action-button";
 import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
@@ -30,16 +31,21 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
   };
 }
 
-const COLS =
-  "gap-2 px-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_7.5rem] lg:items-start";
+function cols(showValue: boolean) {
+  return showValue
+    ? "gap-2 px-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_6.5rem] lg:items-start"
+    : "gap-2 px-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_6.5rem] lg:items-start";
+}
 
 export function EnquiryRow({
   row,
   canCall,
+  showValue = false,
 }: {
   row: LeadRow;
   showBand?: boolean;
   canCall: boolean;
+  showValue?: boolean;
 }) {
   const next = nextDue(row);
   const parked = isParked(row);
@@ -50,11 +56,15 @@ export function EnquiryRow({
   const settled = row.stage_key === "delivered";
 
   return (
-    <div className={`grid grid-cols-1 border-b border-[var(--arth-n10)] py-3 ${COLS}`}>
+    <div className={`grid grid-cols-1 border-b border-[var(--arth-n10)] py-3 ${cols(showValue)}`}>
       <div className="min-w-0">
-        <p className="truncate font-semibold" title={row.customer_name}>
+        <Link
+          href={`/w/rec?id=${row.id}`}
+          className="block truncate font-semibold hover:underline"
+          title="Open the enquiry"
+        >
           {row.customer_name}
-        </p>
+        </Link>
         <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
           {indianMobile(row.phone)}
         </p>
@@ -103,25 +113,26 @@ export function EnquiryRow({
       >
         {next.text}
       </div>
-      <div className="arth-num min-w-0 truncate text-right font-data text-[12.5px]">
-        {inr(Number(row.expected_value_paise) / 100)}
-      </div>
+      {showValue ? (
+        <div className="arth-num min-w-0 truncate text-right font-data text-[12.5px]">
+          {inr(Number(row.expected_value_paise) / 100)}
+        </div>
+      ) : null}
       <div className="flex min-w-0 flex-col gap-1">
         {canCall && !settled && !row.lost_reason_key ? (
           <ActionButton href={`/w/tele?id=${row.id}`} variant="default">
             Call
           </ActionButton>
         ) : null}
-        <ActionButton href={`/w/rec?id=${row.id}`}>Record</ActionButton>
       </div>
     </div>
   );
 }
 
-export function RowHead() {
+export function RowHead({ showValue = false }: { showValue?: boolean }) {
   return (
     <div
-      className={`hidden border-b border-[var(--arth-ink)] py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid ${COLS}`}
+      className={`hidden border-b border-[var(--arth-ink)] py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid ${cols(showValue)}`}
     >
       <span>Customer</span>
       <span>Vehicle</span>
@@ -129,7 +140,7 @@ export function RowHead() {
       <span>Stage</span>
       <span>Last activity</span>
       <span>Next action</span>
-      <span className="text-right">Value</span>
+      {showValue ? <span className="text-right">Value</span> : null}
       <span>Actions</span>
     </div>
   );

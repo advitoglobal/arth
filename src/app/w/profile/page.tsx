@@ -21,7 +21,6 @@ export default async function ProfilePage() {
     if (!canOpen(seat.roleKey, "profile")) return <Forbidden />;
     const hours = await branchHoursForUser(tx, seat.userId);
     const branch = hours[0]?.branch ?? seat.tenantName;
-    const zone = hours[0]?.timezone ?? "Asia/Kolkata";
     return (
       <div className="space-y-6">
         <RuleHeading>My profile</RuleHeading>
@@ -35,8 +34,8 @@ export default async function ProfilePage() {
             Demo session. Production uses a server session and SSO.
           </p>
           <form action={leave}>
-            <Button type="submit" variant="outline" className="mt-2">
-              Leave this floor
+            <Button type="submit" variant="outline" className="mt-2 h-9 rounded-[3px]">
+              Log out
             </Button>
           </form>
         </div>
@@ -45,7 +44,7 @@ export default async function ProfilePage() {
             Working hours
           </p>
           <p className="mt-2 text-sm text-[var(--arth-n60)]">
-            Source: working_hours for {branch}. Time zone {zone}. Every clock on this floor uses this table.
+            Source: branch hours for {branch}. A call due after close waits until the next open.
           </p>
           <ul className="mt-4 space-y-1 font-data text-sm">
             {hours.length === 0 ? (

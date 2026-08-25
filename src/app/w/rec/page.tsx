@@ -1,4 +1,4 @@
-import { asSeat, canOpen } from "@/db/session";
+import { asSeat, canOpen, canSeeValue } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, istDateTime, indianMobile } from "@/lib/format";
@@ -19,7 +19,7 @@ export default async function RecPage({
       return (
         <div>
           <RuleHeading>Enquiry record</RuleHeading>
-          <p className="mt-4">Open a record from a row. It is not a menu item.</p>
+          <p className="mt-4">Open a name from Today, My enquiries, or Search.</p>
         </div>
       );
     }
@@ -42,7 +42,7 @@ export default async function RecPage({
       <div className="space-y-6">
         <RuleHeading>Enquiry record</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Source: leads and lead_events. Times in Asia/Kolkata. Nothing on this screen is edited.
+          Full enquiry: customer, owner, clock, and every action taken. Nothing here is edited. A correction writes a new row.
         </p>
         <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -84,10 +84,12 @@ export default async function RecPage({
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Next action</dt>
               <dd className="font-data">{istDateTime(lead.next_action_at)}</dd>
             </div>
+            {canSeeValue(seat.roleKey) ? (
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Expected value</dt>
               <dd className="font-data">{inr(Number(lead.expected_value_paise) / 100)}</dd>
             </div>
+            ) : null}
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Assigned</dt>
               <dd className="font-data">{istDateTime(lead.assigned_at)}</dd>
@@ -100,7 +102,7 @@ export default async function RecPage({
           {canOpen(seat.roleKey, "tele") && String(lead.owner_user_id ?? "") === seat.userId ? (
             <div className="mt-6">
               <ActionButton href={`/w/tele?id=${lead.id}`} variant="default">
-                On a call
+                Log a call
               </ActionButton>
             </div>
           ) : null}

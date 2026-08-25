@@ -7,6 +7,34 @@ import { Forbidden } from "@/components/forbidden";
 import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
 
+function countLabel(n: number, one: string, many: string) {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+function todayBrief(breaching: number, promised: number, assigned: number) {
+  const parts: string[] = [];
+  if (breaching > 0) {
+    parts.push(
+      `${countLabel(breaching, "enquiry is", "enquiries are")} late. Call ${breaching === 1 ? "this one" : "these"} first.`,
+    );
+  } else {
+    parts.push("Nothing is late.");
+  }
+  if (promised > 0) {
+    parts.push(
+      `${countLabel(promised, "enquiry still needs", "enquiries still need")} a call later today.`,
+    );
+  } else if (breaching === 0) {
+    parts.push("Nothing else is due today.");
+  }
+  if (assigned > 0) {
+    parts.push(
+      `${countLabel(assigned, "new enquiry was", "new enquiries were")} just assigned to you.`,
+    );
+  }
+  return parts.join(" ");
+}
+
 function Block({
   title,
   note,
@@ -26,7 +54,7 @@ function Block({
         <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
           <RowHead />
           {rows.map((row) => (
-            <EnquiryRow key={row.id} row={row} showBand={false} canCall />
+            <EnquiryRow key={row.id} row={row} canCall />
           ))}
         </div>
       )}
@@ -56,7 +84,6 @@ export default async function DayPanelPage() {
       <div className="space-y-8">
         <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
-            {seat.name} ·{" "}
             {new Date().toLocaleDateString("en-IN", {
               timeZone: "Asia/Kolkata",
               weekday: "long",
@@ -65,35 +92,31 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {breaching.length} breaching, {promised.length} promised for later today.
-            Source: next_action_at and first_response_due, Asia/Kolkata.
-            {assignment.assigned > 0
-              ? ` ${assignment.assigned} unowned ${assignment.assigned === 1 ? "enquiry was" : "enquiries were"} assigned on this floor.`
-              : ""}
+            {todayBrief(breaching.length, promised.length, assignment.assigned)}
           </p>
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          The queue is due today plus anything already late. Everything else is in My enquiries.
+          Your list for today: late calls first, then what you still promised to do today. The rest of your book is in My enquiries.
         </p>
         {rows.length === 0 ? (
           <p>No enquiries are due. New ones appear here when they are assigned.</p>
         ) : (
           <>
             <Block
-              title="Breaching"
-              note="First response missed, or a follow-up already late."
+              title="Late"
+              note="First call missed, or a follow-up already late. Start here."
               rows={breaching}
             />
             <Block
-              title="Promised"
-              note="A next action is still due today and not yet late."
+              title="Due later today"
+              note="You still owe a call today. It is not late yet."
               rows={promised}
             />
             {rest.length > 0 ? (
               <Block
-                title="Also on Today"
-                note="On the queue without a dated next action."
+                title="Also due"
+                note="On today without a timed follow-up."
                 rows={rest}
               />
             ) : null}

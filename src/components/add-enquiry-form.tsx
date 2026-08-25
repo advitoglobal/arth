@@ -63,7 +63,7 @@ export function AddEnquiryForm({
       <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
         <p className="font-medium">{confirm}</p>
         <p className="mt-2 text-sm text-[var(--arth-n60)]">
-          Opening On a call. The clock started through working hours.
+          Opening Log a call. The clock started from the next working hour.
         </p>
       </div>
     );

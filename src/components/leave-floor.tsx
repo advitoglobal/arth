@@ -15,14 +15,14 @@ export function LeaveFloor({ invert = false }: { invert?: boolean }) {
     <form action={leave}>
       <Button
         type="submit"
-        variant={invert ? "ghost" : "outline"}
+        variant="outline"
         className={
           invert
-            ? "h-auto px-0 py-0 text-[12.5px] text-[var(--arth-n40)] hover:bg-transparent hover:text-[var(--arth-n00)]"
-            : undefined
+            ? "h-9 w-full rounded-[3px] border-[var(--arth-n00)] bg-transparent text-[var(--arth-n00)] hover:bg-[var(--arth-n90)]"
+            : "h-9 rounded-[3px]"
         }
       >
-        Leave this floor
+        Log out
       </Button>
     </form>
   );

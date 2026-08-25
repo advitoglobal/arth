@@ -27,17 +27,17 @@ export default async function PipePage({
       <div className="space-y-6">
         <RuleHeading>My enquiries</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          The full book, nine stages. Value from expected_value_paise. The queue is only what is due today.
+          Your full book, in nine stages. Today is only what is due now. Open a name for the history. Call when you are dialling.
         </p>
         {canCall ? (
           <ActionButton href="/w/new" variant="default">
             Add enquiry
           </ActionButton>
         ) : null}
-        <nav className="flex flex-wrap gap-2">
+        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Link
             href="/w/pipe"
-            className={`rounded-[3px] border px-3 py-1 text-sm ${!active ? "border-[var(--arth-ink)]" : "border-[var(--arth-n10)]"}`}
+            className={`flex h-11 items-center justify-center rounded-[3px] border px-2 text-center text-sm ${!active ? "border-[var(--arth-ink)] font-semibold" : "border-[var(--arth-n10)]"}`}
           >
             All · {rows.length}
           </Link>
@@ -47,7 +47,7 @@ export default async function PipePage({
               <Link
                 key={key}
                 href={`/w/pipe?stage=${key}`}
-                className={`rounded-[3px] border px-3 py-1 text-sm ${active === key ? "border-[var(--arth-ink)]" : "border-[var(--arth-n10)]"}`}
+                className={`flex h-11 items-center justify-center rounded-[3px] border px-2 text-center text-sm ${active === key ? "border-[var(--arth-ink)] font-semibold" : "border-[var(--arth-n10)]"}`}
               >
                 {STAGE_LABEL[key]} · {n}
               </Link>
@@ -69,7 +69,7 @@ export default async function PipePage({
           <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
             <RowHead />
             {shown.map((row) => (
-              <EnquiryRow key={row.id} row={row} showBand={false} canCall={canCall} />
+              <EnquiryRow key={row.id} row={row} canCall={canCall} />
             ))}
           </div>
         )}

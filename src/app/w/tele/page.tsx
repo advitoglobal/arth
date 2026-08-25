@@ -3,10 +3,11 @@ import { getLead, listQueue } from "@/services/telecalling";
 import { DispositionPanel } from "@/components/disposition-panel";
 import { StagePanel } from "@/components/stage-panel";
 import { RuleHeading } from "@/components/brand/type";
-import { istDateTime, inr, indianMobile } from "@/lib/format";
+import { istDateTime, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { LedgerLine } from "@/components/ledger-line";
+import Link from "next/link";
 
 export default async function TelePage({
   searchParams,
@@ -27,7 +28,7 @@ export default async function TelePage({
     if (!leadId) {
       return (
         <div>
-          <RuleHeading>On a call</RuleHeading>
+          <RuleHeading>Log a call</RuleHeading>
           <p className="mt-4">No enquiries are due. New ones appear here when they are assigned.</p>
         </div>
       );
@@ -36,7 +37,7 @@ export default async function TelePage({
     if (!lead) {
       return (
         <div>
-          <RuleHeading>On a call</RuleHeading>
+          <RuleHeading>Log a call</RuleHeading>
           <p className="mt-4">This enquiry is not in your tenant.</p>
         </div>
       );
@@ -49,22 +50,24 @@ export default async function TelePage({
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div>
-          <RuleHeading>On a call</RuleHeading>
+          <RuleHeading>Log a call</RuleHeading>
           <p className="mt-2 text-sm text-[var(--arth-n60)]">
-            Dial on the desk phone. Log the outcome here. Telephony is not in this cycle.
+            Dial on the desk phone, then record what happened here. This is not a live phone line.
           </p>
           <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
-            <p className="font-display text-[28px] font-semibold">{lead.customer_name}</p>
+            <Link
+              href={`/w/rec?id=${leadId}`}
+              className="font-display text-[28px] font-semibold hover:underline"
+            >
+              {lead.customer_name}
+            </Link>
             <p className="font-data mt-1">{indianMobile(String(lead.phone))}</p>
             <p className="mt-3 text-sm">
               {lead.model_interest} · {lead.stage_label ?? lead.stage_key}
             </p>
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
-              Owner {lead.owner_name ?? "unassigned"} · first response due {istDateTime(lead.first_response_due)} · expected {inr(Number(lead.expected_value_paise) / 100)}
+              Owner {lead.owner_name ?? "unassigned"} · first response due {istDateTime(lead.first_response_due)}
             </p>
-            <div className="mt-4">
-              <ActionButton href={`/w/rec?id=${leadId}`}>Open record</ActionButton>
-            </div>
           </div>
           {owns && remaining.length > 0 ? (
             <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">

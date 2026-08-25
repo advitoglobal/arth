@@ -6,7 +6,7 @@ function assert(cond: boolean, msg: string) {
 
 assert(canOpen("tele", "dayb"), "telecaller opens Today");
 assert(!canOpen("sales", "dayb"), "sales consultant is 403 on Today");
-assert(!canOpen("sales", "tele"), "sales consultant is 403 on On a call");
+assert(!canOpen("sales", "tele"), "sales consultant is 403 on Log a call");
 assert(!canOpen("sales", "profile"), "sales consultant is 403 on profile");
 assert(canOpen("sales", "pipe"), "sales consultant opens My enquiries");
 assert(canOpen("sales", "search"), "sales consultant opens Search");

@@ -11,3 +11,8 @@ export function canOpen(roleKey: string, screen: string): boolean {
   };
   return (access[screen] ?? []).includes(roleKey);
 }
+
+/** Expected value is for managers and the dealer principal, not the floor. */
+export function canSeeValue(roleKey: string): boolean {
+  return roleKey === "mgr" || roleKey === "owner" || roleKey === "adv";
+}

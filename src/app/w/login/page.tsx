@@ -27,7 +27,7 @@ export default function LoginPage() {
         This build is one department, ready to test. An enquiry has an owner, a clock, a call outcome, and a ledger that cannot be quietly edited. Scores and call recording are not in this release.
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--arth-n60)]">
-        <li>A. Iyer: Today, call Ramesh Kumar, log an outcome, open the record.</li>
+        <li>A. Iyer: Today, call Ramesh Kumar, log the outcome, open a name for the record.</li>
         <li>K. Nair: own book. Anita Desai, not Ramesh Kumar.</li>
         <li>M. Pinto: Coastal only. Fazal Ahmed. Cannot see Whitefield.</li>
         <li>S. Rao: sales. My enquiries. Today is refused.</li>

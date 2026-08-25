@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { withTenant, type Tx } from "@/db/with-tenant";
-import { canOpen } from "@/lib/access";
+import { canOpen, canSeeValue } from "@/lib/access";
 import { DEMO_USERS, resolveSeatKey, type Seat, type SeatKey } from "@/lib/seats";
 
-export { canOpen, DEMO_USERS };
+export { canOpen, canSeeValue, DEMO_USERS };
 export type { Seat, SeatKey };
 
 export async function currentSeat(): Promise<Seat> {

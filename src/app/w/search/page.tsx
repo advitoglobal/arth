@@ -119,7 +119,7 @@ export default async function SearchPage({
         {rows.length > 0 ? (
           <div>
             <p className="mb-2 text-sm text-[var(--arth-n60)]">
-              {rows.length} in this tenant. Source: customers and leads, current query.
+              {rows.length} in this tenant. Matching the number, name, or filters you set.
             </p>
             <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
               <RowHead />
@@ -127,7 +127,6 @@ export default async function SearchPage({
                 <EnquiryRow
                   key={row.id}
                   row={row}
-                  showBand={false}
                   canCall={canOpen(seat.roleKey, "tele") && row.owner_user_id === seat.userId}
                 />
               ))}

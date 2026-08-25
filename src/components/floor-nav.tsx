@@ -6,7 +6,7 @@ import { LeaveFloor } from "@/components/leave-floor";
 
 const items = [
   { href: "/w/dayb", screen: "dayb", label: "Today" },
-  { href: "/w/tele", screen: "tele", label: "On a call" },
+  { href: "/w/tele", screen: "tele", label: "Log a call" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
   { href: "/w/search", screen: "search", label: "Search" },
   { href: "/w/notif", screen: "notif", label: "Notifications" },
@@ -56,10 +56,10 @@ export function FloorNav({
         <p className="mt-2 text-[12.5px] text-[var(--arth-n40)]">
           {seat.name} · {seat.roleLabel}
         </p>
-        <nav className="mt-3 flex flex-wrap gap-3">
-          <FloorLinks items={visible} invert={false} />
+        <nav className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <FloorLinks items={visible} invert />
         </nav>
-        <div className="mt-2">
+        <div className="mt-3">
           <LeaveFloor invert />
         </div>
       </div>
