@@ -33,8 +33,39 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
 
 function cols(showValue: boolean) {
   return showValue
-    ? "gap-2 px-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_6.5rem] lg:items-start"
-    : "gap-2 px-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_6.5rem] lg:items-start";
+    ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_6.5rem]"
+    : "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_6.5rem]";
+}
+
+function Field({
+  label,
+  value,
+  sub,
+  warn = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string | null;
+  warn?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:hidden">
+        {label}
+      </p>
+      <p
+        className={`mt-1 truncate text-sm lg:mt-0 ${warn ? "font-semibold text-[var(--arth-overdue)]" : ""}`}
+        title={value}
+      >
+        {value}
+      </p>
+      {sub ? (
+        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={sub}>
+          {sub}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 export function EnquiryRow({
@@ -54,21 +85,27 @@ export function EnquiryRow({
     !row.first_responded_at &&
     new Date(row.first_response_due).getTime() < Date.now();
   const settled = row.stage_key === "delivered";
+  const showCall = canCall && !settled && !row.lost_reason_key;
 
   return (
-    <div className={`grid grid-cols-1 border-b border-[var(--arth-n10)] py-3 ${cols(showValue)}`}>
-      <div className="min-w-0">
-        <Link
-          href={`/w/rec?id=${row.id}`}
-          className="block truncate font-semibold hover:underline"
-          title="Open the enquiry"
-        >
-          {row.customer_name}
-        </Link>
-        <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
-          {indianMobile(row.phone)}
-        </p>
-        <div className="mt-1 flex flex-wrap gap-1">
+    <article
+      className={`relative cursor-pointer border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4 transition-colors hover:bg-[var(--arth-n05)] lg:border-x-0 lg:border-t-0 lg:px-3 lg:py-3 ${cols(showValue)} lg:grid lg:items-start lg:gap-2`}
+    >
+      <Link
+        href={`/w/rec?id=${row.id}`}
+        className="absolute inset-0 z-0"
+        aria-label={`Open ${row.customer_name}`}
+      />
+      <div className="flex items-start justify-between gap-3 lg:block">
+        <div className="min-w-0">
+          <p className="truncate font-semibold" title={row.customer_name}>
+            {row.customer_name}
+          </p>
+          <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
+            {indianMobile(row.phone)}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap justify-end gap-1">
           {settled ? <StatusStamp state="settled" /> : null}
           {!settled && (next.overdue || firstResponseLate) ? (
             <StatusStamp state="overdue" />
@@ -80,59 +117,50 @@ export function EnquiryRow({
           ) : null}
         </div>
       </div>
-      <div className="min-w-0">
-        <p className="truncate" title={row.model_interest ?? ""}>
-          {row.model_interest}
-        </p>
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={row.variant_interest ?? ""}>
-          {row.variant_interest}
-        </p>
+      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 lg:mt-0 lg:contents">
+        <Field
+          label="Vehicle"
+          value={row.model_interest ?? "Not recorded"}
+          sub={row.variant_interest}
+        />
+        <Field
+          label="Source"
+          value={sourceLabel(row.source_key) || "Not recorded"}
+          sub={row.source_detail}
+        />
+        <Field
+          label="Stage"
+          value={row.stage_label ?? "Not recorded"}
+          sub={row.stage_order ? `${row.stage_order} of 9` : null}
+        />
+        <Field label="Last activity" value={eventDate(row)} />
+        <Field label="Next" value={next.text} warn={next.overdue} />
+        {showValue ? (
+          <Field
+            label="Value"
+            value={inr(Number(row.expected_value_paise) / 100)}
+          />
+        ) : null}
       </div>
-      <div className="min-w-0">
-        <p className="truncate">{sourceLabel(row.source_key)}</p>
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={row.source_detail ?? ""}>
-          {row.source_detail}
-        </p>
-      </div>
-      <div className="min-w-0">
-        <p className="truncate">{row.stage_label}</p>
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]">
-          {row.stage_order ? `${row.stage_order} of 9` : ""}
-        </p>
-      </div>
-      <div className="min-w-0 text-[12.5px]" title={eventDate(row)}>
-        {eventDate(row)}
-      </div>
-      <div
-        className={
-          next.overdue
-            ? "min-w-0 text-[12.5px] font-semibold text-[var(--arth-overdue)]"
-            : "min-w-0 text-[12.5px] font-medium"
-        }
-        title={next.text}
-      >
-        {next.text}
-      </div>
-      {showValue ? (
-        <div className="arth-num min-w-0 truncate text-right font-data text-[12.5px]">
-          {inr(Number(row.expected_value_paise) / 100)}
-        </div>
-      ) : null}
-      <div className="flex min-w-0 flex-col gap-1">
-        {canCall && !settled && !row.lost_reason_key ? (
-          <ActionButton href={`/w/tele?id=${row.id}`} variant="default">
+      <div className="mt-4 lg:mt-0">
+        {showCall ? (
+          <ActionButton
+            href={`/w/tele?id=${row.id}`}
+            variant="default"
+            className="w-full lg:w-auto"
+          >
             Call
           </ActionButton>
         ) : null}
       </div>
-    </div>
+    </article>
   );
 }
 
 export function RowHead({ showValue = false }: { showValue?: boolean }) {
   return (
     <div
-      className={`hidden border-b border-[var(--arth-ink)] py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid ${cols(showValue)}`}
+      className={`hidden border-b border-[var(--arth-ink)] bg-[var(--arth-n00)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid lg:gap-2 lg:items-start ${cols(showValue)}`}
     >
       <span>Customer</span>
       <span>Vehicle</span>
@@ -142,6 +170,30 @@ export function RowHead({ showValue = false }: { showValue?: boolean }) {
       <span>Next action</span>
       {showValue ? <span className="text-right">Value</span> : null}
       <span>Actions</span>
+    </div>
+  );
+}
+
+export function EnquiryList({
+  rows,
+  canCall,
+  showValue = false,
+}: {
+  rows: LeadRow[];
+  canCall: boolean | ((row: LeadRow) => boolean);
+  showValue?: boolean;
+}) {
+  return (
+    <div className="space-y-3 lg:space-y-0 lg:border lg:border-[var(--arth-n10)] lg:bg-[var(--arth-n00)]">
+      <RowHead showValue={showValue} />
+      {rows.map((row) => (
+        <EnquiryRow
+          key={row.id}
+          row={row}
+          canCall={typeof canCall === "function" ? canCall(row) : canCall}
+          showValue={showValue}
+        />
+      ))}
     </div>
   );
 }

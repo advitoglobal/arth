@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { asSeat, canOpen } from "@/db/session";
 import { listPipeline } from "@/services/telecalling";
-import { EnquiryRow, RowHead } from "@/components/enquiry-row";
+import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
 import { ActionButton } from "@/components/action-button";
@@ -66,12 +66,7 @@ export default async function PipePage({
             ) : null}
           </p>
         ) : (
-          <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
-            <RowHead />
-            {shown.map((row) => (
-              <EnquiryRow key={row.id} row={row} canCall={canCall} />
-            ))}
-          </div>
+          <EnquiryList rows={shown} canCall={canCall} />
         )}
       </div>
     );

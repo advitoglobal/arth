@@ -10,7 +10,13 @@ async function leave() {
   redirect("/w/login");
 }
 
-export function LeaveFloor({ invert = false }: { invert?: boolean }) {
+export function LeaveFloor({
+  invert = false,
+  compact = false,
+}: {
+  invert?: boolean;
+  compact?: boolean;
+}) {
   return (
     <form action={leave}>
       <Button
@@ -18,7 +24,9 @@ export function LeaveFloor({ invert = false }: { invert?: boolean }) {
         variant="outline"
         className={
           invert
-            ? "h-9 w-full rounded-[3px] border-[var(--arth-n00)] bg-transparent text-[var(--arth-n00)] hover:bg-[var(--arth-n90)]"
+            ? compact
+              ? "h-8 shrink-0 rounded-[3px] border-[var(--arth-n00)] bg-transparent px-3 text-[12.5px] text-[var(--arth-n00)] hover:bg-[var(--arth-n90)]"
+              : "h-9 w-full rounded-[3px] border-[var(--arth-n00)] bg-transparent text-[var(--arth-n00)] hover:bg-[var(--arth-n90)]"
             : "h-9 rounded-[3px]"
         }
       >

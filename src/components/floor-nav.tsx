@@ -30,9 +30,12 @@ export function FloorNav({
   return (
     <>
       <aside className="hidden w-[240px] shrink-0 bg-[var(--arth-ink)] p-5 text-[var(--arth-n00)] lg:flex lg:flex-col">
-        <Link href="/" className="mb-8 block py-2">
-          <ArthWordmark invert />
-        </Link>
+        <div className="mb-8 flex items-start justify-between gap-3">
+          <Link href="/" className="py-1">
+            <ArthWordmark invert />
+          </Link>
+          <LeaveFloor invert compact />
+        </div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-brass-lift)]">
           {seat.roleKey === "tele" ? "Telecalling" : "Sales"}
         </p>
@@ -40,28 +43,25 @@ export function FloorNav({
         <nav className="flex flex-col gap-1">
           <FloorLinks items={visible} invert />
         </nav>
-        <div className="mt-auto pt-8">
-          <p className="text-[12.5px] text-[var(--arth-n40)]">
-            {seat.name} · {seat.roleLabel}
-          </p>
-          <div className="mt-2">
-            <LeaveFloor invert />
-          </div>
-        </div>
-      </aside>
-      <div className="border-b border-[var(--arth-n10)] bg-[var(--arth-ink)] px-4 py-3 text-[var(--arth-n00)] lg:hidden">
-        <Link href="/" className="block w-fit">
-          <ArthWordmark invert />
-        </Link>
-        <p className="mt-2 text-[12.5px] text-[var(--arth-n40)]">
+        <p className="mt-auto pt-8 text-[12.5px] text-[var(--arth-n40)]">
           {seat.name} · {seat.roleLabel}
         </p>
+      </aside>
+      <div className="border-b border-[var(--arth-n10)] bg-[var(--arth-ink)] px-4 py-3 text-[var(--arth-n00)] lg:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Link href="/" className="block w-fit">
+              <ArthWordmark invert />
+            </Link>
+            <p className="mt-2 text-[12.5px] text-[var(--arth-n40)]">
+              {seat.name} · {seat.roleLabel}
+            </p>
+          </div>
+          <LeaveFloor invert compact />
+        </div>
         <nav className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           <FloorLinks items={visible} invert />
         </nav>
-        <div className="mt-3">
-          <LeaveFloor invert />
-        </div>
       </div>
     </>
   );

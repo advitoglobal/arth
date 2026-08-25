@@ -1,6 +1,6 @@
 import { asSeat, canOpen } from "@/db/session";
 import { searchEnquiries } from "@/services/telecalling";
-import { EnquiryRow, RowHead } from "@/components/enquiry-row";
+import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/action-button";
@@ -121,16 +121,12 @@ export default async function SearchPage({
             <p className="mb-2 text-sm text-[var(--arth-n60)]">
               {rows.length} in this tenant. Matching the number, name, or filters you set.
             </p>
-            <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
-              <RowHead />
-              {rows.map((row) => (
-                <EnquiryRow
-                  key={row.id}
-                  row={row}
-                  canCall={canOpen(seat.roleKey, "tele") && row.owner_user_id === seat.userId}
-                />
-              ))}
-            </div>
+            <EnquiryList
+              rows={rows}
+              canCall={(row) =>
+                canOpen(seat.roleKey, "tele") && row.owner_user_id === seat.userId
+              }
+            />
           </div>
         ) : null}
       </div>

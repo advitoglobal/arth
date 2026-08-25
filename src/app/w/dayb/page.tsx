@@ -1,35 +1,40 @@
 import { asSeat, canOpen } from "@/db/session";
 import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { assignUnowned } from "@/services/assignment";
-import { EnquiryRow, RowHead } from "@/components/enquiry-row";
+import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
 import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
 
-function countLabel(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
+function listNames(rows: LeadRow[]) {
+  const names = rows.map((r) => r.customer_name);
+  if (names.length === 0) return "";
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  if (names.length === 3) return `${names[0]}, ${names[1]} and ${names[2]}`;
+  return `${names.slice(0, 2).join(", ")} and ${names.length - 2} more`;
 }
 
-function todayBrief(breaching: number, promised: number, assigned: number) {
+function todayBrief(late: LeadRow[], later: LeadRow[], assigned: number) {
   const parts: string[] = [];
-  if (breaching > 0) {
+  if (late.length > 0) {
     parts.push(
-      `${countLabel(breaching, "enquiry is", "enquiries are")} late. Call ${breaching === 1 ? "this one" : "these"} first.`,
+      `${listNames(late)} ${late.length === 1 ? "is" : "are"} late. Call ${late.length === 1 ? "this one" : "these"} first.`,
     );
   } else {
     parts.push("Nothing is late.");
   }
-  if (promised > 0) {
+  if (later.length > 0) {
     parts.push(
-      `${countLabel(promised, "enquiry still needs", "enquiries still need")} a call later today.`,
+      `${listNames(later)} still ${later.length === 1 ? "needs" : "need"} a call later today.`,
     );
-  } else if (breaching === 0) {
+  } else if (late.length === 0) {
     parts.push("Nothing else is due today.");
   }
   if (assigned > 0) {
     parts.push(
-      `${countLabel(assigned, "new enquiry was", "new enquiries were")} just assigned to you.`,
+      `${assigned} new ${assigned === 1 ? "enquiry was" : "enquiries were"} just assigned to you.`,
     );
   }
   return parts.join(" ");
@@ -51,11 +56,8 @@ function Block({
       {rows.length === 0 ? (
         <p>None in this list.</p>
       ) : (
-        <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
-          <RowHead />
-          {rows.map((row) => (
-            <EnquiryRow key={row.id} row={row} canCall />
-          ))}
+        <div className="lg:border-0">
+          <EnquiryList rows={rows} canCall />
         </div>
       )}
     </section>
@@ -92,7 +94,7 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {todayBrief(breaching.length, promised.length, assignment.assigned)}
+            {todayBrief(breaching, promised, assignment.assigned)}
           </p>
         </div>
         <RuleHeading>Today</RuleHeading>

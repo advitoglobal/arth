@@ -33,7 +33,7 @@ export default async function FloorLayout({
       <FloorNav seat={seat} unread={unread} />
       <div className="min-w-0 flex-1">
         <OfflineBar />
-        <div className="px-8 py-8">{children}</div>
+        <div className="px-4 py-6 lg:px-8 lg:py-8">{children}</div>
       </div>
     </div>
   );
