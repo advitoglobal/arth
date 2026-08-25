@@ -51,6 +51,9 @@ async function main() {
   if (!byEnquiryNo.some((r) => String(r.id) === RAMESH_ID)) {
     throw new Error("Enquiry number search should find Ramesh Kumar");
   }
+  if (byEnquiryNo.some((r) => r.customer_name === "Joseph Abel")) {
+    throw new Error("Enquiry number FFFFFFF1 must not match Joseph Abel");
+  }
 
   const google = await inTenant(WHITEFIELD, (tx) => searchEnquiries(tx, { source: "google" }));
   if (!google.some((r) => r.customer_name === "Ramesh Kumar")) {

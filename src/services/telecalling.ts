@@ -179,7 +179,9 @@ function matchesSearchBox(row: LeadRow, q: string) {
   const phoneHit = digits.length >= 4 && String(row.phone).includes(digits);
   const textHit = text.length >= 2 && hay.includes(text);
   const no = enquiryNo(String(row.id)).toLowerCase();
-  const idHit = compact.length >= 8 && (id.includes(compact) || no === compact);
+  const idHit =
+    (compact.length === 8 && no === compact) ||
+    (compact.length >= 12 && id.endsWith(compact));
   return phoneHit || textHit || idHit;
 }
 
