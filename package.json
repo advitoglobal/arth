@@ -14,7 +14,8 @@
     "db:assign": "npx tsx scripts/prove-assign.ts",
     "db:access": "npx tsx scripts/prove-access.ts",
     "db:scope": "npx tsx scripts/prove-scope.ts",
-    "db:search": "npx tsx scripts/prove-search.ts"
+    "db:search": "npx tsx scripts/prove-search.ts",
+    "prove": "npx tsx scripts/prove.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

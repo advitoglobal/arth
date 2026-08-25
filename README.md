@@ -2,9 +2,9 @@
 
 Enquiry accountability for Indian car dealerships. Not a CRM.
 
-Governed by the documents in `docs/books/` and THE ARTH BRAND SYSTEM v2.9.
+This repository is the **telecalling floor**: one department, working end to end. An enquiry has an owner, a working-hours clock, a recorded call outcome, and an append-only ledger. Scores, telephony, other workspaces, and the Exception Cockpit are not in this cycle.
 
-This cycle is the **telecalling floor**.
+Governed by `00-START-HERE.md`, `docs/books/SCOPE-BRIEF-TELECALLING.md`, `docs/ARTH-ARCHITECTURE.md`, and THE ARTH BRAND SYSTEM v2.9.
 
 ## Run
 
@@ -13,24 +13,33 @@ This cycle is the **telecalling floor**.
 cp .env.example .env.local   # set DATABASE_URL locally. Never commit it.
 npm install
 npm run db:migrate
-npm run db:isolate    # must print ISOLATION_OK
-npm run db:clock      # must print CLOCK_OK
-npm run db:assign     # must print ASSIGN_OK
-npm run db:access     # must print ACCESS_OK
-npm run db:search     # must print SEARCH_OK
+npm run prove            # isolation, clock, assignment, access, scope, search
 npm run dev
 ```
 
-Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product.
+Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product. Sign in on `/w/login`.
 
-Demo seats on `/w/login`:
+Demo seats:
 
 - Whitefield Motors · A. Iyer and K. Nair (telecallers, own books)
 - Coastal Cars · M. Pinto (other tenant)
-- Whitefield Motors · S. Rao (sales consultant, 403 on Today)
+- Whitefield Motors · S. Rao (sales consultant; Today is refused)
+
+## Floor
+
+| Screen | Route | Job |
+|---|---|---|
+| Today | `/w/dayb` | Queue: breaching and promised |
+| On a call | `/w/tele` | Disposition, stage, history |
+| My enquiries | `/w/pipe` | Nine stages, add enquiry |
+| Enquiry record | `/w/rec?id=` | Ledger. Opens from a row |
+| Search | `/w/search` | Phone first, six filters |
+| File enquiry | `/w/new` | When Search finds nothing |
+| Notifications | `/w/notif` | Each row says why it arrived |
+| My profile | `/w/profile` | Seat and working hours |
 
 ## API for later mobile
 
-`GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `GET /api/v1/notifications` · `GET /api/v1/hours` · `POST /api/v1/notifications/read` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
+`GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `POST /api/v1/leads` · `GET /api/v1/notifications` · `GET /api/v1/hours` · `POST /api/v1/notifications/read` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
 
 Same `withTenant` path. No second database for a phone app.

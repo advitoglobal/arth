@@ -5,6 +5,7 @@ export function canOpen(roleKey: string, screen: string): boolean {
     pipe: ["tele", "lead", "mgr", "sales"],
     rec: ["tele", "lead", "mgr", "sales"],
     search: ["tele", "sales", "adv"],
+    new: ["tele"],
     notif: ["tele", "sales", "svc"],
     profile: ["tele"],
   };

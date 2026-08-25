@@ -2,6 +2,7 @@ import { ActionButton } from "@/components/action-button";
 import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
+import { sourceLabel } from "@/lib/labels";
 import type { LeadRow } from "@/services/telecalling";
 
 function eventDate(row: LeadRow) {
@@ -29,13 +30,15 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
   };
 }
 
+const COLS =
+  "gap-2 px-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_7.5rem] lg:items-start";
+
 export function EnquiryRow({
   row,
-  showBand,
   canCall,
 }: {
   row: LeadRow;
-  showBand: boolean;
+  showBand?: boolean;
   canCall: boolean;
 }) {
   const next = nextDue(row);
@@ -47,13 +50,19 @@ export function EnquiryRow({
   const settled = row.stage_key === "delivered";
 
   return (
-    <div className="grid grid-cols-1 gap-2 border-b border-[var(--arth-n10)] px-4 py-3 lg:grid-cols-[repeat(9,minmax(0,1fr))] lg:items-center">
+    <div className={`grid grid-cols-1 border-b border-[var(--arth-n10)] py-3 ${COLS}`}>
       <div className="min-w-0">
-        <p className="truncate font-semibold" title={row.customer_name}>{row.customer_name}</p>
-        <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">{indianMobile(row.phone)}</p>
+        <p className="truncate font-semibold" title={row.customer_name}>
+          {row.customer_name}
+        </p>
+        <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
+          {indianMobile(row.phone)}
+        </p>
         <div className="mt-1 flex flex-wrap gap-1">
           {settled ? <StatusStamp state="settled" /> : null}
-          {!settled && (next.overdue || firstResponseLate) ? <StatusStamp state="overdue" /> : null}
+          {!settled && (next.overdue || firstResponseLate) ? (
+            <StatusStamp state="overdue" />
+          ) : null}
           {parked ? (
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--arth-n60)]">
               Parked
@@ -62,12 +71,18 @@ export function EnquiryRow({
         </div>
       </div>
       <div className="min-w-0">
-        <p className="truncate">{row.model_interest}</p>
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]">{row.variant_interest}</p>
+        <p className="truncate" title={row.model_interest ?? ""}>
+          {row.model_interest}
+        </p>
+        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={row.variant_interest ?? ""}>
+          {row.variant_interest}
+        </p>
       </div>
       <div className="min-w-0">
-        <p className="truncate">{row.source_key}</p>
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]">{row.source_detail}</p>
+        <p className="truncate">{sourceLabel(row.source_key)}</p>
+        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={row.source_detail ?? ""}>
+          {row.source_detail}
+        </p>
       </div>
       <div className="min-w-0">
         <p className="truncate">{row.stage_label}</p>
@@ -75,20 +90,23 @@ export function EnquiryRow({
           {row.stage_order ? `${row.stage_order} of 9` : ""}
         </p>
       </div>
-      <div className="min-w-0 truncate text-[12.5px]" title={eventDate(row)}>{eventDate(row)}</div>
+      <div className="min-w-0 text-[12.5px]" title={eventDate(row)}>
+        {eventDate(row)}
+      </div>
       <div
         className={
           next.overdue
-            ? "min-w-0 truncate font-semibold text-[var(--arth-overdue)]"
-            : "min-w-0 truncate font-medium"
+            ? "min-w-0 text-[12.5px] font-semibold text-[var(--arth-overdue)]"
+            : "min-w-0 text-[12.5px] font-medium"
         }
         title={next.text}
       >
         {next.text}
       </div>
-      <div className="min-w-0 truncate">{showBand ? row.difficulty_band : ""}</div>
-      <div className="arth-num min-w-0 truncate font-data">{inr(Number(row.expected_value_paise) / 100)}</div>
-      <div className="flex min-w-0 flex-wrap gap-2">
+      <div className="arth-num min-w-0 truncate text-right font-data text-[12.5px]">
+        {inr(Number(row.expected_value_paise) / 100)}
+      </div>
+      <div className="flex min-w-0 flex-col gap-1">
         {canCall && !settled && !row.lost_reason_key ? (
           <ActionButton href={`/w/tele?id=${row.id}`} variant="default">
             Call
@@ -102,14 +120,15 @@ export function EnquiryRow({
 
 export function RowHead() {
   return (
-    <div className="hidden grid-cols-[repeat(9,minmax(0,1fr))] gap-2 border-b border-[var(--arth-ink)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid">
+    <div
+      className={`hidden border-b border-[var(--arth-ink)] py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid ${COLS}`}
+    >
       <span>Customer</span>
       <span>Vehicle</span>
       <span>Source</span>
       <span>Stage</span>
       <span>Last activity</span>
       <span>Next action</span>
-      <span>Band</span>
       <span className="text-right">Value</span>
       <span>Actions</span>
     </div>

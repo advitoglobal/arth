@@ -141,6 +141,106 @@ export async function assignUnowned(tx: Tx, actorUserId: string) {
   return { assigned: assigned.length, actorUserId };
 }
 
+export async function createOwnedEnquiry(
+  tx: Tx,
+  input: {
+    userId: string;
+    customerName: string;
+    phone: string;
+    modelInterest: string;
+    variantInterest: string;
+    sourceKey: string;
+    sourceDetail: string;
+    expectedValuePaise: number;
+  },
+) {
+  const digits = input.phone.replace(/\D/g, "");
+  if (digits.length !== 10) {
+    throw new Error("Use a ten-digit Indian mobile number.");
+  }
+  const name = input.customerName.trim();
+  if (name.length < 2) {
+    throw new Error("A customer name is required.");
+  }
+
+  const [dup] = await tx<{ lead_id: string }[]>`
+    SELECT l.id::text AS lead_id
+    FROM customers c
+    JOIN leads l ON l.customer_id = c.id
+    WHERE c.phone = ${digits}
+    ORDER BY l.created_at DESC
+    LIMIT 1
+  `;
+  if (dup) {
+    const err = new Error("This number is already on the book. Open the existing record.");
+    (err as Error & { existingLeadId?: string }).existingLeadId = dup.lead_id;
+    throw err;
+  }
+
+  const [pos] = await tx<{ branch_id: string }[]>`
+    SELECT p.branch_id::text
+    FROM users u
+    JOIN positions p ON p.id = u.position_id
+    WHERE u.id = ${input.userId}::uuid
+  `;
+  if (!pos?.branch_id) {
+    throw new Error("This seat has no branch. The enquiry cannot be filed.");
+  }
+
+  const { hours, timeZone, firstResponseMinutes } = await branchHours(tx, pos.branch_id);
+  const arrived = new Date();
+  const due = firstResponseDue(arrived, hours, firstResponseMinutes, timeZone);
+  const band = difficultyAtAssignment(input.sourceKey);
+
+  const [customer] = await tx<{ id: string }[]>`
+    INSERT INTO customers (tenant_id, full_name, phone)
+    VALUES (current_setting('app.tenant_id')::uuid, ${name}, ${digits})
+    RETURNING id::text
+  `;
+
+  const [lead] = await tx<{ id: string }[]>`
+    INSERT INTO leads (
+      tenant_id, branch_id, customer_id, source_key, source_detail,
+      model_interest, variant_interest, stage_key, owner_user_id, assigned_at,
+      difficulty_band, difficulty_locked_at, expected_value_paise,
+      first_response_due, next_action_at
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${pos.branch_id}::uuid,
+      ${customer.id}::uuid,
+      ${input.sourceKey},
+      ${input.sourceDetail || null},
+      ${input.modelInterest || null},
+      ${input.variantInterest || null},
+      'assigned',
+      ${input.userId}::uuid,
+      now(),
+      ${band},
+      now(),
+      ${input.expectedValuePaise},
+      ${due.toISOString()}::timestamptz,
+      ${due.toISOString()}::timestamptz
+    )
+    RETURNING id::text
+  `;
+
+  await tx`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${lead.id}::uuid,
+      'created',
+      'USER',
+      ${input.userId}::uuid,
+      'Filed from Search. Owner is the seat that took the call.',
+      ${tx.json({ source_key: input.sourceKey })}
+    )
+  `;
+
+  return { leadId: lead.id, recorded: `${name} is on your book.` };
+}
+
 export async function scheduleNextAction(
   tx: Tx,
   leadId: string,

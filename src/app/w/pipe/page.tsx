@@ -6,18 +6,7 @@ import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
-
-const LABELS: Record<string, string> = {
-  new: "New",
-  assigned: "Assigned",
-  contacted: "Contacted",
-  qualified: "Qualified",
-  test_drive: "Test drive",
-  quotation: "Quotation",
-  negotiation: "Negotiation",
-  booked: "Booked",
-  delivered: "Delivered",
-};
+import { STAGE_LABEL } from "@/lib/labels";
 
 export default async function PipePage({
   searchParams,
@@ -40,6 +29,11 @@ export default async function PipePage({
         <p className="text-sm text-[var(--arth-n60)]">
           The full book, nine stages. Value from expected_value_paise. The queue is only what is due today.
         </p>
+        {canCall ? (
+          <ActionButton href="/w/new" variant="default">
+            Add enquiry
+          </ActionButton>
+        ) : null}
         <nav className="flex flex-wrap gap-2">
           <Link
             href="/w/pipe"
@@ -55,7 +49,7 @@ export default async function PipePage({
                 href={`/w/pipe?stage=${key}`}
                 className={`rounded-[3px] border px-3 py-1 text-sm ${active === key ? "border-[var(--arth-ink)]" : "border-[var(--arth-n10)]"}`}
               >
-                {LABELS[key]} · {n}
+                {STAGE_LABEL[key]} · {n}
               </Link>
             );
           })}
@@ -63,7 +57,7 @@ export default async function PipePage({
         {shown.length === 0 ? (
           <p>
             {active
-              ? `No enquiries in ${LABELS[active]}. They appear here when the stage moves.`
+              ? `No enquiries in ${STAGE_LABEL[active]}. They appear here when the stage moves.`
               : "No enquiries are assigned to you."}
             {!canCall && !active ? (
               <span className="mt-3 inline-block">

@@ -69,6 +69,7 @@ export function screenFromPath(pathname: string): string | null {
     "/w/pipe": "pipe",
     "/w/rec": "rec",
     "/w/search": "search",
+    "/w/new": "new",
     "/w/notif": "notif",
     "/w/profile": "profile",
   };

@@ -3,7 +3,7 @@ import { currentSeat, asSeat, canOpen } from "@/db/session";
 import { FloorNav } from "@/components/floor-nav";
 import { OfflineBar } from "@/components/offline-bar";
 import { hasDemoSession } from "@/lib/seats";
-import { countUnread } from "@/services/telecalling";
+import { countUnread, raiseFirstResponseBreaches } from "@/services/telecalling";
 import type { ReactNode } from "react";
 
 export default async function FloorLayout({
@@ -22,7 +22,10 @@ export default async function FloorLayout({
 
   const seat = await currentSeat();
   const unread = canOpen(seat.roleKey, "notif")
-    ? await asSeat((tx, s) => countUnread(tx, s.userId))
+    ? await asSeat(async (tx, s) => {
+        if (s.roleKey === "tele") await raiseFirstResponseBreaches(tx, s.userId);
+        return countUnread(tx, s.userId);
+      })
     : 0;
 
   return (

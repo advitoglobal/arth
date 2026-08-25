@@ -1,0 +1,47 @@
+export const SOURCE_LABEL: Record<string, string> = {
+  google: "Google",
+  meta: "Meta",
+  walk_in: "Walk-in",
+  inbound_call: "Inbound call",
+};
+
+export const STAGE_LABEL: Record<string, string> = {
+  new: "New",
+  assigned: "Assigned",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  test_drive: "Test drive",
+  quotation: "Quotation",
+  negotiation: "Negotiation",
+  booked: "Booked",
+  delivered: "Delivered",
+};
+
+export function sourceLabel(key: string | null | undefined) {
+  if (!key) return "";
+  return SOURCE_LABEL[key] ?? key;
+}
+
+export function stageLabel(key: string | null | undefined) {
+  if (!key) return "";
+  return STAGE_LABEL[key] ?? key.replaceAll("_", " ");
+}
+
+export function eventLabel(type: string) {
+  const map: Record<string, string> = {
+    assigned: "Assigned",
+    clock_deferred: "Clock deferred",
+    disposition: "Disposition",
+    correction: "Correction",
+    stage_change: "Stage moved",
+    call_attempt: "Call attempt",
+    created: "Filed",
+  };
+  return map[type] ?? type;
+}
+
+export function actorLabel(type: string | null | undefined) {
+  if (type === "SYSTEM") return "System";
+  if (type === "USER") return "Seat";
+  return type ?? "";
+}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { STAGE_KEYS } from "@/domain/clock";
+import { sourceLabel, stageLabel } from "@/lib/labels";
 
 export default async function SearchPage({
   searchParams,
@@ -50,9 +51,10 @@ export default async function SearchPage({
             Source
             <select name="source" defaultValue={filters.source ?? ""} className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2">
               <option value="">Any</option>
-              <option value="google">google</option>
-              <option value="meta">meta</option>
-              <option value="walk_in">walk_in</option>
+              <option value="google">{sourceLabel("google")}</option>
+              <option value="meta">{sourceLabel("meta")}</option>
+              <option value="walk_in">{sourceLabel("walk_in")}</option>
+              <option value="inbound_call">{sourceLabel("inbound_call")}</option>
             </select>
           </label>
           <label className="block text-sm">
@@ -60,7 +62,7 @@ export default async function SearchPage({
             <select name="stage" defaultValue={filters.stage ?? ""} className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2">
               <option value="">Any</option>
               {STAGE_KEYS.map((s) => (
-                <option key={s} value={s}>{s.replaceAll("_", " ")}</option>
+                <option key={s} value={s}>{stageLabel(s)}</option>
               ))}
             </select>
           </label>
@@ -102,7 +104,17 @@ export default async function SearchPage({
           <p>Enter a number, a name, or a filter. New inbound calls start here.</p>
         ) : null}
         {active && rows.length === 0 ? (
-          <p>No enquiries match. Widen the filters or try another four digits.</p>
+          <div className="space-y-3">
+            <p>No enquiries match. Widen the filters or try another four digits.</p>
+            {canOpen(seat.roleKey, "new") ? (
+              <ActionButton
+                href={`/w/new${filters.q ? `?phone=${encodeURIComponent(filters.q.replace(/\D/g, "").slice(0, 10))}` : ""}`}
+                variant="default"
+              >
+                File this enquiry
+              </ActionButton>
+            ) : null}
+          </div>
         ) : null}
         {rows.length > 0 ? (
           <div>

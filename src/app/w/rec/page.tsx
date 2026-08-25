@@ -3,6 +3,8 @@ import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, istDateTime, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
+import { sourceLabel } from "@/lib/labels";
+import { LedgerLine } from "@/components/ledger-line";
 import { Forbidden } from "@/components/forbidden";
 
 export default async function RecPage({
@@ -56,7 +58,7 @@ export default async function RecPage({
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Source</dt>
-              <dd>{lead.source_key} · {lead.source_detail}</dd>
+              <dd>{sourceLabel(String(lead.source_key))} · {lead.source_detail}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Stage</dt>
@@ -92,7 +94,7 @@ export default async function RecPage({
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Lost reason</dt>
-              <dd>{lead.lost_reason_key ?? "Open"}</dd>
+              <dd>{lead.lost_reason_label ?? (lead.lost_reason_key ? String(lead.lost_reason_key) : "Open")}</dd>
             </div>
           </dl>
           {canOpen(seat.roleKey, "tele") && String(lead.owner_user_id ?? "") === seat.userId ? (
@@ -109,15 +111,7 @@ export default async function RecPage({
         ) : (
           <ul className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
             {events.map((ev) => (
-              <li key={String(ev.id)} className="border-b border-[var(--arth-n10)] px-4 py-3 text-sm">
-                <span className="font-data">{istDateTime(String(ev.created_at))}</span>
-                {" · "}
-                {String(ev.actor_type)}
-                {ev.actor_name ? ` · ${String(ev.actor_name)}` : ""}
-                {" · "}
-                {String(ev.event_type)}
-                {ev.note ? ` · ${String(ev.note)}` : ""}
-              </li>
+              <LedgerLine key={String(ev.id)} ev={ev as Record<string, unknown>} />
             ))}
           </ul>
         )}

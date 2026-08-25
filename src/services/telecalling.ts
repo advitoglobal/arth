@@ -39,7 +39,7 @@ export async function listQueue(tx: Tx, ownerId: string) {
       l.stage_key,
       s.label AS stage_label,
       s.sort_order AS stage_order,
-      e.note AS last_event,
+      e.last_event,
       e.created_at AS last_event_at,
       l.next_action_at,
       l.difficulty_band,
@@ -54,10 +54,24 @@ export async function listQueue(tx: Tx, ownerId: string) {
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
     LEFT JOIN LATERAL (
-      SELECT note, created_at, disposition_key, revisit_at
-      FROM lead_events
-      WHERE lead_id = l.id
-      ORDER BY created_at DESC
+      SELECT
+        CASE
+          WHEN d.label IS NOT NULL THEN d.label
+          WHEN ev.event_type = 'assigned' THEN 'Assigned'
+          WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
+          WHEN ev.event_type = 'correction' THEN 'Correction'
+          WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
+          ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
+        END AS last_event,
+        ev.created_at,
+        ev.disposition_key,
+        ev.revisit_at
+      FROM lead_events ev
+      LEFT JOIN config_dispositions d
+        ON d.tenant_id = ev.tenant_id AND d.key = ev.disposition_key
+      WHERE ev.lead_id = l.id
+      ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
     WHERE l.owner_user_id = ${ownerId}
@@ -86,7 +100,7 @@ export async function listPipeline(tx: Tx, ownerId: string) {
       l.stage_key,
       s.label AS stage_label,
       s.sort_order AS stage_order,
-      e.note AS last_event,
+      e.last_event,
       e.created_at AS last_event_at,
       l.next_action_at,
       l.difficulty_band,
@@ -101,10 +115,24 @@ export async function listPipeline(tx: Tx, ownerId: string) {
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
     LEFT JOIN LATERAL (
-      SELECT note, created_at, disposition_key, revisit_at
-      FROM lead_events
-      WHERE lead_id = l.id
-      ORDER BY created_at DESC
+      SELECT
+        CASE
+          WHEN d.label IS NOT NULL THEN d.label
+          WHEN ev.event_type = 'assigned' THEN 'Assigned'
+          WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
+          WHEN ev.event_type = 'correction' THEN 'Correction'
+          WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
+          ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
+        END AS last_event,
+        ev.created_at,
+        ev.disposition_key,
+        ev.revisit_at
+      FROM lead_events ev
+      LEFT JOIN config_dispositions d
+        ON d.tenant_id = ev.tenant_id AND d.key = ev.disposition_key
+      WHERE ev.lead_id = l.id
+      ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
     WHERE l.owner_user_id = ${ownerId}
@@ -147,7 +175,7 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
       l.stage_key,
       s.label AS stage_label,
       s.sort_order AS stage_order,
-      e.note AS last_event,
+      e.last_event,
       e.created_at AS last_event_at,
       l.next_action_at,
       l.difficulty_band,
@@ -162,10 +190,24 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
     LEFT JOIN LATERAL (
-      SELECT note, created_at, disposition_key, revisit_at
-      FROM lead_events
-      WHERE lead_id = l.id
-      ORDER BY created_at DESC
+      SELECT
+        CASE
+          WHEN d.label IS NOT NULL THEN d.label
+          WHEN ev.event_type = 'assigned' THEN 'Assigned'
+          WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
+          WHEN ev.event_type = 'correction' THEN 'Correction'
+          WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
+          ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
+        END AS last_event,
+        ev.created_at,
+        ev.disposition_key,
+        ev.revisit_at
+      FROM lead_events ev
+      LEFT JOIN config_dispositions d
+        ON d.tenant_id = ev.tenant_id AND d.key = ev.disposition_key
+      WHERE ev.lead_id = l.id
+      ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
     ORDER BY l.created_at DESC
@@ -205,17 +247,20 @@ export async function getLead(tx: Tx, id: string) {
       c.full_name AS customer_name,
       c.phone,
       u.full_name AS owner_name,
-      s.label AS stage_label
+      s.label AS stage_label,
+      lr.label AS lost_reason_label
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN users u ON u.id = l.owner_user_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
+    LEFT JOIN config_lost_reasons lr ON lr.tenant_id = l.tenant_id AND lr.key = l.lost_reason_key
     WHERE l.id = ${id}::uuid
   `;
   const events = await tx`
-    SELECT e.*, u.full_name AS actor_name
+    SELECT e.*, u.full_name AS actor_name, d.label AS disposition_label
     FROM lead_events e
     LEFT JOIN users u ON u.id = e.actor_id
+    LEFT JOIN config_dispositions d ON d.tenant_id = e.tenant_id AND d.key = e.disposition_key
     WHERE e.lead_id = ${id}::uuid
     ORDER BY e.created_at DESC
   `;

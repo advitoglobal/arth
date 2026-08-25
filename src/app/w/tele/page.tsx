@@ -6,6 +6,7 @@ import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, inr, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
+import { LedgerLine } from "@/components/ledger-line";
 
 export default async function TelePage({
   searchParams,
@@ -86,14 +87,9 @@ export default async function TelePage({
           {events.length === 0 ? (
             <p className="mt-3 text-sm">No activity recorded yet. The first call writes the first row.</p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
               {events.map((ev) => (
-                <li key={String(ev.id)} className="border-b border-[var(--arth-n10)] py-2 text-sm">
-                  <span className="font-data">{istDateTime(String(ev.created_at))}</span>
-                  {" · "}
-                  {String(ev.event_type)}
-                  {ev.note ? ` · ${String(ev.note)}` : ""}
-                </li>
+                <LedgerLine key={String(ev.id)} ev={ev as Record<string, unknown>} />
               ))}
             </ul>
           )}
