@@ -18,7 +18,7 @@ Advito returning 10:00 to 11:00 IST. Preview on port 43127. Work continued.
 - Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. Queue is due today plus breaching. Parked is derived. My enquiries filters the nine stages. Enquiry record is the ledger. First-response breach writes a notification that names why it arrived.
 - Demo seats: A. Iyer, K. Nair (same tenant, own books), M. Pinto (Coastal), S. Rao (sales). Opening Today as S. Rao keeps `/w/dayb` and shows *You cannot open this screen* (not a silent return to My enquiries). Queue API remains HTTP 403.
 - Search: phone, name, source, stage, overdue, parked, vehicle. `GET /api/v1/search` carries the same filters. Iyer's book now has all nine stages plus a derived Parked row (Joseph Abel).
-- Today splits **Breaching** and **Promised**. Difficulty band stays off the telecaller record. `GET /api/v1/hours` returns the branch clock table.
+- Notifications show an unread count on the nav. A refused screen has a boxed button back to that seat's landing page. Search has a boxed Clear.
 
 ## Contradiction raised (SPEC)
 

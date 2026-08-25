@@ -3,6 +3,7 @@ import { searchEnquiries } from "@/services/telecalling";
 import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { STAGE_KEYS } from "@/domain/clock";
 
@@ -88,8 +89,13 @@ export default async function SearchPage({
               className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-3"
             />
           </label>
-          <div className="flex items-end">
-            <Button type="submit" className="h-11">Search</Button>
+          <div className="flex items-end gap-2">
+            <Button type="submit" className="h-11">
+              Search
+            </Button>
+            {active ? (
+              <ActionButton href="/w/search">Clear</ActionButton>
+            ) : null}
           </div>
         </form>
         {!active ? (

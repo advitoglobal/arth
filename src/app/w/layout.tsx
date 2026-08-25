@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
 import { cookies } from "next/headers";
-import { currentSeat } from "@/db/session";
+import { currentSeat, asSeat, canOpen } from "@/db/session";
 import { FloorNav } from "@/components/floor-nav";
 import { OfflineBar } from "@/components/offline-bar";
 import { hasDemoSession } from "@/lib/seats";
+import { countUnread } from "@/services/telecalling";
+import type { ReactNode } from "react";
 
 export default async function FloorLayout({
   children,
@@ -20,9 +21,13 @@ export default async function FloorLayout({
   }
 
   const seat = await currentSeat();
+  const unread = canOpen(seat.roleKey, "notif")
+    ? await asSeat((tx, s) => countUnread(tx, s.userId))
+    : 0;
+
   return (
     <div className="flex min-h-full flex-col bg-[var(--arth-n05)] lg:flex-row">
-      <FloorNav seat={seat} />
+      <FloorNav seat={seat} unread={unread} />
       <div className="min-w-0 flex-1">
         <OfflineBar />
         <div className="px-8 py-8">{children}</div>

@@ -457,6 +457,14 @@ export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
   return { raised };
 }
 
+export async function countUnread(tx: Tx, userId: string) {
+  const [row] = await tx<{ n: string }[]>`
+    SELECT count(*)::text AS n FROM notifications
+    WHERE user_id = ${userId}::uuid AND read_at IS NULL
+  `;
+  return Number(row?.n ?? 0);
+}
+
 export async function listNotifications(tx: Tx, userId: string) {
   return tx`
     SELECT * FROM notifications

@@ -1,5 +1,7 @@
+import { currentSeat } from "@/db/session";
 import { Forbidden } from "@/components/forbidden";
 
-export default function DeniedPage() {
-  return <Forbidden />;
+export default async function DeniedPage() {
+  const seat = await currentSeat();
+  return <Forbidden landing={`/w/${seat.workspaceKey}`} />;
 }

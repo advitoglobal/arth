@@ -13,10 +13,20 @@ const items = [
   { href: "/w/profile", screen: "profile", label: "My profile" },
 ];
 
-export function FloorNav({ seat }: { seat: Seat }) {
+export function FloorNav({
+  seat,
+  unread = 0,
+}: {
+  seat: Seat;
+  unread?: number;
+}) {
   const visible = items
     .filter((item) => canOpen(seat.roleKey, item.screen))
-    .map(({ href, label }) => ({ href, label }));
+    .map(({ href, label, screen }) => ({
+      href,
+      label:
+        screen === "notif" && unread > 0 ? `${label} · ${unread}` : label,
+    }));
   return (
     <>
       <aside className="hidden w-[240px] shrink-0 bg-[var(--arth-ink)] p-5 text-[var(--arth-n00)] lg:flex lg:flex-col">
