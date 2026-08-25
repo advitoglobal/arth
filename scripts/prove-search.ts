@@ -84,17 +84,21 @@ async function main() {
     throw new Error("Arrived date filter should include Ramesh Kumar on his arrived day");
   }
 
-  const today = istDay(new Date());
-  const dueToday = await inTenant(WHITEFIELD, (tx) =>
-    searchEnquiries(tx, { from: today, to: today, on: "due" }),
-  );
-  if (!dueToday.some((r) => r.customer_name === "Ramesh Kumar")) {
-    throw new Error("Follow-up due today should include Ramesh Kumar");
+  if (!ramesh.next_action_at) {
+    throw new Error("Ramesh Kumar must have a follow-up due date");
   }
-  if (dueToday.some((r) => r.customer_name === "Joseph Abel")) {
-    throw new Error("Follow-up due today should not include parked Joseph Abel");
+  const dueDay = istDay(ramesh.next_action_at);
+  const dueOnHisDay = await inTenant(WHITEFIELD, (tx) =>
+    searchEnquiries(tx, { from: dueDay, to: dueDay, on: "due" }),
+  );
+  if (!dueOnHisDay.some((r) => r.customer_name === "Ramesh Kumar")) {
+    throw new Error("Follow-up due date filter should include Ramesh Kumar on his due day");
+  }
+  if (dueOnHisDay.some((r) => r.customer_name === "Joseph Abel")) {
+    throw new Error("Follow-up due on Ramesh's day should not include parked Joseph Abel");
   }
 
+  const today = istDay(new Date());
   const arrivedToday = await inTenant(WHITEFIELD, (tx) =>
     searchEnquiries(tx, { from: today, to: today, on: "arrived" }),
   );
