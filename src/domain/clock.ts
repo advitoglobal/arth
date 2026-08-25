@@ -118,6 +118,23 @@ export function isOnDayQueue(
   return due.getTime() <= end.getTime();
 }
 
+export function isFirstResponseLate(row: {
+  first_response_due: Date | string | null;
+  first_responded_at: Date | string | null;
+  now?: Date;
+}): boolean {
+  if (!row.first_response_due || row.first_responded_at) return false;
+  return new Date(row.first_response_due).getTime() < (row.now ?? new Date()).getTime();
+}
+
+export function isFollowUpLate(
+  nextActionAt: Date | string | null,
+  now = new Date(),
+): boolean {
+  if (!nextActionAt) return false;
+  return new Date(nextActionAt).getTime() < now.getTime();
+}
+
 export const CALLBACK_REASON_AFTER_DAYS = 14;
 
 export function needsCallbackReason(revisitAt: Date | string | null, now = new Date()) {

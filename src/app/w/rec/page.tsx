@@ -87,8 +87,12 @@ export default async function RecPage({
               <dd className="font-data">{inr(Number(lead.expected_value_paise) / 100)}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Difficulty band</dt>
-              <dd>{lead.difficulty_band ?? "Locked at assignment"}</dd>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Assigned</dt>
+              <dd className="font-data">{istDateTime(lead.assigned_at)}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Lost reason</dt>
+              <dd>{lead.lost_reason_key ?? "Open"}</dd>
             </div>
           </dl>
           {canOpen(seat.roleKey, "tele") && String(lead.owner_user_id ?? "") === seat.userId ? (
