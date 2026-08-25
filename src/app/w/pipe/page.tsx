@@ -5,6 +5,7 @@ import { EnquiryRow, RowHead } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
 import { ActionButton } from "@/components/action-button";
+import { Forbidden } from "@/components/forbidden";
 
 const LABELS: Record<string, string> = {
   new: "New",
