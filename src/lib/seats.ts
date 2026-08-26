@@ -8,6 +8,7 @@ export const DEMO_USERS = {
     roleLabel: "telecaller",
     workspaceKey: "dayb",
     tenantName: "Whitefield Motors",
+    username: "iyer",
   },
   nair: {
     seatKey: "nair",
@@ -18,6 +19,7 @@ export const DEMO_USERS = {
     roleLabel: "telecaller",
     workspaceKey: "dayb",
     tenantName: "Whitefield Motors",
+    username: "nair",
   },
   pinto: {
     seatKey: "pinto",
@@ -28,6 +30,7 @@ export const DEMO_USERS = {
     roleLabel: "telecaller",
     workspaceKey: "dayb",
     tenantName: "Coastal Cars",
+    username: "pinto",
   },
   rao: {
     seatKey: "rao",
@@ -38,6 +41,18 @@ export const DEMO_USERS = {
     roleLabel: "sales consultant",
     workspaceKey: "pipe",
     tenantName: "Whitefield Motors",
+    username: "rao",
+  },
+  dsouza: {
+    seatKey: "dsouza",
+    tenantId: "22222222-2222-2222-2222-222222222222",
+    userId: "dddddddd-dddd-dddd-dddd-ddddddddddd5",
+    name: "M. Dsouza",
+    roleKey: "sales",
+    roleLabel: "sales consultant",
+    workspaceKey: "pipe",
+    tenantName: "Coastal Cars",
+    username: "dsouza",
   },
 } as const;
 
@@ -46,10 +61,9 @@ export type Seat = (typeof DEMO_USERS)[SeatKey];
 
 export function hasDemoSession(
   rawSeat: string | undefined,
-  rawTenant: string | undefined,
+  _rawTenant?: string | undefined,
 ): boolean {
-  if (rawSeat && rawSeat in DEMO_USERS) return true;
-  return rawTenant === "coastal" || rawTenant === "whitefield";
+  return Boolean(rawSeat && rawSeat in DEMO_USERS);
 }
 
 export function resolveSeatKey(

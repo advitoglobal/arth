@@ -9,12 +9,18 @@ export function DispositionPanel({
   leadId,
   nextLeadId,
   nextName,
+  autoContinue = false,
+  callSeconds = 0,
+  onNote,
   dispositions,
   lostReasons,
 }: {
   leadId: string;
   nextLeadId?: string;
   nextName?: string;
+  autoContinue?: boolean;
+  callSeconds?: number;
+  onNote?: (note: string) => void;
   dispositions: {
     key: string;
     label: string;
@@ -56,7 +62,8 @@ export function DispositionPanel({
       (!selected?.requires_revisit || revisit) &&
       (!selected?.requires_lost_reason || lost) &&
       (!showLostFact || lostFact.trim()) &&
-      (!farCallback || callbackReason.trim()),
+      (!farCallback || callbackReason.trim()) &&
+      (!selected?.connected || note.trim()),
   );
 
   useEffect(() => {
@@ -65,13 +72,17 @@ export function DispositionPanel({
       setConfirm(null);
       setEventId(null);
       if (nextLeadId) {
-        router.push(`/w/tele?id=${nextLeadId}`);
+        router.push(
+          autoContinue ? `/w/tele?id=${nextLeadId}&auto=1` : `/w/tele?id=${nextLeadId}`,
+        );
+      } else if (autoContinue) {
+        router.push("/w/dayb");
       } else {
         router.refresh();
       }
     }, 1500);
     return () => window.clearTimeout(t);
-  }, [confirm, eventId, router, nextLeadId]);
+  }, [confirm, eventId, router, nextLeadId, autoContinue]);
 
   async function save() {
     if (!canSave) return;
@@ -87,6 +98,7 @@ export function DispositionPanel({
         lostReasonKey: lost || undefined,
         callbackReason: callbackReason || undefined,
         lostFact: lostFact || undefined,
+        callSeconds,
       }),
     });
     const data = await res.json();
@@ -95,7 +107,7 @@ export function DispositionPanel({
       return;
     }
     setEventId(data.eventId ?? null);
-    setConfirm(`${data.recorded}. Next action is on the queue.`);
+    setConfirm(data.confirm ?? `${data.recorded}. Next action is on the queue.`);
     setNote("");
     setRevisit("");
     setLost("");
@@ -129,7 +141,9 @@ export function DispositionPanel({
           Undo writes a correcting entry. The original row stays.
           {nextName
             ? ` After this window the next enquiry is ${nextName}.`
-            : " After this window you stay on Today if nothing else is due."}
+            : autoContinue
+              ? " The list is finished. After this window you return to Today."
+              : " After this window you stay on Today if nothing else is due."}
         </p>
         <Button className="mt-4" variant="outline" onClick={undo}>
           Undo
@@ -223,12 +237,15 @@ export function DispositionPanel({
         </label>
       ) : null}
       <label className="block text-sm">
-        Note
+        What was said
         <textarea
           className="mt-1 block min-h-20 w-full rounded-[3px] border border-[var(--arth-n50)] px-2 py-2"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Example: asked for a Saturday test drive"
+          onChange={(e) => {
+            setNote(e.target.value);
+            onNote?.(e.target.value);
+          }}
+          placeholder="Example: asked for a Saturday test drive and the Zxi brochure"
         />
       </label>
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}

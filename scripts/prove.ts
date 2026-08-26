@@ -10,6 +10,7 @@ const checks: [string, string][] = [
   ["db:ledger", "LEDGER_OK"],
   ["db:disposition", "DISPOSITION_OK"],
   ["db:queue", "QUEUE_OK"],
+  ["db:points", "POINTS_OK"],
 ];
 
 let failed = 0;

@@ -5,6 +5,7 @@ import { inr, istDateTime, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
 import { enquiryNo, sourceLabel } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
+import { StagePanel } from "@/components/stage-panel";
 import { Forbidden } from "@/components/forbidden";
 import { FigureSource } from "@/components/figure-source";
 
@@ -104,11 +105,19 @@ export default async function RecPage({
               <dd>{lead.lost_reason_label ?? (lead.lost_reason_key ? String(lead.lost_reason_key) : "Open")}</dd>
             </div>
           </dl>
-          {canOpen(seat.roleKey, "tele") && String(lead.owner_user_id ?? "") === seat.userId ? (
+          {canOpen(seat.roleKey, "tele") &&
+          (!lead.owner_user_id || String(lead.owner_user_id) === seat.userId) ? (
             <div className="mt-6">
               <ActionButton href={`/w/tele?id=${lead.id}`} variant="default">
                 Log a call
               </ActionButton>
+            </div>
+          ) : null}
+          {canOpen(seat.roleKey, "rec") &&
+          String(lead.owner_user_id ?? "") === seat.userId &&
+          seat.roleKey === "sales" ? (
+            <div className="mt-6">
+              <StagePanel leadId={String(lead.id)} stageKey={String(lead.stage_key)} />
             </div>
           ) : null}
         </div>

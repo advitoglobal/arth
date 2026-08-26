@@ -5,6 +5,7 @@ import {
   nextActionDue,
   type DayHours,
 } from "@/domain/clock";
+import { pointsFor } from "@/domain/points";
 
 async function branchHours(tx: Tx, branchId: string): Promise<{
   hours: DayHours[];
@@ -36,6 +37,225 @@ async function branchHours(tx: Tx, branchId: string): Promise<{
   };
 }
 
+/** Clocks for unowned names. No owner until a telecaller reaches the customer. */
+export async function armUnownedClocks(tx: Tx) {
+  const unowned = await tx<{
+    id: string;
+    branch_id: string;
+    source_key: string;
+    created_at: Date;
+    first_response_due: Date | null;
+  }[]>`
+    SELECT id, branch_id, source_key, created_at, first_response_due
+    FROM leads
+    WHERE owner_user_id IS NULL
+      AND lost_reason_key IS NULL
+      AND first_responded_at IS NULL
+    ORDER BY created_at ASC
+  `;
+
+  let armed = 0;
+  for (const lead of unowned) {
+    const { hours, timeZone, firstResponseMinutes } = await branchHours(
+      tx,
+      lead.branch_id,
+    );
+    const arrived = new Date(lead.created_at);
+    const due = firstResponseDue(arrived, hours, firstResponseMinutes, timeZone);
+    const clockStart = due.getTime() - firstResponseMinutes * 60 * 1000;
+    const delayMinutes = Math.max(
+      0,
+      Math.round((clockStart - arrived.getTime()) / 60000),
+    );
+    const band = difficultyAtAssignment(lead.source_key);
+
+    await tx`
+      UPDATE leads SET
+        difficulty_band = COALESCE(difficulty_band, ${band}),
+        difficulty_locked_at = COALESCE(difficulty_locked_at, now()),
+        first_response_due = COALESCE(first_response_due, ${due.toISOString()}::timestamptz),
+        next_action_at = COALESCE(next_action_at, ${due.toISOString()}::timestamptz)
+      WHERE id = ${lead.id}::uuid
+    `;
+
+    if (delayMinutes > 0) {
+      const [exists] = await tx<{ n: string }[]>`
+        SELECT count(*)::text AS n FROM lead_events
+        WHERE lead_id = ${lead.id}::uuid AND event_type = 'clock_deferred'
+      `;
+      if (Number(exists?.n ?? 0) === 0) {
+        await tx`
+          INSERT INTO lead_events (
+            tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+          ) VALUES (
+            current_setting('app.tenant_id')::uuid,
+            ${lead.id}::uuid,
+            'clock_deferred',
+            'SYSTEM',
+            NULL,
+            'Clock starts at next working open. Delay is on the branch, not the telecaller.',
+            ${tx.json({ delay_minutes: delayMinutes, charged_to: "branch" })}
+          )
+        `;
+      }
+    }
+    armed += 1;
+  }
+  return { armed };
+}
+
+export async function claimOnReach(
+  tx: Tx,
+  leadId: string,
+  userId: string,
+) {
+  const [pos] = await tx<{ role_key: string }[]>`
+    SELECT role_key FROM users WHERE id = ${userId}::uuid
+  `;
+  if (pos?.role_key !== "tele") {
+    throw new Error("Only a telecaller can claim a new enquiry.");
+  }
+
+  const [lead] = await tx<{
+    owner_user_id: string | null;
+    source_key: string;
+    difficulty_band: string | null;
+  }[]>`
+    SELECT owner_user_id::text, source_key, difficulty_band
+    FROM leads WHERE id = ${leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (lead.owner_user_id && lead.owner_user_id !== userId) {
+    throw new Error("Another telecaller already reached this customer.");
+  }
+
+  const band = lead.difficulty_band ?? difficultyAtAssignment(lead.source_key);
+
+  const [row] = await tx<{ id: string }[]>`
+    UPDATE leads SET
+      owner_user_id = ${userId}::uuid,
+      assigned_at = COALESCE(assigned_at, now()),
+      first_responded_at = COALESCE(first_responded_at, now()),
+      difficulty_band = COALESCE(difficulty_band, ${band}),
+      difficulty_locked_at = COALESCE(difficulty_locked_at, now()),
+      stage_key = CASE WHEN stage_key IN ('new','assigned') THEN 'contacted' ELSE stage_key END
+    WHERE id = ${leadId}::uuid
+      AND (owner_user_id IS NULL OR owner_user_id = ${userId}::uuid)
+    RETURNING id::text
+  `;
+  if (!row) {
+    throw new Error("Another telecaller already reached this customer.");
+  }
+
+  if (!lead.owner_user_id) {
+    await tx`
+      INSERT INTO lead_events (
+        tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+      ) VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${leadId}::uuid,
+        'assigned',
+        'SYSTEM',
+        NULL,
+        'Claimed when the telecaller reached the customer.',
+        ${tx.json({ owner_user_id: userId, claimed_on: "connected_call" })}
+      )
+    `;
+  }
+  return { claimed: true };
+}
+
+export async function handoffToSales(
+  tx: Tx,
+  input: { leadId: string; userId: string; note: string },
+) {
+  const [lead] = await tx<{
+    owner_user_id: string | null;
+    stage_key: string;
+    branch_id: string;
+    customer_name: string;
+    difficulty_band: string | null;
+  }[]>`
+    SELECT
+      l.owner_user_id::text,
+      l.stage_key,
+      l.branch_id::text,
+      c.full_name AS customer_name,
+      l.difficulty_band
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE l.id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (lead.owner_user_id !== input.userId) {
+    throw new Error("Only the telecaller who reached this customer can hand it to sales.");
+  }
+  const order = ["new", "assigned", "contacted", "qualified"];
+  if (order.indexOf(lead.stage_key) < order.indexOf("qualified") && order.indexOf(lead.stage_key) >= 0) {
+    throw new Error("Qualify the enquiry before handing it to sales.");
+  }
+  if (lead.stage_key === "delivered" || lead.stage_key === "booked") {
+    throw new Error("This enquiry is already past a sales handoff.");
+  }
+
+  const [sales] = await tx<{ id: string; full_name: string }[]>`
+    SELECT u.id::text, u.full_name
+    FROM users u
+    JOIN positions p ON p.id = u.position_id
+    WHERE u.role_key = 'sales'
+      AND u.is_active = true
+      AND p.branch_id = ${lead.branch_id}::uuid
+    ORDER BY u.full_name
+    LIMIT 1
+  `;
+  if (!sales) {
+    throw new Error("This branch has no sales consultant to receive the enquiry.");
+  }
+
+  const points = pointsFor({
+    kind: "handoff",
+    difficulty: lead.difficulty_band,
+  });
+
+  await tx`
+    UPDATE leads SET owner_user_id = ${sales.id}::uuid
+    WHERE id = ${input.leadId}::uuid
+  `;
+
+  const [inserted] = await tx<{ id: string }[]>`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'handoff',
+      'USER',
+      ${input.userId}::uuid,
+      ${input.note.trim() || "Qualified. Handed to sales to convert."},
+      ${tx.json({ sales_user_id: sales.id, points })}
+    )
+    RETURNING id::text
+  `;
+
+  await tx`
+    INSERT INTO notifications (tenant_id, user_id, title, why, href)
+    VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${sales.id}::uuid,
+      ${lead.customer_name + " is ready for you"},
+      'Telecalling qualified this enquiry and handed it to sales. Conversion is now your job.',
+      ${"/w/rec?id=" + input.leadId}
+    )
+  `;
+
+  return {
+    recorded: `Handed to ${sales.full_name}. Conversion is now a sales job.`,
+    eventId: inserted?.id,
+    points,
+  };
+}
+
+/** Kept for proofs of the old round-robin path. The floor no longer auto-assigns. */
 export async function assignUnowned(tx: Tx, actorUserId: string) {
   const unowned = await tx<{
     id: string;

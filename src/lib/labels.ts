@@ -36,6 +36,8 @@ export function eventLabel(type: string) {
     stage_change: "Stage moved",
     call_attempt: "Call attempt",
     created: "Filed",
+    whatsapp: "WhatsApp sent",
+    handoff: "Handed to sales",
   };
   return map[type] ?? type;
 }

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
-import { branchHoursForUser } from "@/services/telecalling";
+import { branchHoursForUser, pointsTotal } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
 import { Forbidden } from "@/components/forbidden";
@@ -21,6 +21,7 @@ export default async function ProfilePage() {
     if (!canOpen(seat.roleKey, "profile")) return <Forbidden />;
     const hours = await branchHoursForUser(tx, seat.userId);
     const branch = hours[0]?.branch ?? seat.tenantName;
+    const points = await pointsTotal(tx, seat.userId);
     return (
       <div className="space-y-6">
         <RuleHeading>My profile</RuleHeading>
@@ -30,8 +31,10 @@ export default async function ProfilePage() {
           <p><span className="text-[var(--arth-n60)]">Opens on </span>{seat.workspaceKey === "dayb" ? "Today" : seat.workspaceKey === "pipe" ? "My enquiries" : "Log a call"}</p>
           <p><span className="text-[var(--arth-n60)]">Tenant </span>{seat.tenantName}</p>
           <p><span className="text-[var(--arth-n60)]">Branch </span>{branch}</p>
+          <p><span className="text-[var(--arth-n60)]">Username </span><span className="font-data">{seat.username}</span></p>
+          <p><span className="text-[var(--arth-n60)]">Points </span><span className="font-data">{points}</span></p>
           <p className="text-sm text-[var(--arth-n60)]">
-            Demo session. Production uses a server session and SSO.
+            Points = outcome base × difficulty. Connected under 20 seconds scores nothing. Duration comes from the on-screen timer, not a telephone recording.
           </p>
           <form action={leave}>
             <Button type="submit" variant="outline" className="mt-2 h-9 rounded-[3px]">

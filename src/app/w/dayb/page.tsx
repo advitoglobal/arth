@@ -1,9 +1,10 @@
 import { asSeat, canOpen } from "@/db/session";
 import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
-import { assignUnowned } from "@/services/assignment";
+import { armUnownedClocks } from "@/services/assignment";
 import { EnquiryList } from "@/components/enquiry-row";
 import { FigureSource } from "@/components/figure-source";
 import { RuleHeading } from "@/components/brand/type";
+import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
@@ -17,7 +18,7 @@ function listNames(rows: LeadRow[]) {
   return `${names.slice(0, 2).join(", ")} and ${names.length - 2} more`;
 }
 
-function todayBrief(late: LeadRow[], later: LeadRow[], assigned: number) {
+function todayBrief(late: LeadRow[], later: LeadRow[], pool: number) {
   const parts: string[] = [];
   if (late.length > 0) {
     parts.push(
@@ -33,9 +34,9 @@ function todayBrief(late: LeadRow[], later: LeadRow[], assigned: number) {
   } else if (late.length === 0) {
     parts.push("Nothing else is due today.");
   }
-  if (assigned > 0) {
+  if (pool > 0) {
     parts.push(
-      `${assigned} new ${assigned === 1 ? "enquiry was" : "enquiries were"} just assigned to you.`,
+      `${pool} new ${pool === 1 ? "enquiry is" : "enquiries are"} still in the shared book. They stay there until a telecaller reaches the customer.`,
     );
   }
   return parts.join(" ");
@@ -68,7 +69,7 @@ function Block({
 export default async function DayPanelPage() {
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "dayb")) return <Forbidden />;
-    const assignment = await assignUnowned(tx, seat.userId);
+    await armUnownedClocks(tx);
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listQueue(tx, seat.userId);
     const breaching = rows.filter(
@@ -82,6 +83,8 @@ export default async function DayPanelPage() {
     );
     const seen = new Set([...breaching, ...promised].map((r) => r.id));
     const rest = rows.filter((r) => !seen.has(r.id));
+    const pool = rows.filter((r) => !r.owner_user_id).length;
+    const next = rows[0];
 
     return (
       <div className="space-y-8">
@@ -95,19 +98,29 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {todayBrief(breaching, promised, assignment.assigned)}
+            {todayBrief(breaching, promised, pool)}
           </p>
+          {next ? (
+            <div className="mt-4">
+              <ActionButton href={`/w/tele?id=${next.id}&auto=1`} variant="default">
+                Start next call · {next.customer_name}
+              </ActionButton>
+              <p className="mt-2 text-sm text-[var(--arth-n60)]">
+                Lines up late names first, then the rest of Today, until the list is finished.
+              </p>
+            </div>
+          ) : null}
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Your list for today: late calls first, then what you still promised to do today. The rest of your book is in My enquiries.
+          Your list for today: late calls first, then what you still promised to do today. New names are on this list for every telecaller at the branch until someone reaches the customer. After that they stay with that seat. Qualify, then hand to sales. The rest of your book is in My enquiries.
         </p>
         <FigureSource
           source="your queue"
           period="today in India Standard Time, late first"
         />
         {rows.length === 0 ? (
-          <p>No enquiries are due. New ones appear here when they are assigned.</p>
+          <p>No enquiries are due. New names appear here for every telecaller until someone reaches the customer.</p>
         ) : (
           <>
             <Block

@@ -1,13 +1,22 @@
 import type { Tx } from "@/db/with-tenant";
 import {
+  isFirstResponseLate,
+  isFollowUpLate,
   isOnDayQueue,
   isParked,
   needsCallbackReason,
   revisitDayToInstant,
   STAGE_KEYS,
 } from "@/domain/clock";
-import { scheduleNextAction } from "@/services/assignment";
+import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
+import { claimOnReach, scheduleNextAction } from "@/services/assignment";
 import { enquiryNo, stageLabel } from "@/lib/labels";
+import {
+  type WhatsAppKind,
+  waMeUrl,
+  whatsappKindLabel,
+  whatsappMessage,
+} from "@/lib/whatsapp";
 
 export type LeadRow = {
   id: string;
@@ -70,6 +79,8 @@ export async function listQueue(tx: Tx, ownerId: string) {
           WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
           WHEN ev.event_type = 'correction' THEN 'Correction'
           WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'whatsapp' THEN 'WhatsApp sent'
+          WHEN ev.event_type = 'handoff' THEN 'Handed to sales'
           WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
           ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
         END AS last_event,
@@ -83,17 +94,35 @@ export async function listQueue(tx: Tx, ownerId: string) {
       ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
-    WHERE l.owner_user_id = ${ownerId}
+    WHERE (
+        l.owner_user_id = ${ownerId}
+        OR (
+          l.owner_user_id IS NULL
+          AND l.first_responded_at IS NULL
+          AND l.lost_reason_key IS NULL
+        )
+      )
       AND l.stage_key <> 'delivered'
       AND l.lost_reason_key IS NULL
     ORDER BY l.next_action_at ASC NULLS LAST
   `;
-  return rows.filter((r) => {
-    if (isParked(r) && r.next_action_at && new Date(r.next_action_at) > new Date()) {
-      return false;
-    }
-    return isOnDayQueue(r.next_action_at);
-  });
+  return rows
+    .filter((r) => {
+      if (isParked(r) && r.next_action_at && new Date(r.next_action_at) > new Date()) {
+        return false;
+      }
+      return isOnDayQueue(r.next_action_at);
+    })
+    .sort((a, b) => {
+      const lateA =
+        isFirstResponseLate(a) || isFollowUpLate(a.next_action_at) ? 0 : 1;
+      const lateB =
+        isFirstResponseLate(b) || isFollowUpLate(b.next_action_at) ? 0 : 1;
+      if (lateA !== lateB) return lateA - lateB;
+      const ta = a.next_action_at ? new Date(a.next_action_at).getTime() : 0;
+      const tb = b.next_action_at ? new Date(b.next_action_at).getTime() : 0;
+      return ta - tb;
+    });
 }
 
 export async function listPipeline(tx: Tx, ownerId: string) {
@@ -131,6 +160,8 @@ export async function listPipeline(tx: Tx, ownerId: string) {
           WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
           WHEN ev.event_type = 'correction' THEN 'Correction'
           WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'whatsapp' THEN 'WhatsApp sent'
+          WHEN ev.event_type = 'handoff' THEN 'Handed to sales'
           WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
           ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
         END AS last_event,
@@ -241,6 +272,8 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
           WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
           WHEN ev.event_type = 'correction' THEN 'Correction'
           WHEN ev.event_type = 'created' THEN 'Filed'
+          WHEN ev.event_type = 'whatsapp' THEN 'WhatsApp sent'
+          WHEN ev.event_type = 'handoff' THEN 'Handed to sales'
           WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
           ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
         END AS last_event,
@@ -312,7 +345,7 @@ export async function getLead(tx: Tx, id: string) {
   return { lead: row, events };
 }
 
-async function assertOwner(tx: Tx, leadId: string, userId: string) {
+async function assertCanLog(tx: Tx, leadId: string, userId: string) {
   const [lead] = await tx<{ owner_user_id: string | null }[]>`
     SELECT owner_user_id::text FROM leads WHERE id = ${leadId}::uuid
   `;
@@ -333,12 +366,14 @@ export async function recordDisposition(
     lostReasonKey?: string;
     callbackReason?: string;
     lostFact?: string;
+    callSeconds?: number;
   },
 ) {
   if (!input.dispositionKey?.trim()) {
     throw new Error("Select an outcome.");
   }
   const revisitAt = revisitDayToInstant(input.revisitAt) ?? input.revisitAt;
+  const callSeconds = Math.max(0, Math.floor(Number(input.callSeconds ?? 0) || 0));
   const [disp] = await tx<{
     requires_revisit: boolean;
     requires_lost_reason: boolean;
@@ -349,7 +384,10 @@ export async function recordDisposition(
     FROM config_dispositions WHERE key = ${input.dispositionKey}
   `;
   if (!disp) throw new Error("Unknown disposition");
-  await assertOwner(tx, input.leadId, input.userId);
+  await assertCanLog(tx, input.leadId, input.userId);
+  if (disp.connected && !input.note.trim()) {
+    throw new Error("Write what was said on this call. It is stored on the enquiry history.");
+  }
   if (disp.requires_revisit && !revisitAt) {
     throw new Error("A revisit date is required for postponed.");
   }
@@ -368,9 +406,25 @@ export async function recordDisposition(
     throw new Error("A reason is required when the callback is more than 14 days away.");
   }
 
-  const [before] = await tx<{ next_action_at: Date | null; stage_key: string }[]>`
-    SELECT next_action_at, stage_key FROM leads WHERE id = ${input.leadId}::uuid
+  const [before] = await tx<{
+    next_action_at: Date | null;
+    stage_key: string;
+    difficulty_band: string | null;
+  }[]>`
+    SELECT next_action_at, stage_key, difficulty_band FROM leads WHERE id = ${input.leadId}::uuid
   `;
+
+  const scoringConnect = isScoringConnect(disp.connected, callSeconds);
+  if (scoringConnect) {
+    await claimOnReach(tx, input.leadId, input.userId);
+  }
+
+  const points = pointsFor({
+    kind: input.dispositionKey,
+    connected: disp.connected,
+    callSeconds,
+    difficulty: before?.difficulty_band ?? null,
+  });
 
   const previous = {
     previous_next_action_at: before?.next_action_at
@@ -379,12 +433,15 @@ export async function recordDisposition(
     previous_stage_key: before?.stage_key ?? null,
     callback_reason: input.callbackReason ?? null,
     lost_fact: input.lostFact ?? null,
+    points,
+    scoring_connected: scoringConnect,
+    connect_floor_seconds: 20,
   };
 
   const [inserted] = await tx<{ id: string }[]>`
     INSERT INTO lead_events (
       tenant_id, lead_id, event_type, actor_type, actor_id,
-      disposition_key, revisit_at, note, payload
+      disposition_key, call_seconds, revisit_at, note, payload
     )
     VALUES (
       current_setting('app.tenant_id')::uuid,
@@ -393,6 +450,7 @@ export async function recordDisposition(
       'USER',
       ${input.userId}::uuid,
       ${input.dispositionKey},
+      ${callSeconds},
       ${revisitAt ?? null},
       ${input.note},
       ${tx.json(previous)}
@@ -415,8 +473,6 @@ export async function recordDisposition(
     );
     await tx`
       UPDATE leads SET
-        first_responded_at = COALESCE(first_responded_at, now()),
-        stage_key = CASE WHEN stage_key IN ('new','assigned') THEN 'contacted' ELSE stage_key END,
         next_action_at = ${revisit.toISOString()}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
@@ -428,14 +484,18 @@ export async function recordDisposition(
     );
     await tx`
       UPDATE leads SET
-        first_responded_at = COALESCE(first_responded_at, now()),
-        stage_key = CASE WHEN stage_key IN ('new','assigned') THEN 'contacted' ELSE stage_key END,
         next_action_at = ${next.toISOString()}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
   }
 
-  return { recorded: disp.label, eventId: inserted?.id };
+  const earned = pointsLine(points, scoringConnect, disp.connected);
+  return {
+    recorded: disp.label,
+    eventId: inserted?.id,
+    points,
+    confirm: `${disp.label}. ${earned} Next action is on the queue.`,
+  };
 }
 
 export async function undoDisposition(
@@ -501,7 +561,7 @@ export async function advanceStage(
   tx: Tx,
   input: { leadId: string; userId: string; to: string },
 ) {
-  await assertOwner(tx, input.leadId, input.userId);
+  await assertCanLog(tx, input.leadId, input.userId);
   const [lead] = await tx<{ stage_key: string }[]>`
     SELECT stage_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
@@ -536,6 +596,88 @@ export async function advanceStage(
   return {
     recorded: `Stage is now ${stageLabel(input.to)}`,
     eventId: inserted?.id,
+  };
+}
+
+export async function pointsTotal(tx: Tx, userId: string) {
+  const [row] = await tx<{ n: string }[]>`
+    SELECT COALESCE(sum((payload->>'points')::int), 0)::text AS n
+    FROM lead_events
+    WHERE actor_id = ${userId}::uuid
+      AND payload->>'points' IS NOT NULL
+  `;
+  return Number(row?.n ?? 0);
+}
+
+export async function sendWhatsApp(
+  tx: Tx,
+  input: {
+    leadId: string;
+    userId: string;
+    kind: WhatsAppKind;
+    conversation: string;
+    senderName: string;
+    dealer: string;
+  },
+) {
+  await assertCanLog(tx, input.leadId, input.userId);
+  const [lead] = await tx<{
+    customer_name: string;
+    phone: string;
+    model_interest: string | null;
+    variant_interest: string | null;
+    difficulty_band: string | null;
+  }[]>`
+    SELECT
+      c.full_name AS customer_name,
+      c.phone,
+      l.model_interest,
+      l.variant_interest,
+      l.difficulty_band
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE l.id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  const text = whatsappMessage({
+    kind: input.kind,
+    customerName: lead.customer_name,
+    model: lead.model_interest,
+    variant: lead.variant_interest,
+    conversation: input.conversation,
+    dealer: input.dealer,
+    sender: input.senderName,
+  });
+  const url = waMeUrl(lead.phone, text);
+  const points = pointsFor({
+    kind: "whatsapp",
+    difficulty: lead.difficulty_band,
+  });
+  const [inserted] = await tx<{ id: string }[]>`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'whatsapp',
+      'USER',
+      ${input.userId}::uuid,
+      ${whatsappKindLabel(input.kind) + " prepared for WhatsApp."},
+      ${tx.json({
+        kind: input.kind,
+        text,
+        points,
+        channel: "whatsapp",
+      })}
+    )
+    RETURNING id::text
+  `;
+  return {
+    recorded: `${whatsappKindLabel(input.kind)} is on the enquiry history. WhatsApp opens with the prepared message. Attach the PDF from this phone. A WhatsApp Business API is not connected.`,
+    eventId: inserted?.id,
+    points,
+    url,
+    text,
   };
 }
 

@@ -6,6 +6,9 @@ type Payload = {
   callback_reason?: string | null;
   charged_to?: string | null;
   delay_minutes?: number | null;
+  points?: number | null;
+  kind?: string | null;
+  scoring_connected?: boolean | null;
 };
 
 export function LedgerLine({
@@ -24,6 +27,12 @@ export function LedgerLine({
     payload?.callback_reason ? `Callback reason: ${payload.callback_reason}` : null,
     payload?.charged_to ? `Delay charged to ${payload.charged_to}` : null,
     payload?.delay_minutes != null ? `${payload.delay_minutes} minutes deferred` : null,
+    payload?.kind ? String(payload.kind) : null,
+    ev.call_seconds != null ? `${ev.call_seconds}s on the timer` : null,
+    payload?.points != null ? `+${payload.points} points` : null,
+    payload?.scoring_connected === false && ev.disposition_key
+      ? "Under 20 seconds, not scored as connected"
+      : null,
     ev.note ? String(ev.note) : null,
   ].filter(Boolean);
 

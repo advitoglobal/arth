@@ -18,6 +18,7 @@
     "db:ledger": "npx tsx scripts/prove-ledger.ts",
     "db:disposition": "npx tsx scripts/prove-disposition.ts",
     "db:queue": "npx tsx scripts/prove-queue.ts",
+    "db:points": "npx tsx scripts/prove-points.ts",
     "prove": "npx tsx scripts/prove.ts"
   },
   "dependencies": {

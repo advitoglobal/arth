@@ -12,3 +12,8 @@ export function requireScreen(seat: Seat, screen: string) {
   if (!canOpen(seat.roleKey, screen)) return forbiddenJson();
   return null;
 }
+
+export function requireAnyScreen(seat: Seat, screens: string[]) {
+  if (screens.some((screen) => canOpen(seat.roleKey, screen))) return null;
+  return forbiddenJson();
+}

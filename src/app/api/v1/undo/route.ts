@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
 import { undoDisposition } from "@/services/telecalling";
-import { requireScreen } from "@/lib/http";
+import { requireAnyScreen } from "@/lib/http";
 
 export async function POST(req: Request) {
   const body = await req.json();
   try {
     return await asSeat(async (tx, seat) => {
-      const denied = requireScreen(seat, "tele");
+      const denied = requireAnyScreen(seat, ["tele", "rec"]);
       if (denied) return denied;
       const result = await undoDisposition(tx, {
         leadId: body.leadId,

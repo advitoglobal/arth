@@ -216,7 +216,8 @@ export default async function SearchPage({
               rows={rows}
               showValue={canSeeValue(seat.roleKey)}
               canCall={(row) =>
-                canOpen(seat.roleKey, "tele") && row.owner_user_id === seat.userId
+                canOpen(seat.roleKey, "tele") &&
+                (!row.owner_user_id || row.owner_user_id === seat.userId)
               }
             />
           </div>
