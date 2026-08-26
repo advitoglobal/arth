@@ -379,6 +379,8 @@ CREATE POLICY tenant_isolation ON leads
 `FORCE` matters: without it the table owner bypasses the policy, and migrations run as the
 owner. **Apply this to every tenant-scoped table. There are no exceptions.**
 
+**As built in this repository:** four walls inside the dealer. Law: `docs/books/VISIBILITY-WALLS.md`.
+
 ### 5.2 Append-only, by privilege
 
 ```sql
@@ -435,7 +437,7 @@ Anything below, if broken, is a defect regardless of what a ticket says.
 
 1. **Money is integer paise.** Never float, never `NUMERIC` for currency.
 2. **Ledgers are append-only by privilege**, not by convention.
-3. **Tenant isolation is forced at the database.**
+3. **Tenant isolation is forced at the database.** Four walls inside the dealer. `docs/books/VISIBILITY-WALLS.md`.
 4. **Derived, never stored:** chain state, exception state, Parked.
 5. **Nine stages.** `new · assigned · contacted · qualified · test_drive · quotation · negotiation · booked · delivered`
 6. **Stages, dispositions, chain steps, plans and thresholds are rows.**

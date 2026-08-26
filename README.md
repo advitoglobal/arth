@@ -4,7 +4,7 @@ Enquiry accountability for Indian car dealerships. Not a CRM.
 
 This repository is the **telecalling floor**. Telecalling qualifies an enquiry and hands it to sales. Sales converts. An enquiry has a clock, a call outcome, points, and an append-only ledger.
 
-Governed by `00-START-HERE.md`, `docs/books/SCOPE-BRIEF-TELECALLING.md`, `docs/ARTH-ARCHITECTURE.md`, and THE ARTH BRAND SYSTEM v2.9.
+Governed by `00-START-HERE.md`, `docs/books/VISIBILITY-WALLS.md`, `docs/books/SCOPE-BRIEF-TELECALLING.md`, `docs/ARTH-ARCHITECTURE.md`, and THE ARTH BRAND SYSTEM v2.9.
 
 ## Run
 
@@ -56,4 +56,4 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | Notifications | `/w/notif` | Each row says why it arrived |
 | My profile | `/w/profile` | Seat, hours, points |
 
-`npm run prove` prints isolation, clock, assign (shared pool), access, scope, search, ledger, disposition, queue, points.
+`npm run prove` prints isolation, clock, assign (shared pool), access, scope, search, ledger, disposition, queue, points, and walls. `WALLS_OK` is required before any new department.

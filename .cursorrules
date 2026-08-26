@@ -15,9 +15,8 @@ Build order: prove tenant isolation first (two tenants, same unfiltered SELECT, 
 only its own rows). Then working hours. Then the telecalling workspace per
 SCOPE-BRIEF-TELECALLING.md. Then Architecture section 7.
 
-Points and telephony are deliberately excluded from the first milestone. The 20-second
-connect floor cannot be enforced without call duration, and shipping a score before its
-anti-gaming control exists teaches a floor to game it.
+Points ship with on-screen call duration and the 20-second floor. Live telephony
+and recording files are still excluded until a provider is contracted.
 
 ## Non-negotiable
 
@@ -26,7 +25,9 @@ anti-gaming control exists teaches a floor to game it.
   new row. A column that must be written after insert cannot exist on such a table.
 - Tenant isolation is FORCED row-level security at the database, keyed on a
   transaction-scoped session setting. All database access goes through withTenant().
-  There is no other path.
+  There is no other path. Inside a dealer the four walls apply to every department:
+  dealer, branch, team, owner. Search and Filter included. Law:
+  `docs/books/VISIBILITY-WALLS.md`. A new table or workspace that skips this is a defect.
 - Derived, never stored: chain state, exception state, Parked.
 - Nine stages: new, assigned, contacted, qualified, test_drive, quotation, negotiation,
   booked, delivered. After booked, progress belongs to the delivery chain.
@@ -57,7 +58,7 @@ ASSUMED (you are guessing). Never state an assumption as a fact.
 Read REWORK-REGISTER.md before proposing a design; it lists ideas already rejected and
 the condition for revisiting each. It never blocks a fix: a defect is the work, not rework.
 
-Read DECISIONS.md before designing anything.
+Read DECISIONS.md and `docs/books/VISIBILITY-WALLS.md` before designing anything.
 
 Prefer asking over choosing when a specification is ambiguous.
 

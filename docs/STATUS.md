@@ -1,15 +1,15 @@
 # Status
 
 **Date:** 26 Aug 2026
-**What you get this cycle:** the telecalling floor, including username/password login, a shared new book until a telecaller reaches the customer, auto caller, on-screen call duration, points with the 20-second floor, WhatsApp templates, and handoff to sales. Not a live telephone exchange, not a recording file, not the Exception Cockpit.
+**What you get this cycle:** the telecalling floor, including username/password login, a shared new book until a telecaller reaches the customer, auto caller, on-screen call duration, points with the 20-second floor, WhatsApp templates, and handoff to sales. Four visibility walls (dealer, branch, team, owner) are registered as platform law for every later department. Not a live telephone exchange, not a recording file, not the Exception Cockpit.
 
-**Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
+**Governing pack:** 00-START-HERE, VISIBILITY-WALLS, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 
 **Director review pack:** `docs/REVIEW-TELECALLING-BUILT.md` (IT + Product: what is built, how to walk it, contradictions, what is out of scope). UI extraction for Product Director: `docs/UI-EVIDENCE.md`.
 
 ## What is built (this cycle)
 
-- Step 0 isolation: Postgres 16, forced RLS, `withTenant`. `npm run prove` must print `PROVE_OK`.
+- Step 0 isolation: Postgres 16, forced RLS, `withTenant` bound to an active seat of that dealer. Four walls (`docs/books/VISIBILITY-WALLS.md`). `npm run prove` must print `PROVE_OK` including `WALLS_OK` and `ISOLATION_OK`.
 - Working hours Mon-Sat 09:30-18:30 IST, Sunday closed. Sunday 21:40 IST starts Monday 09:30 IST. First call due Monday 10:00 IST.
 - Round-robin on Today open is **withdrawn**. New names stay unowned until a connected call of 20 seconds or more. After-hours delay is still a `clock_deferred` event charged to the **branch**. Anita Desai is in the shared book, then belongs to the telecaller who reaches her.
 - Username and password login. Demonstration password is documented on `/w/login`. Production uses SSO.

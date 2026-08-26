@@ -5,6 +5,17 @@ Read this before designing anything.
 
 ---
 
+## 2026-08-26 · Four visibility walls, every department
+Dealer, then branch, then team, then owner. After a telecaller reaches the customer, Search and Filter hide that enquiry from other telecallers. Team leader sees the team. Branch manager sees the branch. Dealer principal sees this dealer only. Forced RLS plus `arth_lead_visible`. Fail closed without `app.user_id`. Law: `docs/books/VISIBILITY-WALLS.md`. Sales, service, and every later department inherit this. A bypass is a defect.
+
+## 2026-08-26 · Shared book until reach, then exclusive
+New names are visible to every telecaller at the branch until a connected call of 20 seconds or more. Then the owner is the telecaller who reached the customer. Not-connected outcomes do not claim.
+
+## 2026-08-26 · Telecalling qualifies, sales converts
+Hand to sales is allowed from Qualified. Conversion is the sales consultant's job. Today stays a telecalling screen.
+
+---
+
 ## 2026-08-21 · Nine stages, not twelve
 `New · Assigned · Contacted · Qualified · Test drive · Quotation · Negotiation · Booked · Delivered`
 Twelve folded delivery-chain steps into the sales pipeline. Allocated, Invoiced and Registered are chain steps. Modelling them twice means two places to disagree about where a car is. After Booked, progress is the chain's to report.

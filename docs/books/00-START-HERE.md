@@ -53,7 +53,7 @@ that otherwise look arbitrary.
 | 3 | `ARTH-BUILD-SPECIFICATION.md` | Objects, state machines, access matrix, **Appendix B: all 80 screens with routes and access lists** |
 | 4 | `Arth-Platform.html` | **The visual reference. Open it in a browser now.** 80 screens, 22 seats, switch roles in the sidebar |
 | 5 | `SCOPE-BRIEF-TELECALLING.md` | The first milestone, and why it is that one |
-| 6 | `DECISIONS.md` | Every settled ruling, dated. **Before designing anything** |
+| 6 | `DECISIONS.md` and `docs/books/VISIBILITY-WALLS.md` | Rulings, and the four walls every department inherits |
 | 7 | `REWORK-REGISTER.md` | Designs already rejected, with the condition for revisiting each. **Before proposing anything** |
 | 8 | `ARTH-PROJECT-CONFIGURATION-BOOK.html` | What is configurable and by whom, integrations, failure modes, runbooks |
 | 9 | `EIGHT-DECISIONS-ANSWERED.md` | Eight product rulings with full reasoning |
@@ -113,7 +113,7 @@ Architecture §6.
 
 1. **Money is integer paise.** Never float, never `NUMERIC` for currency.
 2. **Ledgers are append-only by privilege**, not convention. A correction is a new row.
-3. **Tenant isolation is forced at the database.**
+3. **Tenant isolation is forced at the database.** Inside a dealer, **four walls**: dealer, branch, team, owner. Search and Filter obey them. Law: `docs/books/VISIBILITY-WALLS.md`. Every later department inherits this.
 4. **Derived, never stored:** chain state, exception state, Parked.
 5. **Nine stages.** `new assigned contacted qualified test_drive quotation negotiation booked delivered`
 6. **Stages, dispositions, chain steps, plans and thresholds are rows, not code.**
@@ -127,6 +127,8 @@ Architecture §6.
 14. **No credential in any commit, document or chat.**
 15. **No em dashes in product copy** (UI strings, labels, notifications). A brand voice
     rule about what a *user* reads. These specification documents use them freely.
+16. **Four visibility walls, every department.** Dealer, then branch, then team, then owner.
+    Fail closed if the session has no user. `docs/books/VISIBILITY-WALLS.md`.
 
 ---
 

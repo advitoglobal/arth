@@ -9,6 +9,7 @@ import {
   STAGE_KEYS,
 } from "@/domain/clock";
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
+import { isPersonalRole } from "@/domain/visibility";
 import { claimOnReach, scheduleNextAction } from "@/services/assignment";
 import { enquiryNo, stageLabel } from "@/lib/labels";
 import {
@@ -134,7 +135,10 @@ export async function listPipeline(tx: Tx, ownerId: string) {
   const [viewer] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${ownerId}::uuid
   `;
-  const personal = viewer?.role_key === "tele" || viewer?.role_key === "sales" || viewer?.role_key === "svctele";
+  if (!viewer) {
+    throw new Error("This seat does not belong to this dealer.");
+  }
+  const personal = isPersonalRole(viewer.role_key);
   return tx<LeadRow[]>`
     SELECT
       l.id,
