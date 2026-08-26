@@ -17,7 +17,6 @@ export function AddEnquiryForm({
   const [variant, setVariant] = useState("");
   const [source, setSource] = useState("inbound_call");
   const [detail, setDetail] = useState("");
-  const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [existing, setExisting] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -27,7 +26,6 @@ export function AddEnquiryForm({
     model !== "" ||
     variant !== "" ||
     detail !== "" ||
-    value !== "" ||
     source !== "inbound_call";
 
   async function save() {
@@ -42,7 +40,6 @@ export function AddEnquiryForm({
         variantInterest: variant,
         sourceKey: source,
         sourceDetail: detail,
-        expectedValueRupees: value,
       }),
     });
     const data = await res.json();
@@ -129,15 +126,6 @@ export function AddEnquiryForm({
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
           placeholder="Example: missed call on showroom line"
-        />
-      </label>
-      <label className="block text-sm">
-        Expected value (rupees)
-        <input
-          className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-3 font-data"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Example: 1250000"
         />
       </label>
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}

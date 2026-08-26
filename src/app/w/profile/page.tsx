@@ -41,7 +41,7 @@ export default async function ProfilePage() {
         </div>
         <div className="max-w-lg border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
-            Working hours
+            When this branch is open
           </p>
           <p className="mt-2 text-sm text-[var(--arth-n60)]">
             Source: branch hours for {branch}. A call due after close waits until the next open.

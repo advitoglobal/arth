@@ -2,7 +2,8 @@ import { asSeat, canOpen } from "@/db/session";
 import { listNotifications, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
-import { NotificationOpen, MarkAllRead } from "@/components/notification-open";
+import { NotificationCard, MarkAllRead } from "@/components/notification-open";
+import { FigureSource } from "@/components/figure-source";
 
 export default async function NotifPage() {
   return asSeat(async (tx, seat) => {
@@ -13,8 +14,9 @@ export default async function NotifPage() {
       <div className="space-y-6">
         <RuleHeading>Notifications</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Every row says why you got it. Opening it marks it read.
+          Every row says why you got it. Opening it, or tapping the row, marks it read.
         </p>
+        <FigureSource source="your notifications" period="unread and read, newest first" />
         {rows.length === 0 ? (
           <p>No notifications. New ones appear when an enquiry you own needs you.</p>
         ) : (
@@ -22,16 +24,14 @@ export default async function NotifPage() {
             {rows.some((n) => !n.read_at) ? <MarkAllRead /> : null}
             <ul className="border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
             {rows.map((n) => (
-              <li key={String(n.id)} className="border-b border-[var(--arth-n10)] px-4 py-3">
-                <p className="font-medium">{String(n.title)}</p>
-                <p className="text-sm text-[var(--arth-n60)]">{String(n.why)}</p>
-                <p className="mt-1 text-[12.5px] text-[var(--arth-n60)]">
-                  {n.read_at ? "Read" : "Unread"}
-                </p>
-                {n.href ? (
-                  <NotificationOpen id={String(n.id)} href={String(n.href)} />
-                ) : null}
-              </li>
+              <NotificationCard
+                key={String(n.id)}
+                id={String(n.id)}
+                href={n.href ? String(n.href) : null}
+                title={String(n.title)}
+                why={String(n.why)}
+                read={Boolean(n.read_at)}
+              />
             ))}
             </ul>
           </>

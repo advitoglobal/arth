@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "This enquiry is not in your tenant." }, { status: 404 });
     }
     return NextResponse.json({
-      source: "leads, lead_events",
+      source: "enquiry record and activity ledger",
       period: "full ledger",
       ...data,
     });

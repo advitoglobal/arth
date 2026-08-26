@@ -9,7 +9,7 @@ export async function GET() {
     if (denied) return denied;
     const rows = await listNotifications(tx, seat.userId);
     return NextResponse.json({
-      source: "notifications",
+      source: "your notifications",
       period: "unread and read, newest first",
       rows,
     });

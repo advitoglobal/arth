@@ -21,7 +21,7 @@ const items = [
   },
   {
     t: "Rupees, lakhs, branches",
-    b: "Indian digit grouping. Branch, not rooftop. Enquiry, not lead — except in the phrase lead source.",
+    b: "Indian digit grouping. Branch, not rooftop. Enquiry, not lead, except in the phrase lead source.",
   },
 ];
 

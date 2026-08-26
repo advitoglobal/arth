@@ -7,8 +7,8 @@ export function ArthWordmark({
   invert?: boolean;
   className?: string;
 }) {
-  const fill = invert ? "#F1F4F4" : "#0F2A33";
-  const rule = invert ? "#D0A155" : "#B07F2C";
+  const fill = invert ? "var(--arth-n05)" : "var(--arth-ink)";
+  const rule = invert ? "var(--arth-brass-lift)" : "var(--arth-brass)";
 
   return (
     <svg

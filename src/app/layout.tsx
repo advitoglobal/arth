@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "arth — for auto retail",
+    default: "arth, for auto retail",
     template: "%s · arth",
   },
   description:

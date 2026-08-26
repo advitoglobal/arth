@@ -1,10 +1,11 @@
 import type { Tx } from "@/db/with-tenant";
 import { isOnDayQueue, isParked, needsCallbackReason, STAGE_KEYS } from "@/domain/clock";
 import { scheduleNextAction } from "@/services/assignment";
-import { enquiryNo } from "@/lib/labels";
+import { enquiryNo, stageLabel } from "@/lib/labels";
 
 export type LeadRow = {
   id: string;
+  enquiryNo?: string;
   customer_name: string;
   phone: string;
   model_interest: string | null;
@@ -275,7 +276,7 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
     if (from && (!day || day < from)) return false;
     if (to && (!day || day > to)) return false;
     return true;
-  });
+  }).map((r) => ({ ...r, enquiryNo: enquiryNo(r.id) }));
 }
 
 export async function getLead(tx: Tx, id: string) {
@@ -433,17 +434,20 @@ export async function undoDisposition(
 ) {
   const [event] = await tx<{
     id: string;
+    event_type: string;
     payload: {
       previous_next_action_at?: string | null;
       previous_stage_key?: string | null;
+      from?: string | null;
     } | null;
   }[]>`
-    SELECT id::text, payload
+    SELECT id::text, event_type, payload
     FROM lead_events
     WHERE id = ${input.eventId}::bigint AND lead_id = ${input.leadId}::uuid
   `;
   if (!event) throw new Error("Nothing to undo.");
 
+  const isStage = event.event_type === "stage_change";
   const undoOf = { undo_of: input.eventId };
   await tx`
     INSERT INTO lead_events (
@@ -454,17 +458,29 @@ export async function undoDisposition(
       'correction',
       'USER',
       ${input.userId}::uuid,
-      'Undo of last disposition. Original row stands.',
+      ${isStage
+        ? "Undo of last stage move. Original row stands."
+        : "Undo of last disposition. Original row stands."},
       ${tx.json(undoOf)}
     )
   `;
 
+  const prevStage =
+    event.payload?.previous_stage_key ?? event.payload?.from ?? null;
+  if (isStage) {
+    await tx`
+      UPDATE leads SET
+        stage_key = COALESCE(${prevStage}, stage_key)
+      WHERE id = ${input.leadId}::uuid
+    `;
+    return { recorded: "Correction written" };
+  }
+
   const prev = event.payload?.previous_next_action_at ?? null;
-  const stage = event.payload?.previous_stage_key ?? null;
   await tx`
     UPDATE leads SET
       next_action_at = ${prev}::timestamptz,
-      stage_key = COALESCE(${stage}, stage_key),
+      stage_key = COALESCE(${prevStage}, stage_key),
       lost_reason_key = NULL
     WHERE id = ${input.leadId}::uuid
   `;
@@ -486,7 +502,7 @@ export async function advanceStage(
   if (to !== from + 1) {
     throw new Error("Stage moves one step forward. It is not edited.");
   }
-  await tx`
+  const [inserted] = await tx<{ id: string }[]>`
     INSERT INTO lead_events (
       tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
     ) VALUES (
@@ -495,14 +511,22 @@ export async function advanceStage(
       'stage_change',
       'USER',
       ${input.userId}::uuid,
-      ${"Moved to " + input.to.replaceAll("_", " ") + "."},
-      ${tx.json({ from: lead.stage_key, to: input.to })}
+      ${"Moved to " + stageLabel(input.to) + "."},
+      ${tx.json({
+        previous_stage_key: lead.stage_key,
+        from: lead.stage_key,
+        to: input.to,
+      })}
     )
+    RETURNING id::text
   `;
   await tx`
     UPDATE leads SET stage_key = ${input.to} WHERE id = ${input.leadId}::uuid
   `;
-  return { recorded: `Stage is now ${input.to.replaceAll("_", " ")}` };
+  return {
+    recorded: `Stage is now ${stageLabel(input.to)}`,
+    eventId: inserted?.id,
+  };
 }
 
 export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
@@ -530,8 +554,8 @@ export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
       VALUES (
         current_setting('app.tenant_id')::uuid,
         ${userId}::uuid,
-        ${row.customer_name + " is past first response"},
-        'You own this enquiry and first response is overdue. The clock ran through working hours.',
+        ${row.customer_name + " still needs a first call"},
+        'You own this enquiry and the first call is late. The clock only runs while the branch is open.',
         ${href}
       )
     `;

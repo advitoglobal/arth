@@ -2,6 +2,7 @@ import { asSeat, canOpen } from "@/db/session";
 import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { assignUnowned } from "@/services/assignment";
 import { EnquiryList } from "@/components/enquiry-row";
+import { FigureSource } from "@/components/figure-source";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
 import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
@@ -101,6 +102,10 @@ export default async function DayPanelPage() {
         <p className="text-sm text-[var(--arth-n60)]">
           Your list for today: late calls first, then what you still promised to do today. The rest of your book is in My enquiries.
         </p>
+        <FigureSource
+          source="your queue"
+          period="today in India Standard Time, late first"
+        />
         {rows.length === 0 ? (
           <p>No enquiries are due. New ones appear here when they are assigned.</p>
         ) : (

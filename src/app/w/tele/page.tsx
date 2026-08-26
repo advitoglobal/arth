@@ -7,6 +7,7 @@ import { istDateTime, indianMobile } from "@/lib/format";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { LedgerLine } from "@/components/ledger-line";
+import { enquiryNo } from "@/lib/labels";
 import Link from "next/link";
 
 export default async function TelePage({
@@ -62,11 +63,14 @@ export default async function TelePage({
               {lead.customer_name}
             </Link>
             <p className="font-data mt-1">{indianMobile(String(lead.phone))}</p>
+            <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
+              Enquiry {enquiryNo(String(lead.id))}
+            </p>
             <p className="mt-3 text-sm">
               {lead.model_interest} · {lead.stage_label ?? lead.stage_key}
             </p>
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
-              Owner {lead.owner_name ?? "unassigned"} · first response due {istDateTime(lead.first_response_due)}
+              Owner {lead.owner_name ?? "unassigned"} · call by {istDateTime(lead.first_response_due)}
             </p>
           </div>
           {owns && remaining.length > 0 ? (

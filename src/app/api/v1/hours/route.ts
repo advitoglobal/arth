@@ -9,7 +9,7 @@ export async function GET() {
     if (denied) return denied;
     const rows = await branchHoursForUser(tx, seat.userId);
     return NextResponse.json({
-      source: "working_hours",
+      source: "branch hours",
       period: "this branch, Sunday to Saturday",
       rows,
     });

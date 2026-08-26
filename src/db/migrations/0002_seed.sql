@@ -148,6 +148,6 @@ VALUES
 INSERT INTO notifications (tenant_id, user_id, title, why, href)
 VALUES
   ('11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-ddddddddddd1',
-   'Ramesh Kumar is past first response',
-   'You own this enquiry and first response was due 61 hours ago.',
+   'Ramesh Kumar still needs a first call',
+   'You own this enquiry and the first call is late. The clock only runs while the branch is open.',
    '/w/rec?id=ffffffff-ffff-ffff-ffff-fffffffffff1');

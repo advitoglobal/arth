@@ -6,6 +6,7 @@ import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
+import { FigureSource } from "@/components/figure-source";
 import { STAGE_LABEL } from "@/lib/labels";
 
 export default async function PipePage({
@@ -29,6 +30,10 @@ export default async function PipePage({
         <p className="text-sm text-[var(--arth-n60)]">
           Your full book, in nine stages. Today is only what is due now. Open a name for the history. Call when you are dialling.
         </p>
+        <FigureSource
+          source="your full book"
+          period="all nine stages, current"
+        />
         {canCall ? (
           <ActionButton href="/w/new" variant="default">
             Add enquiry
@@ -59,9 +64,13 @@ export default async function PipePage({
             {active
               ? `No enquiries in ${STAGE_LABEL[active]}. They appear here when the stage moves.`
               : "No enquiries are assigned to you."}
-            {!canCall && !active ? (
-              <span className="mt-3 inline-block">
+            {canOpen(seat.roleKey, "dayb") && !active ? (
+              <span className="mt-3 block">
                 <ActionButton href="/w/dayb">Open Today</ActionButton>
+              </span>
+            ) : !canCall && !active ? (
+              <span className="mt-3 block">
+                <ActionButton href="/w/search">Open Search</ActionButton>
               </span>
             ) : null}
           </p>

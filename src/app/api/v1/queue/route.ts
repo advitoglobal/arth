@@ -9,8 +9,8 @@ export async function GET() {
     if (denied) return denied;
     const rows = await listQueue(tx, seat.userId);
     return NextResponse.json({
-      source: "leads.next_action_at",
-      period: "today plus breaching, Asia/Kolkata",
+      source: "your queue",
+      period: "today plus late, India Standard Time",
       rows,
     });
   });

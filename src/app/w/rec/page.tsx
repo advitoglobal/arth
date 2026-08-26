@@ -6,6 +6,7 @@ import { ActionButton } from "@/components/action-button";
 import { enquiryNo, sourceLabel } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
 import { Forbidden } from "@/components/forbidden";
+import { FigureSource } from "@/components/figure-source";
 
 export default async function RecPage({
   searchParams,
@@ -44,6 +45,7 @@ export default async function RecPage({
         <p className="text-sm text-[var(--arth-n60)]">
           Full enquiry: customer, owner, clock, and every action taken. Nothing here is edited. A correction writes a new row.
         </p>
+        <FigureSource source="this enquiry" period="full activity ledger" />
         <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-display text-[28px] font-semibold">{lead.customer_name}</p>
@@ -76,11 +78,11 @@ export default async function RecPage({
               <dd className="font-data">{istDateTime(lead.created_at)}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">First response due</dt>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Call by</dt>
               <dd className="font-data">{istDateTime(lead.first_response_due)}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">First responded</dt>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">First call logged</dt>
               <dd className="font-data">{istDateTime(lead.first_responded_at)}</dd>
             </div>
             <div>

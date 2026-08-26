@@ -9,8 +9,8 @@ export async function GET() {
     if (denied) return denied;
     const rows = await listPipeline(tx, seat.userId);
     return NextResponse.json({
-      source: "leads.expected_value_paise",
-      period: "own book, all stages",
+      source: "your full book",
+      period: "all nine stages, current",
       rows,
     });
   });

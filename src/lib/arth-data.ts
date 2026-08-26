@@ -45,7 +45,7 @@ export const cockpitCards: CockpitCard[] = [
     id: "c2",
     title: "Campaign with no bookings",
     amount: 38000,
-    body: "Festive Offer — C3 has spent ₹38,000 and produced no bookings in 21 days.",
+    body: "Festive Offer, C3 has spent ₹38,000 and produced no bookings in 21 days.",
     href: "/workspace/spend?role=principal",
   },
   {
@@ -68,14 +68,14 @@ export const cockpitCards: CockpitCard[] = [
   },
   {
     id: "c5",
-    title: "Grand Vitara — Search",
+    title: "Grand Vitara, Search",
     amount: 184000,
     body: "₹1,84,000 spent. 20 bookings. Cost per booking ₹9,200.",
     href: "/workspace/spend?role=principal",
   },
   {
     id: "c6",
-    title: "Brezza — Meta lead form",
+    title: "Brezza, Meta lead form",
     amount: 96200,
     body: "₹96,200 spent. 13 bookings. Cost per booking ₹7,400.",
     href: "/workspace/spend?role=principal",
@@ -139,19 +139,19 @@ export const enquiries: Enquiry[] = [
 
 export const spendRows = [
   {
-    campaign: "Grand Vitara — Search",
+    campaign: "Grand Vitara, Search",
     spend: 184000,
     bookings: 20,
     cost: 9200,
   },
   {
-    campaign: "Brezza — Meta lead form",
+    campaign: "Brezza, Meta lead form",
     spend: 96200,
     bookings: 13,
     cost: 7400,
   },
   {
-    campaign: "Festive Offer — C3",
+    campaign: "Festive Offer, C3",
     spend: 38000,
     bookings: 0,
     cost: 38000,

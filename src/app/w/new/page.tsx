@@ -15,7 +15,7 @@ export default async function NewEnquiryPage({
       <div className="space-y-6">
         <RuleHeading>File an enquiry</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Use this when Search finds no match. You become the owner. The first-response clock starts through working hours.
+          Use this when Search finds no match. You become the owner. The first call is due after the branch next opens, not while it is closed.
         </p>
         <AddEnquiryForm presetPhone={phone} />
       </div>
