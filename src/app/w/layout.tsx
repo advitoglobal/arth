@@ -1,8 +1,10 @@
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { currentSeat, asSeat, canOpen } from "@/db/session";
 import { FloorNav } from "@/components/floor-nav";
 import { OfflineBar } from "@/components/offline-bar";
 import { hasDemoSession } from "@/lib/seats";
+import { isSessionGuardError } from "@/db/with-tenant";
 import { countUnread, raiseFirstResponseBreaches } from "@/services/telecalling";
 import type { ReactNode } from "react";
 
@@ -28,12 +30,20 @@ export default async function FloorLayout({
   }
 
   const seat = await currentSeat();
-  const unread = canOpen(seat.roleKey, "notif")
-    ? await asSeat(async (tx, s) => {
-        if (s.roleKey === "tele") await raiseFirstResponseBreaches(tx, s.userId);
-        return countUnread(tx, s.userId);
-      })
-    : 0;
+  let unread = 0;
+  try {
+    unread = canOpen(seat.roleKey, "notif")
+      ? await asSeat(async (tx, s) => {
+          if (s.roleKey === "tele") await raiseFirstResponseBreaches(tx, s.userId);
+          return countUnread(tx, s.userId);
+        })
+      : 0;
+  } catch (err) {
+    if (isSessionGuardError(err)) {
+      redirect("/w/login");
+    }
+    throw err;
+  }
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--arth-n05)] lg:flex-row">

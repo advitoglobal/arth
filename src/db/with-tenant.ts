@@ -14,6 +14,15 @@ export const sql = postgres(url, {
 
 export type Tx = postgres.TransactionSql<Record<string, unknown>>;
 
+export function isSessionGuardError(err: unknown) {
+  const message = err instanceof Error ? err.message : "";
+  return (
+    message.includes("Session is incomplete") ||
+    message.includes("does not belong to this dealer") ||
+    message.includes("No signed-in seat")
+  );
+}
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

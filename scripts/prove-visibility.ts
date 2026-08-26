@@ -116,6 +116,11 @@ async function main() {
     throw new Error("A Coastal seat must not open a Whitefield transaction");
   }
 
+  const bound = await withTenant({ tenantId: WHITEFIELD, userId: IYER }, async () => "ok");
+  if (bound !== "ok") {
+    throw new Error("A matching Whitefield seat must open a Whitefield transaction");
+  }
+
   let incomplete = false;
   try {
     await withTenant({ tenantId: WHITEFIELD, userId: "not-a-uuid" }, async () => null);
