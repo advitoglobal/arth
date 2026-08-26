@@ -42,17 +42,6 @@ export function NotificationCard({
       <p className="mt-1 text-[12.5px] text-[var(--arth-n60)]">
         {read ? "Read" : "Unread"}
       </p>
-      {href ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="relative z-10 mt-2 h-9 px-3"
-          onClick={open}
-        >
-          Open
-        </Button>
-      ) : null}
     </li>
   );
 }

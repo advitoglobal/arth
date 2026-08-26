@@ -12,8 +12,8 @@ export default function HomePage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
             arth for auto retail
           </p>
-          <RuleHeading className="mt-6 max-w-[22ch]">
-            Other systems tell you your telecaller made forty calls. Arth tells you those forty calls cost ₹9,200 and produced one delivered car.
+          <RuleHeading className="mt-6 max-w-[68ch] [&_h1]:text-[28px] sm:[&_h1]:text-[44px]">
+            Other systems tell you your telecaller made forty calls. Arth tells you which of those calls came from a source costing ₹9,200 a booking.
           </RuleHeading>
           <p className="mt-6 max-w-[68ch] text-base leading-relaxed text-[var(--arth-n60)]">
             This preview is the telecalling floor for Indian dealer groups. Not the full 80-screen product. You can hold a person to an enquiry: owner, clock, disposition, ledger. Walk it, then send what should change.
@@ -43,7 +43,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-[1440px] px-8 py-16">
             <span className="arth-rule" />
             <p className="mt-6 max-w-[40ch] font-display text-[28px] font-semibold leading-snug">
-              Forty calls is activity. One delivered car is artha.
+              Forty calls is activity. One delivered car is arth.
             </p>
             <p className="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--arth-n40)]">
               Meaning, and wealth. Enquiry data in a dealership has always had
@@ -80,7 +80,7 @@ export default function HomePage() {
           ))}
         </section>
       </main>
-      <footer className="border-t border-[var(--arth-n10)] px-8 py-6 text-center text-[10pt] text-[var(--arth-n60)]">
+      <footer className="border-t border-[var(--arth-n10)] px-8 py-6 text-center text-[12.5px] text-[var(--arth-n60)]">
         An Advito Global product
       </footer>
     </div>

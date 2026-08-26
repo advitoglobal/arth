@@ -7,6 +7,9 @@ const checks: [string, string][] = [
   ["db:access", "ACCESS_OK"],
   ["db:scope", "SCOPE_OK"],
   ["db:search", "SEARCH_OK"],
+  ["db:ledger", "LEDGER_OK"],
+  ["db:disposition", "DISPOSITION_OK"],
+  ["db:queue", "QUEUE_OK"],
 ];
 
 let failed = 0;

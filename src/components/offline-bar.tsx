@@ -18,7 +18,7 @@ export function OfflineBar() {
   if (!offline) return null;
   return (
     <div className="bg-[var(--arth-ink)] px-4 py-2 text-sm text-[var(--arth-n00)]">
-      Working offline. Calls you log will sync when you reconnect.
+      Working offline. Work cannot be saved until you are connected.
     </div>
   );
 }

@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s · arth",
   },
   description:
-    "Other systems tell you your telecaller made forty calls. Arth tells you those forty calls cost ₹9,200 and produced one delivered car.",
+    "Other systems tell you your telecaller made forty calls. Arth tells you which of those calls came from a source costing ₹9,200 a booking.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -36,19 +36,21 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 export function StatusStamp({
   state,
 }: {
-  state: "overdue" | "settled" | "review" | "draft";
+  state: "overdue" | "settled" | "review" | "draft" | "parked";
 }) {
   const map = {
     overdue: "bg-[var(--arth-overdue-wash)] text-[var(--arth-overdue)]",
     settled: "bg-[var(--arth-settled-wash)] text-[var(--arth-settled)]",
     review: "bg-[var(--arth-brass-wash)] text-[var(--arth-brass-pill)]",
     draft: "bg-[var(--arth-n10)] text-[var(--arth-n80)]",
+    parked: "bg-[var(--arth-n10)] text-[var(--arth-n80)]",
   };
   const label = {
     overdue: "Overdue",
     settled: "Settled",
     review: "Review",
     draft: "Draft",
+    parked: "Parked",
   };
 
   return (

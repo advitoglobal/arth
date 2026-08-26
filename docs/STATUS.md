@@ -14,7 +14,9 @@
 - Round-robin assignment (option A) by current open-book load. After-hours delay is a `clock_deferred` event charged to the **branch**. Anita Desai lands on K. Nair, not A. Iyer.
 - Lost reasons and dispositions seeded. Postponed needs a revisit. Lost needs a reason and that reason's fact. A callback more than 14 days away needs a reason.
 - Seven telecalling screens at `/w/dayb` `/w/tele` `/w/pipe` `/w/rec` `/w/search` `/w/notif` `/w/profile`. File enquiry at `/w/new` when Search finds no match.
-- Queue is due today plus late. Parked is derived. Difficulty band is stored and hidden from the telecaller row. Expected value is hidden from tele and sales.
+- Queue is due today plus late. It decrements when a call is logged (`QUEUE_OK`). Parked is a stamp. Difficulty band is stored and hidden from the telecaller row. Expected value is hidden from tele and sales.
+- Outcome select opens empty. Record outcome stays disabled until the panel is valid. Revisit is a date, not a time.
+- Desktop row at `lg` splits name, phone, enquiry number and stamp into four columns. Cards below `lg`.
 - In-place confirmation after a disposition or a stage move. Undo inside that window writes a correction and restores the previous stage.
 - Enquiry numbers (last eight of the id) on the tile, the record, Log a call, and Search.
 - Demo seats: A. Iyer, K. Nair, M. Pinto, S. Rao. Opening Today as S. Rao keeps `/w/dayb` and shows *You cannot open this screen*.
@@ -34,7 +36,17 @@ Open http://127.0.0.1:43127 then Open the product. Sign in on `/w/login`.
 
 ## Contradiction raised (SPEC)
 
-Build Spec Appendix B lists Search as `adv`/`sales`. SCOPE-BRIEF-TELECALLING includes Search as a telecaller screen. This cycle grants `tele` access so the floor can be tested. Brand should reconcile Appendix B.
+Build Spec Appendix B listed Search as `adv`/`sales`. SCOPE-BRIEF-TELECALLING includes Search as a telecaller screen. **Ruled 26 Aug 2026:** `tele` has Search. Appendix B is amended. Not a build defect.
+
+## Named, not built this cycle
+
+**Consent by purpose.** No `consent` table. A live floor that telephones customers needs one row per purpose, never one tick for everything. **Deferred until a live-client floor is authorised.** Trigger: first real customer record that will be called. Retrofitting onto records already being called is the expensive version.
+
+**`audit_logs`.** Absent. `lead_events` is the enquiry ledger (append-only). Access, permission changes and exports are a separate ledger and are not in this database. **Deferred until production identity.** Trigger: first non-demo session.
+
+**Assignment-on-open.** `assignUnowned` runs when Today opens. It is a fast path for the demonstration. If nobody opens Today, nothing is assigned; two concurrent opens can race; weekend arrivals sit unowned until Monday login. **Not this cycle.** Eventual shape: a scheduled job, with the screen call remaining as a fast path.
+
+**Palette on-dark scale.** Build uses `n40` / `n20` / `brass-lift` on ink (measured 6.49 / 9.83 / 6.37). Prototype has `--on-ink` and related tokens; build has `--arth-ink-deep` which the prototype does not. **Both versions go to Brand. Do not add tokens here until Brand rules.**
 
 ## Out of scope this cycle (SPEC)
 

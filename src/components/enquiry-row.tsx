@@ -33,8 +33,8 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
 
 function cols(showValue: boolean) {
   return showValue
-    ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,0.75fr)_6.5rem]"
-    : "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_6.5rem]";
+    ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_5.5rem_auto_minmax(0,0.9fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,0.7fr)_6.5rem]"
+    : "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_5.5rem_auto_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_6.5rem]";
 }
 
 function Field({
@@ -86,6 +86,7 @@ export function EnquiryRow({
     new Date(row.first_response_due).getTime() < Date.now();
   const settled = row.stage_key === "delivered";
   const showCall = canCall && !settled && !row.lost_reason_key;
+  const number = enquiryNo(row.id);
 
   return (
     <article
@@ -96,28 +97,24 @@ export function EnquiryRow({
         className="absolute inset-0 z-0"
         aria-label={`Open ${row.customer_name}`}
       />
-      <div className="flex items-start justify-between gap-3 lg:block">
-        <div className="min-w-0">
+      <div className="flex items-start justify-between gap-3 lg:contents">
+        <div className="min-w-0 lg:contents">
           <p className="truncate font-semibold" title={row.customer_name}>
             {row.customer_name}
           </p>
-          <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
+          <p className="font-data mt-1 truncate text-[12.5px] text-[var(--arth-n60)] lg:mt-0">
             {indianMobile(row.phone)}
           </p>
           <p className="font-data truncate text-[12.5px] text-[var(--arth-n60)]">
-            Enquiry {enquiryNo(row.id)}
+            {`Enquiry ${number}`}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+        <div className="flex shrink-0 flex-wrap justify-end gap-1 lg:justify-start">
           {settled ? <StatusStamp state="settled" /> : null}
           {!settled && (next.overdue || firstResponseLate) ? (
             <StatusStamp state="overdue" />
           ) : null}
-          {parked ? (
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--arth-n60)]">
-              Parked
-            </span>
-          ) : null}
+          {parked ? <StatusStamp state="parked" /> : null}
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 lg:mt-0 lg:contents">
@@ -165,12 +162,15 @@ export function RowHead({ showValue = false }: { showValue?: boolean }) {
     <div
       className={`hidden border-b border-[var(--arth-ink)] bg-[var(--arth-n00)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)] lg:grid lg:gap-2 lg:items-start ${cols(showValue)}`}
     >
-      <span>Customer</span>
+      <span>Name</span>
+      <span>Phone</span>
+      <span>Enquiry</span>
+      <span>Stamp</span>
       <span>Vehicle</span>
       <span>Source</span>
       <span>Stage</span>
       <span>Last activity</span>
-      <span>Next action</span>
+      <span>Next</span>
       {showValue ? <span className="text-right">Value</span> : null}
       <span>Actions</span>
     </div>

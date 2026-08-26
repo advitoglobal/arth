@@ -1,5 +1,11 @@
 import type { Tx } from "@/db/with-tenant";
-import { isOnDayQueue, isParked, needsCallbackReason, STAGE_KEYS } from "@/domain/clock";
+import {
+  isOnDayQueue,
+  isParked,
+  needsCallbackReason,
+  revisitDayToInstant,
+  STAGE_KEYS,
+} from "@/domain/clock";
 import { scheduleNextAction } from "@/services/assignment";
 import { enquiryNo, stageLabel } from "@/lib/labels";
 
@@ -329,6 +335,10 @@ export async function recordDisposition(
     lostFact?: string;
   },
 ) {
+  if (!input.dispositionKey?.trim()) {
+    throw new Error("Select an outcome.");
+  }
+  const revisitAt = revisitDayToInstant(input.revisitAt) ?? input.revisitAt;
   const [disp] = await tx<{
     requires_revisit: boolean;
     requires_lost_reason: boolean;
@@ -340,7 +350,7 @@ export async function recordDisposition(
   `;
   if (!disp) throw new Error("Unknown disposition");
   await assertOwner(tx, input.leadId, input.userId);
-  if (disp.requires_revisit && !input.revisitAt) {
+  if (disp.requires_revisit && !revisitAt) {
     throw new Error("A revisit date is required for postponed.");
   }
   if (disp.requires_lost_reason && !input.lostReasonKey) {
@@ -354,7 +364,7 @@ export async function recordDisposition(
       throw new Error(`Record the ${reason.requires_fact} before closing as lost.`);
     }
   }
-  if (needsCallbackReason(input.revisitAt ?? null) && !input.callbackReason?.trim()) {
+  if (needsCallbackReason(revisitAt ?? null) && !input.callbackReason?.trim()) {
     throw new Error("A reason is required when the callback is more than 14 days away.");
   }
 
@@ -383,7 +393,7 @@ export async function recordDisposition(
       'USER',
       ${input.userId}::uuid,
       ${input.dispositionKey},
-      ${input.revisitAt ?? null},
+      ${revisitAt ?? null},
       ${input.note},
       ${tx.json(previous)}
     )
@@ -397,11 +407,11 @@ export async function recordDisposition(
           next_action_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
-  } else if (input.revisitAt) {
+  } else if (revisitAt) {
     const revisit = await scheduleNextAction(
       tx,
       input.leadId,
-      new Date(input.revisitAt),
+      new Date(revisitAt),
     );
     await tx`
       UPDATE leads SET

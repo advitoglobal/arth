@@ -44,4 +44,6 @@ Demo seats:
 
 `GET /api/v1/queue` · `GET /api/v1/pipeline` · `GET /api/v1/search` · `GET /api/v1/leads/:id` · `POST /api/v1/leads` · `GET /api/v1/notifications` · `GET /api/v1/hours` · `POST /api/v1/notifications/read` · `POST /api/v1/assign` · `POST /api/v1/dispositions` · `POST /api/v1/undo` · `POST /api/v1/stage`
 
+`npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue.
+
 Same `withTenant` path. No second database for a phone app.

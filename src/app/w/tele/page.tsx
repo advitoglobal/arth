@@ -64,7 +64,7 @@ export default async function TelePage({
             </Link>
             <p className="font-data mt-1">{indianMobile(String(lead.phone))}</p>
             <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
-              Enquiry {enquiryNo(String(lead.id))}
+              {`Enquiry ${enquiryNo(String(lead.id))}`}
             </p>
             <p className="mt-3 text-sm">
               {lead.model_interest} · {lead.stage_label ?? lead.stage_key}
@@ -111,7 +111,15 @@ export default async function TelePage({
                 dispositions={dispositions}
                 lostReasons={lostReasons}
               />
-              <StagePanel leadId={leadId} stageKey={String(lead.stage_key)} />
+              <div className="border-t-2 border-[var(--arth-ink)] pt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
+                  Stage, not a call
+                </p>
+                <p className="mt-2 mb-3 text-sm text-[var(--arth-n60)]">
+                  Recording an outcome and moving a stage are two different acts. This panel is only the stage.
+                </p>
+                <StagePanel leadId={leadId} stageKey={String(lead.stage_key)} />
+              </div>
             </>
           ) : (
             <p>

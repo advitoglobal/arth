@@ -54,7 +54,7 @@ export default async function RecPage({
           </div>
           <p className="font-data">{indianMobile(String(lead.phone))}</p>
           <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
-            Enquiry {enquiryNo(String(lead.id))}
+            {`Enquiry ${enquiryNo(String(lead.id))}`}
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>

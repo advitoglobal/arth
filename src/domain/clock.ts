@@ -143,6 +143,14 @@ export function needsCallbackReason(revisitAt: Date | string | null, now = new D
   return delta > CALLBACK_REASON_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }
 
+/** A revisit is a calendar day. Stored as that morning in India Standard Time. */
+export function revisitDayToInstant(value: string | undefined | null): string | undefined {
+  if (!value) return undefined;
+  const day = value.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return value;
+  return `${day}T09:30:00+05:30`;
+}
+
 export const STAGE_KEYS = [
   "new",
   "assigned",

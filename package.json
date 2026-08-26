@@ -15,6 +15,9 @@
     "db:access": "npx tsx scripts/prove-access.ts",
     "db:scope": "npx tsx scripts/prove-scope.ts",
     "db:search": "npx tsx scripts/prove-search.ts",
+    "db:ledger": "npx tsx scripts/prove-ledger.ts",
+    "db:disposition": "npx tsx scripts/prove-disposition.ts",
+    "db:queue": "npx tsx scripts/prove-queue.ts",
     "prove": "npx tsx scripts/prove.ts"
   },
   "dependencies": {

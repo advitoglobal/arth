@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { needsCallbackReason } from "@/domain/clock";
 
 export function DispositionPanel({
   leadId,
@@ -23,9 +24,8 @@ export function DispositionPanel({
   }[];
   lostReasons: { key: string; label: string; requires_fact: string }[];
 }) {
-  const initial = dispositions[0]?.key ?? "no_answer";
   const router = useRouter();
-  const [key, setKey] = useState(initial);
+  const [key, setKey] = useState("");
   const [revisit, setRevisit] = useState("");
   const [lost, setLost] = useState("");
   const [note, setNote] = useState("");
@@ -34,20 +34,30 @@ export function DispositionPanel({
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const farCallback =
-    revisit !== "" &&
-    new Date(revisit).getTime() - Date.now() > 14 * 24 * 60 * 60 * 1000;
+  const farCallback = needsCallbackReason(revisit || null);
+  const selected = dispositions.find((d) => d.key === key);
+  const selectedLost = lostReasons.find((r) => r.key === lost);
+  const showLostFact =
+    Boolean(selected?.requires_lost_reason) &&
+    Boolean(selectedLost) &&
+    selectedLost?.requires_fact !== "none";
+  const showRevisit = Boolean(
+    selected?.requires_revisit || selected?.key === "connected_callback",
+  );
   const dirty =
     note !== "" ||
     revisit !== "" ||
     lost !== "" ||
     callbackReason !== "" ||
     lostFact !== "" ||
-    key !== initial;
-  const selected = dispositions.find((d) => d.key === key);
-  const selectedLost = lostReasons.find((r) => r.key === lost);
-  const showLostFact = selected?.requires_lost_reason && selectedLost && selectedLost.requires_fact !== "none";
-  const showRevisit = selected?.requires_revisit || selected?.key === "connected_callback";
+    key !== "";
+  const canSave = Boolean(
+    key &&
+      (!selected?.requires_revisit || revisit) &&
+      (!selected?.requires_lost_reason || lost) &&
+      (!showLostFact || lostFact.trim()) &&
+      (!farCallback || callbackReason.trim()),
+  );
 
   useEffect(() => {
     if (!confirm || !eventId) return;
@@ -64,6 +74,7 @@ export function DispositionPanel({
   }, [confirm, eventId, router, nextLeadId]);
 
   async function save() {
+    if (!canSave) return;
     setError(null);
     const res = await fetch("/api/v1/dispositions", {
       method: "POST",
@@ -90,6 +101,7 @@ export function DispositionPanel({
     setLost("");
     setCallbackReason("");
     setLostFact("");
+    setKey("");
   }
 
   async function undo() {
@@ -141,8 +153,15 @@ export function DispositionPanel({
           <select
             className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] bg-[var(--arth-n00)] px-2"
             value={key}
-            onChange={(e) => setKey(e.target.value)}
+            onChange={(e) => {
+              setKey(e.target.value);
+              setRevisit("");
+              setLost("");
+              setLostFact("");
+              setCallbackReason("");
+            }}
           >
+            <option value="">Select an outcome</option>
             <optgroup label="Connected">
               {dispositions.filter((d) => d.connected).map((d) => (
                 <option key={d.key} value={d.key}>{d.label}</option>
@@ -157,9 +176,9 @@ export function DispositionPanel({
       </label>
       {showRevisit ? (
         <label className="block text-sm">
-          Revisit at
+          Revisit on
           <input
-            type="datetime-local"
+            type="date"
             className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
             value={revisit}
             onChange={(e) => setRevisit(e.target.value)}
@@ -214,7 +233,9 @@ export function DispositionPanel({
       </label>
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
       <div className="flex gap-2">
-        <Button onClick={save}>Record outcome</Button>
+        <Button onClick={save} disabled={!canSave}>
+          Record outcome
+        </Button>
       </div>
     </div>
   );

@@ -55,7 +55,7 @@ export default function TrustPage() {
           </Button>
         </div>
       </main>
-      <footer className="border-t border-[var(--arth-n10)] px-8 py-6 text-center text-[10pt] text-[var(--arth-n60)]">
+      <footer className="border-t border-[var(--arth-n10)] px-8 py-6 text-center text-[12.5px] text-[var(--arth-n60)]">
         An Advito Global product
       </footer>
     </div>
