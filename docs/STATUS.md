@@ -5,7 +5,7 @@
 
 **Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 
-**Director review pack:** `docs/REVIEW-TELECALLING-BUILT.md` (IT + Product: what is built, how to walk it, contradictions, what is out of scope).
+**Director review pack:** `docs/REVIEW-TELECALLING-BUILT.md` (IT + Product: what is built, how to walk it, contradictions, what is out of scope). UI extraction for Product Director: `docs/UI-EVIDENCE.md`.
 
 ## What is built (this cycle)
 
