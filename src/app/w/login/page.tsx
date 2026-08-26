@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authenticateSeat } from "@/lib/auth";
+import { DEMO_USERS, hasDemoSession, resolveSeatKey } from "@/lib/seats";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +29,11 @@ export default async function LoginPage({
   searchParams: Promise<{ e?: string }>;
 }) {
   const { e } = await searchParams;
+  const jar = await cookies();
+  const key = resolveSeatKey(jar.get("arth_seat")?.value);
+  if (!e && hasDemoSession(jar.get("arth_seat")?.value) && key) {
+    redirect(`/w/${DEMO_USERS[key].workspaceKey}`);
+  }
   return (
     <div className="mx-auto max-w-xl space-y-8 py-8">
       <RuleHeading>Sign in to the telecalling floor</RuleHeading>

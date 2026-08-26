@@ -59,21 +59,13 @@ export const DEMO_USERS = {
 export type SeatKey = keyof typeof DEMO_USERS;
 export type Seat = (typeof DEMO_USERS)[SeatKey];
 
-export function hasDemoSession(
-  rawSeat: string | undefined,
-  _rawTenant?: string | undefined,
-): boolean {
-  return Boolean(rawSeat && rawSeat in DEMO_USERS);
+export function hasDemoSession(rawSeat: string | undefined): boolean {
+  return resolveSeatKey(rawSeat) !== null;
 }
 
-export function resolveSeatKey(
-  rawSeat: string | undefined,
-  rawTenant: string | undefined,
-): SeatKey {
+export function resolveSeatKey(rawSeat: string | undefined): SeatKey | null {
   if (rawSeat && rawSeat in DEMO_USERS) return rawSeat as SeatKey;
-  if (rawTenant === "coastal") return "pinto";
-  if (rawTenant === "whitefield") return "iyer";
-  return "iyer";
+  return null;
 }
 
 export function screenFromPath(pathname: string): string | null {

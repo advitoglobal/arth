@@ -8,13 +8,31 @@ import {
   screenFromPath,
 } from "@/lib/seats";
 
+function passPath(req: NextRequest) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-arth-path", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  if (path === "/w/login" || path === "/w/denied") return NextResponse.next();
-
   const seatCookie = req.cookies.get("arth_seat")?.value;
-  const tenantCookie = req.cookies.get("arth_tenant")?.value;
-  if (path.startsWith("/w/") && !hasDemoSession(seatCookie, tenantCookie)) {
+  const signedIn = hasDemoSession(seatCookie);
+  const key = resolveSeatKey(seatCookie);
+
+  if (path === "/w/login") {
+    if (signedIn && key && !req.nextUrl.searchParams.get("e")) {
+      const home = req.nextUrl.clone();
+      home.pathname = `/w/${DEMO_USERS[key].workspaceKey}`;
+      home.search = "";
+      return NextResponse.redirect(home);
+    }
+    return passPath(req);
+  }
+
+  if (path === "/w/denied") return passPath(req);
+
+  if (path.startsWith("/w/") && !signedIn) {
     const login = req.nextUrl.clone();
     login.pathname = "/w/login";
     login.search = "";
@@ -22,15 +40,24 @@ export function middleware(req: NextRequest) {
   }
 
   const screen = screenFromPath(path);
-  if (!screen) return NextResponse.next();
-
-  const key = resolveSeatKey(seatCookie, tenantCookie);
-  if (canOpen(DEMO_USERS[key].roleKey, screen)) return NextResponse.next();
+  if (!screen) return passPath(req);
+  if (!key) {
+    const login = req.nextUrl.clone();
+    login.pathname = "/w/login";
+    login.search = "";
+    return NextResponse.redirect(login);
+  }
+  if (canOpen(DEMO_USERS[key].roleKey, screen)) return passPath(req);
 
   const denied = req.nextUrl.clone();
   denied.pathname = "/w/denied";
   denied.search = "";
-  return NextResponse.rewrite(denied, { status: 403 });
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-arth-path", "/w/denied");
+  return NextResponse.rewrite(denied, {
+    status: 403,
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {

@@ -8,7 +8,10 @@ export type { Seat, SeatKey };
 
 export async function currentSeat(): Promise<Seat> {
   const jar = await cookies();
-  const key = resolveSeatKey(jar.get("arth_seat")?.value, jar.get("arth_tenant")?.value);
+  const key = resolveSeatKey(jar.get("arth_seat")?.value);
+  if (!key) {
+    throw new Error("No signed-in seat.");
+  }
   return DEMO_USERS[key];
 }
 

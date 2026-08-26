@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { currentSeat, asSeat, canOpen } from "@/db/session";
 import { FloorNav } from "@/components/floor-nav";
 import { OfflineBar } from "@/components/offline-bar";
@@ -6,13 +6,20 @@ import { hasDemoSession } from "@/lib/seats";
 import { countUnread, raiseFirstResponseBreaches } from "@/services/telecalling";
 import type { ReactNode } from "react";
 
+function isPublicFloorPath(path: string) {
+  return path === "/w/login" || path === "/w/denied";
+}
+
 export default async function FloorLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   const jar = await cookies();
-  if (!hasDemoSession(jar.get("arth_seat")?.value, jar.get("arth_tenant")?.value)) {
+  const path = (await headers()).get("x-arth-path") ?? "";
+  const signedIn = hasDemoSession(jar.get("arth_seat")?.value);
+
+  if (!signedIn || isPublicFloorPath(path)) {
     return (
       <div className="min-h-full bg-[var(--arth-n05)]">
         <div className="px-8 py-8">{children}</div>
