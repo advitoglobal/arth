@@ -37,7 +37,11 @@ export function FloorNav({
           <LeaveFloor invert compact />
         </div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-brass-lift)]">
-          {seat.roleKey === "tele" ? "Telecalling" : "Sales"}
+          {seat.roleKey === "tele"
+            ? "Telecalling"
+            : seat.roleKey === "sales"
+              ? "Sales"
+              : "Management"}
         </p>
         <p className="mb-6 mt-1 text-sm">{seat.tenantName}</p>
         <nav className="flex flex-col gap-1">

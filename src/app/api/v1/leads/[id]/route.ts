@@ -13,7 +13,7 @@ export async function GET(
     if (denied) return denied;
     const data = await getLead(tx, id);
     if (!data.lead) {
-      return NextResponse.json({ error: "This enquiry is not in your tenant." }, { status: 404 });
+      return NextResponse.json({ error: "This enquiry is not on your book." }, { status: 404 });
     }
     return NextResponse.json({
       source: "enquiry record and activity ledger",

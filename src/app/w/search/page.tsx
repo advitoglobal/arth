@@ -56,11 +56,11 @@ export default async function SearchPage({
       <div className="space-y-6">
         <RuleHeading>Search</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Type a mobile number, a name, an enquiry number, or a model. Use Filter underneath to narrow the list by source, stage, date, and the rest.
+          Type a mobile number, a name, an enquiry number, or a model. Results stay inside your bucket: your book, your team, your branch, or this dealer. Another telecaller’s owned enquiry does not appear. Another dealer never appears.
         </p>
         <FigureSource
-          source="enquiries in this tenant"
-          period="current book"
+            source="your visible book"
+            period="owned names plus shared new names at this branch"
         />
         <form method="get" className="space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
@@ -210,7 +210,7 @@ export default async function SearchPage({
         {rows.length > 0 ? (
           <div>
             <p className="mb-2 text-sm text-[var(--arth-n60)]">
-              {rows.length} in this tenant. Source: enquiries in this tenant. Period: current book.
+              {rows.length} on your book. Other telecallers’ names are not in this list.
             </p>
             <EnquiryList
               rows={rows}

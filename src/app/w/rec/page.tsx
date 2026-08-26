@@ -30,7 +30,7 @@ export default async function RecPage({
       return (
         <div>
           <RuleHeading>Enquiry record</RuleHeading>
-          <p className="mt-4">This enquiry is not in your tenant.</p>
+          <p className="mt-4">This enquiry is not on your book.</p>
         </div>
       );
     }

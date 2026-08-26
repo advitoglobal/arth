@@ -46,6 +46,10 @@ export default async function LoginPage({
         <li>pinto · Coastal telecaller.</li>
         <li>rao · Whitefield sales. Today is refused. Converts after handoff.</li>
         <li>dsouza · Coastal sales.</li>
+        <li>menon · Whitefield team leader. Sees Iyer and Nair books.</li>
+        <li>gupta · Whitefield branch manager. Sees this branch only.</li>
+        <li>shah · Whitefield dealer principal. This dealer only, never Coastal.</li>
+        <li>fernandes / kamath · Coastal manager and principal.</li>
       </ul>
       <p className="text-sm text-[var(--arth-n60)]">
         Demonstration password for every seat: <span className="font-data">arth-demo</span>. Production uses a server session and SSO.

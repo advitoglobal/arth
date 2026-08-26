@@ -10,20 +10,23 @@ const app = postgres(
 
 const TENANT_A = "11111111-1111-1111-1111-111111111111";
 const TENANT_B = "22222222-2222-2222-2222-222222222222";
+const SHAH = "dddddddd-dddd-dddd-dddd-ddddddddddd8";
+const KAMATH = "dddddddd-dddd-dddd-dddd-dddddddddd10";
 
 async function main() {
 
-  async function countAs(tenantId: string) {
+  async function countAs(tenantId: string, userId: string) {
     return app.begin(async (tx) => {
       await tx`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+      await tx`SELECT set_config('app.user_id', ${userId}, true)`;
       const rows = await tx<{ n: string }[]>`SELECT count(*)::text AS n FROM leads`;
       const names = await tx<{ name: string }[]>`SELECT name FROM tenants`;
       return { n: Number(rows[0].n), tenantNames: names.map((x) => x.name) };
     });
   }
 
-  const seenA = await countAs(TENANT_A);
-  const seenB = await countAs(TENANT_B);
+  const seenA = await countAs(TENANT_A, SHAH);
+  const seenB = await countAs(TENANT_B, KAMATH);
 
   console.log("tenant A Whitefield Motors", seenA);
   console.log("tenant B Coastal Cars", seenB);
@@ -43,6 +46,7 @@ async function main() {
 
   const leak = await app.begin(async (tx) => {
     await tx`SELECT set_config('app.tenant_id', ${TENANT_A}, true)`;
+    await tx`SELECT set_config('app.user_id', ${SHAH}, true)`;
     return tx<{ n: string }[]>`
       SELECT count(*)::text AS n FROM leads
       WHERE tenant_id = ${TENANT_B}::uuid

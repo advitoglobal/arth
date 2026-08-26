@@ -19,6 +19,7 @@
     "db:disposition": "npx tsx scripts/prove-disposition.ts",
     "db:queue": "npx tsx scripts/prove-queue.ts",
     "db:points": "npx tsx scripts/prove-points.ts",
+    "db:walls": "npx tsx scripts/prove-visibility.ts",
     "prove": "npx tsx scripts/prove.ts"
   },
   "dependencies": {

@@ -10,10 +10,13 @@ const app = postgres(
 
 const WHITEFIELD = "11111111-1111-1111-1111-111111111111";
 const COASTAL = "22222222-2222-2222-2222-222222222222";
+const SHAH = "dddddddd-dddd-dddd-dddd-ddddddddddd8";
+const KAMATH = "dddddddd-dddd-dddd-dddd-dddddddddd10";
 
 async function emptyBeyondContacted(tenantId: string) {
   return app.begin(async (tx) => {
     await tx`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+    await tx`SELECT set_config('app.user_id', ${tenantId.startsWith("1111") ? SHAH : KAMATH}, true)`;
     return tx<{ customer: string; stage: string; n: string }[]>`
       SELECT c.full_name AS customer, l.stage_key AS stage, count(e.id)::text AS n
       FROM leads l
@@ -33,6 +36,7 @@ async function emptyBeyondContacted(tenantId: string) {
 async function thinHistory(tenantId: string) {
   return app.begin(async (tx) => {
     await tx`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+    await tx`SELECT set_config('app.user_id', ${tenantId.startsWith("1111") ? SHAH : KAMATH}, true)`;
     return tx<{ customer: string; stage: string; n: string; need: string }[]>`
       SELECT c.full_name AS customer, l.stage_key AS stage,
              count(e.id)::text AS n, (s.sort_order - 1)::text AS need

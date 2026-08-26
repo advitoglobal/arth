@@ -20,8 +20,8 @@ export async function GET(req: Request) {
       on: p.get("on") ?? "",
     });
     return NextResponse.json({
-      source: "enquiries in this tenant",
-      period: "current book",
+      source: "your visible book",
+      period: "bucket for this seat",
       rows,
     });
   });

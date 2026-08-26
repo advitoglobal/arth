@@ -100,6 +100,11 @@ export async function listQueue(tx: Tx, ownerId: string) {
           l.owner_user_id IS NULL
           AND l.first_responded_at IS NULL
           AND l.lost_reason_key IS NULL
+          AND l.branch_id = (
+            SELECT p.branch_id FROM users u
+            JOIN positions p ON p.id = u.position_id
+            WHERE u.id = ${ownerId}::uuid
+          )
         )
       )
       AND l.stage_key <> 'delivered'
@@ -126,6 +131,10 @@ export async function listQueue(tx: Tx, ownerId: string) {
 }
 
 export async function listPipeline(tx: Tx, ownerId: string) {
+  const [viewer] = await tx<{ role_key: string }[]>`
+    SELECT role_key FROM users WHERE id = ${ownerId}::uuid
+  `;
+  const personal = viewer?.role_key === "tele" || viewer?.role_key === "sales" || viewer?.role_key === "svctele";
   return tx<LeadRow[]>`
     SELECT
       l.id,
@@ -175,7 +184,10 @@ export async function listPipeline(tx: Tx, ownerId: string) {
       ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
-    WHERE l.owner_user_id = ${ownerId}
+    WHERE (
+      ${personal} = false
+      OR l.owner_user_id = ${ownerId}
+    )
     ORDER BY l.expected_value_paise DESC
   `;
 }
@@ -334,6 +346,7 @@ export async function getLead(tx: Tx, id: string) {
     LEFT JOIN config_lost_reasons lr ON lr.tenant_id = l.tenant_id AND lr.key = l.lost_reason_key
     WHERE l.id = ${id}::uuid
   `;
+  if (!row) return { lead: null, events: [] };
   const events = await tx`
     SELECT e.*, u.full_name AS actor_name, d.label AS disposition_label
     FROM lead_events e
@@ -349,7 +362,7 @@ async function assertCanLog(tx: Tx, leadId: string, userId: string) {
   const [lead] = await tx<{ owner_user_id: string | null }[]>`
     SELECT owner_user_id::text FROM leads WHERE id = ${leadId}::uuid
   `;
-  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (!lead) throw new Error("This enquiry is not on your book.");
   if (lead.owner_user_id && lead.owner_user_id !== userId) {
     throw new Error("You do not own this enquiry. Only the owner can log an outcome.");
   }
@@ -565,7 +578,7 @@ export async function advanceStage(
   const [lead] = await tx<{ stage_key: string }[]>`
     SELECT stage_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
-  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (!lead) throw new Error("This enquiry is not on your book.");
   const from = STAGE_KEYS.indexOf(lead.stage_key as (typeof STAGE_KEYS)[number]);
   const to = STAGE_KEYS.indexOf(input.to as (typeof STAGE_KEYS)[number]);
   if (from < 0 || to < 0) throw new Error("Unknown stage.");
@@ -638,7 +651,7 @@ export async function sendWhatsApp(
     JOIN customers c ON c.id = l.customer_id
     WHERE l.id = ${input.leadId}::uuid
   `;
-  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (!lead) throw new Error("This enquiry is not on your book.");
   const text = whatsappMessage({
     kind: input.kind,
     customerName: lead.customer_name,

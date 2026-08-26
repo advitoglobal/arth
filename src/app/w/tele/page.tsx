@@ -39,7 +39,7 @@ export default async function TelePage({
       return (
         <div>
           <RuleHeading>Log a call</RuleHeading>
-          <p className="mt-4">This enquiry is not in your tenant.</p>
+          <p className="mt-4">This enquiry is not on your book.</p>
         </div>
       );
     }
@@ -129,7 +129,7 @@ export default async function TelePage({
             <p>
               {handedToSales
                 ? `This enquiry is with ${lead.owner_name}. Conversion is a sales job.`
-                : `You do not own this enquiry. ${lead.owner_name ?? "Another seat"} reached the customer. Search can still open the record.`}
+                : `You do not own this enquiry. ${lead.owner_name ?? "Another seat"} reached the customer.`}
             </p>
           )}
         </div>

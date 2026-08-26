@@ -11,10 +11,12 @@ const app = postgres(
 const TENANT = "11111111-1111-1111-1111-111111111111";
 const IYER = "dddddddd-dddd-dddd-dddd-ddddddddddd1";
 const NAIR = "dddddddd-dddd-dddd-dddd-ddddddddddd3";
+const SHAH = "dddddddd-dddd-dddd-dddd-ddddddddddd8";
 
 async function main() {
   await app.begin(async (tx) => {
     await tx`SELECT set_config('app.tenant_id', ${TENANT}, true)`;
+    await tx`SELECT set_config('app.user_id', ${SHAH}, true)`;
     const iyer = await tx<{ n: string }[]>`
       SELECT count(*)::text AS n FROM leads
       WHERE owner_user_id = ${IYER}::uuid AND lost_reason_key IS NULL AND stage_key <> 'delivered'

@@ -26,6 +26,8 @@ async function main() {
         owner_user_id = NULL,
         assigned_at = NULL,
         first_responded_at = NULL,
+        first_response_due = NULL,
+        next_action_at = NULL,
         stage_key = 'new',
         lost_reason_key = NULL
       WHERE id = ${ANITA}::uuid
