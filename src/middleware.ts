@@ -21,12 +21,6 @@ export function middleware(req: NextRequest) {
   const key = resolveSeatKey(seatCookie);
 
   if (path === "/w/login") {
-    if (signedIn && key && !req.nextUrl.searchParams.get("e")) {
-      const home = req.nextUrl.clone();
-      home.pathname = `/w/${DEMO_USERS[key].workspaceKey}`;
-      home.search = "";
-      return NextResponse.redirect(home);
-    }
     return passPath(req);
   }
 
