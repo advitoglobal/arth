@@ -6,6 +6,8 @@ This repository is the **telecalling floor**, complete for this cycle: one depar
 
 Governed by `00-START-HERE.md`, `docs/books/SCOPE-BRIEF-TELECALLING.md`, `docs/ARTH-ARCHITECTURE.md`, and THE ARTH BRAND SYSTEM v2.9.
 
+Director review of this cycle: `docs/REVIEW-TELECALLING-BUILT.md`.
+
 ## Run
 
 ```bash

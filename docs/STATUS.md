@@ -5,6 +5,8 @@
 
 **Governing pack:** 00-START-HERE, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 
+**Director review pack:** `docs/REVIEW-TELECALLING-BUILT.md` (IT + Product: what is built, how to walk it, contradictions, what is out of scope).
+
 ## What is built (this cycle)
 
 - Step 0 isolation: Postgres 16, forced RLS, `withTenant`. `npm run prove` must print `PROVE_OK`.
