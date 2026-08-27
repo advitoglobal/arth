@@ -43,7 +43,7 @@ export function StatusStamp({
     settled: "bg-[var(--arth-settled-wash)] text-[var(--arth-settled)]",
     review: "bg-[var(--arth-brass-wash)] text-[var(--arth-brass-pill)]",
     draft: "bg-[var(--arth-n10)] text-[var(--arth-n80)]",
-    parked: "bg-[var(--arth-n10)] text-[var(--arth-n80)]",
+    parked: "bg-[var(--arth-brass-wash)] text-[var(--arth-brass-pill)]",
   };
   const label = {
     overdue: "Overdue",

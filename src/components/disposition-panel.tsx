@@ -50,6 +50,9 @@ export function DispositionPanel({
   const showRevisit = Boolean(
     selected?.requires_revisit || selected?.key === "connected_callback",
   );
+  const needsRevisit = Boolean(
+    selected?.requires_revisit || selected?.key === "connected_callback",
+  );
   const dirty =
     note !== "" ||
     revisit !== "" ||
@@ -59,7 +62,7 @@ export function DispositionPanel({
     key !== "";
   const canSave = Boolean(
     key &&
-      (!selected?.requires_revisit || revisit) &&
+      (!needsRevisit || revisit) &&
       (!selected?.requires_lost_reason || lost) &&
       (!showLostFact || lostFact.trim()) &&
       (!farCallback || callbackReason.trim()) &&

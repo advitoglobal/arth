@@ -84,6 +84,7 @@ async function main() {
       dispositionKey: "connected_callback",
       note: "Reached Anita. Wants the Brezza Lxi brochure.",
       callSeconds: 25,
+      revisitAt: "2026-09-03",
     });
     if (!reached.points || reached.points <= 0) {
       throw new Error("A 25 second connect must score points");

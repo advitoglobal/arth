@@ -14,7 +14,7 @@ export default async function NotifPage() {
       <div className="space-y-6">
         <RuleHeading>Notifications</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Every row says why you got it. Opening it, or tapping the row, marks it read.
+          Every one says why you got it. The row opens the enquiry.
         </p>
         <FigureSource source="your notifications" period="unread and read, newest first" />
         {rows.length === 0 ? (

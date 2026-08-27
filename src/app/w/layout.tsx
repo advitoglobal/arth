@@ -1,8 +1,10 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { currentSeat, asSeat, canOpen } from "@/db/session";
 import { FloorNav } from "@/components/floor-nav";
 import { OfflineBar } from "@/components/offline-bar";
+import { ArthWordmark } from "@/components/brand/logo";
 import { hasDemoSession } from "@/lib/seats";
 import { isSessionGuardError } from "@/db/with-tenant";
 import { countUnread, raiseFirstResponseBreaches } from "@/services/telecalling";
@@ -24,6 +26,11 @@ export default async function FloorLayout({
   if (!signedIn || isPublicFloorPath(path)) {
     return (
       <div className="min-h-full bg-[var(--arth-n05)]">
+        <div className="border-b border-[var(--arth-n80)] bg-[var(--arth-ink)] px-8 py-4">
+          <Link href="/" aria-label="arth home" className="inline-block py-1">
+            <ArthWordmark invert />
+          </Link>
+        </div>
         <div className="px-8 py-8">{children}</div>
       </div>
     );

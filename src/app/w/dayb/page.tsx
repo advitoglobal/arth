@@ -51,9 +51,16 @@ function Block({
   note: string;
   rows: LeadRow[];
 }) {
+  const remaining =
+    rows.length === 1 ? "1 remaining" : `${rows.length} remaining`;
   return (
     <section className="space-y-3">
-      <h2 className="font-display text-[20px] font-semibold">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-display text-[20px] font-semibold">{title}</h2>
+        <p className="font-data shrink-0 text-sm tabular-nums text-[var(--arth-n60)]">
+          {remaining}
+        </p>
+      </div>
       <p className="text-sm text-[var(--arth-n60)]">{note}</p>
       {rows.length === 0 ? (
         <p>None in this list.</p>

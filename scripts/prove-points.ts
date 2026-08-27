@@ -25,6 +25,7 @@ async function main() {
       dispositionKey: "connected_callback",
       note: "Hung up. Prove 20 second floor.",
       callSeconds: 10,
+      revisitAt: "2026-09-03",
     });
     if (short.points !== 0) {
       throw new Error(`10 second connect must score 0, got ${short.points}`);
@@ -36,6 +37,7 @@ async function main() {
       dispositionKey: "connected_callback",
       note: "Spoke about Grand Vitara Zeta quotation.",
       callSeconds: 25,
+      revisitAt: "2026-09-03",
     });
     if (!long.points || long.points <= 0) {
       throw new Error("25 second connect must score points");

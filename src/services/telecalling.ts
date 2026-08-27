@@ -402,11 +402,13 @@ export async function recordDisposition(
   `;
   if (!disp) throw new Error("Unknown disposition");
   await assertCanLog(tx, input.leadId, input.userId);
+  const needsRevisit =
+    Boolean(disp.requires_revisit) || disp.label.toLowerCase().includes("callback");
   if (disp.connected && !input.note.trim()) {
     throw new Error("Write what was said on this call. It is stored on the enquiry history.");
   }
-  if (disp.requires_revisit && !revisitAt) {
-    throw new Error("A revisit date is required for postponed.");
+  if (needsRevisit && !revisitAt) {
+    throw new Error("Pick the revisit day.");
   }
   if (disp.requires_lost_reason && !input.lostReasonKey) {
     throw new Error("A lost reason is needed before this enquiry can be closed.");
