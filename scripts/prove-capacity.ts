@@ -102,7 +102,7 @@ async function main() {
     await Promise.all(
       Array.from({ length: burstN }, (_, i) =>
         asCap(CAP_TELE, (tx) =>
-          searchEnquiries(tx, { q: i % 2 === 0 ? NEEDLE_PHONE : "Load 12" }),
+          searchEnquiries(tx, { q: i % 2 === 0 ? NEEDLE_PHONE : NEEDLE_NAME }),
         ),
       ),
     );

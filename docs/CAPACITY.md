@@ -34,18 +34,25 @@ npm run db:capacity         # timings; prints CAPACITY_OK
 
 Sign in as `captele` (same demonstration password) to use the large book. `iyer` is still the Whitefield walk-through.
 
-## Budgets (single action, 20 lakh book, this pod)
+## Measured on this pod (27 Aug 2026)
 
-| Action | Budget |
-|---|---|
-| Search by phone or name | 800 ms |
-| Today | 800 ms |
-| Open one enquiry | 400 ms |
-| My enquiries counts plus 80 rows | 800 ms |
-| Digital desk / principal snapshot | 1,500 ms |
-| 24 searches at once | 4,000 ms |
+Book: **2,000,001** enquiries on Capacity Motors (Whitefield and Coastal unchanged).
 
-If a budget fails, that is a defect. Do not “fix” it by loading fewer rows in the UI without a `COUNT` for the real figure.
+| Action | Time | Budget |
+|---|---|---|
+| Search by phone | 18 ms | 800 ms |
+| Search by name | 3 ms | 800 ms |
+| Search a dumped name (`Load 1500000`) | 24 ms | 800 ms |
+| Today | 12 ms | 800 ms |
+| Open one enquiry | 3 ms | 400 ms |
+| My enquiries counts plus 80 rows | 242 ms | 800 ms |
+| Digital desk snapshot | 623 ms | 1,500 ms |
+| Dealer principal snapshot | 570 ms | 1,500 ms |
+| 24 searches at once | 91 ms | 4,000 ms |
+
+`CAPACITY_OK` from `npm run db:capacity`.
+
+Search, Today, book counts, and My enquiries lists run as bounded `SECURITY DEFINER` SQL that still calls `arth_lead_row_visible` or the same owner/branch predicates. Customer rows are dealer-scoped; enquiry walls stay on `leads`. Another dealer never appears. Another telecaller’s owned enquiry does not appear in Search.
 
 ## 1,000 logins at once
 

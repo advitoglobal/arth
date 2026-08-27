@@ -105,45 +105,7 @@ export async function hydrateLeads(tx: Tx, ids: string[]) {
 
 export async function listQueue(tx: Tx, ownerId: string) {
   const found = await tx<{ id: string }[]>`
-    SELECT l.id
-    FROM leads l
-    WHERE (
-        l.owner_user_id = ${ownerId}
-        OR (
-          l.owner_user_id IS NULL
-          AND l.first_responded_at IS NULL
-          AND l.lost_reason_key IS NULL
-          AND l.branch_id = (
-            SELECT p.branch_id FROM users u
-            JOIN positions p ON p.id = u.position_id
-            WHERE u.id = ${ownerId}::uuid
-          )
-        )
-      )
-      AND l.stage_key <> 'delivered'
-      AND l.lost_reason_key IS NULL
-      AND (
-        l.next_action_at IS NULL
-        OR (timezone('Asia/Kolkata', l.next_action_at))::date
-          <= (timezone('Asia/Kolkata', now()))::date
-      )
-      AND NOT (
-        l.last_disposition_key = 'postponed'
-        AND l.last_revisit_at IS NOT NULL
-        AND l.last_revisit_at > now()
-        AND l.next_action_at IS NOT NULL
-        AND l.next_action_at > now()
-      )
-    ORDER BY
-      CASE
-        WHEN l.first_response_due IS NOT NULL
-          AND l.first_responded_at IS NULL
-          AND l.first_response_due < now() THEN 0
-        WHEN l.next_action_at IS NOT NULL AND l.next_action_at < now() THEN 0
-        ELSE 1
-      END,
-      l.next_action_at ASC NULLS LAST
-    LIMIT ${QUEUE_LIMIT}
+    SELECT x AS id FROM arth_queue_lead_ids(${ownerId}::uuid) AS x
   `;
   return hydrateLeads(tx, found.map((r) => String(r.id)));
 }
@@ -174,13 +136,7 @@ export async function listPipeline(
     : "";
 
   const grouped = await tx<{ stage_key: string; n: string }[]>`
-    SELECT l.stage_key, count(*)::text AS n
-    FROM leads l
-    WHERE (
-      ${personal} = false
-      OR l.owner_user_id = ${ownerId}
-    )
-    GROUP BY l.stage_key
+    SELECT stage_key, n::text FROM arth_pipeline_counts(${personal})
   `;
   const counts: Record<string, number> = {};
   let total = 0;
@@ -191,18 +147,11 @@ export async function listPipeline(
   }
 
   const found = await tx<{ id: string }[]>`
-    SELECT l.id
-    FROM leads l
-    WHERE (
-      ${personal} = false
-      OR l.owner_user_id = ${ownerId}
-    )
-    AND (
-      ${stageFilter} = ''
-      OR l.stage_key = ${stageFilter}
-    )
-    ORDER BY l.expected_value_paise DESC
-    LIMIT ${limit}
+    SELECT x AS id FROM arth_pipeline_lead_ids(
+      ${personal},
+      ${stageFilter},
+      ${limit}
+    ) AS x
   `;
   const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
   return { rows, total, counts, limit };
@@ -246,91 +195,40 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
   const digits = q.replace(/\D/g, "");
   const compact = q.replace(/-/g, "");
   const text = q.trim();
+  const letters = text.replace(/\d/g, "").replace(/\W/g, "").trim();
+  const enquiry8 = compact.length === 8 && /^[0-9a-f]+$/i.test(compact);
+  const enquiryLong = compact.length >= 12 && /^[0-9a-f-]+$/i.test(compact);
+  const phoneOnly = digits.length >= 4;
+  const textSearch = letters.length >= 2 && !enquiry8;
+
+  const phoneArg = phoneOnly && !textSearch ? digits : null;
+  const nameArg = textSearch ? text : null;
+  const enquiry8Arg = enquiry8 ? compact.toUpperCase() : null;
+  const enquiryTailArg = enquiryLong ? compact.toLowerCase().replace(/-/g, "") : null;
+  const sourceArg = source || null;
+  const stageArg = stage || null;
+  const modelArg = model || null;
+  const overdueArg = overdue || null;
+  const parkedArg = parked || null;
+  const fromArg = from || null;
+  const toArg = to || null;
+  const onArg = on || null;
 
   const found = await tx<{ id: string }[]>`
-    SELECT l.id
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    WHERE (
-      ${!hasQ} = true
-      OR (
-        (${digits.length >= 4} = true AND c.phone LIKE ${"%" + digits + "%"})
-        OR (${text.length >= 2} = true AND c.full_name ILIKE ${"%" + text + "%"})
-        OR (${text.length >= 2} = true AND l.model_interest ILIKE ${"%" + text + "%"})
-        OR (${text.length >= 2} = true AND l.variant_interest ILIKE ${"%" + text + "%"})
-        OR (${compact.length === 8} = true AND upper(right(replace(l.id::text, '-', ''), 8)) = ${compact.toUpperCase()})
-        OR (${compact.length >= 12} = true AND replace(l.id::text, '-', '') LIKE ${"%" + compact.toLowerCase()})
-      )
-    )
-    AND (${source === ""} = true OR l.source_key = ${source})
-    AND (${stage === ""} = true OR l.stage_key = ${stage})
-    AND (
-      ${model === ""} = true
-      OR l.model_interest ILIKE ${"%" + model + "%"}
-      OR l.variant_interest ILIKE ${"%" + model + "%"}
-    )
-    AND (
-      ${overdue === ""} = true
-      OR (
-        ${overdue === "yes"} = true
-        AND (
-          (l.next_action_at IS NOT NULL AND l.next_action_at < now())
-          OR (
-            l.first_response_due IS NOT NULL
-            AND l.first_responded_at IS NULL
-            AND l.first_response_due < now()
-          )
-        )
-      )
-      OR (
-        ${overdue === "no"} = true
-        AND NOT (
-          (l.next_action_at IS NOT NULL AND l.next_action_at < now())
-          OR (
-            l.first_response_due IS NOT NULL
-            AND l.first_responded_at IS NULL
-            AND l.first_response_due < now()
-          )
-        )
-      )
-    )
-    AND (
-      ${parked === ""} = true
-      OR (
-        ${parked === "yes"} = true
-        AND l.last_disposition_key = 'postponed'
-        AND l.last_revisit_at IS NOT NULL
-        AND l.last_revisit_at > now()
-      )
-      OR (
-        ${parked === "no"} = true
-        AND NOT (
-          l.last_disposition_key = 'postponed'
-          AND l.last_revisit_at IS NOT NULL
-          AND l.last_revisit_at > now()
-        )
-      )
-    )
-    AND (
-      ${from === ""} = true
-      OR (
-        CASE
-          WHEN ${on === "due"} = true THEN (timezone('Asia/Kolkata', l.next_action_at))::date
-          ELSE (timezone('Asia/Kolkata', l.created_at))::date
-        END
-      ) >= ${from || "1900-01-01"}::date
-    )
-    AND (
-      ${to === ""} = true
-      OR (
-        CASE
-          WHEN ${on === "due"} = true THEN (timezone('Asia/Kolkata', l.next_action_at))::date
-          ELSE (timezone('Asia/Kolkata', l.created_at))::date
-        END
-      ) <= ${to || "2999-12-31"}::date
-    )
-    ORDER BY l.created_at DESC
-    LIMIT ${LIST_LIMIT}
+    SELECT x AS id FROM arth_search_lead_ids(
+      ${phoneArg},
+      ${nameArg},
+      ${enquiry8Arg},
+      ${enquiryTailArg},
+      ${sourceArg},
+      ${stageArg},
+      ${modelArg},
+      ${overdueArg},
+      ${parkedArg},
+      ${fromArg},
+      ${toArg},
+      ${onArg}
+    ) AS x
   `;
   const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
   return rows.map((r) => ({ ...r, enquiryNo: enquiryNo(r.id) }));

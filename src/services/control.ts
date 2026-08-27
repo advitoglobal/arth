@@ -67,37 +67,11 @@ export async function controlSnapshot(tx: Tx) {
         `;
 
   const [book] = await tx<{ names: string; unowned: string; late: string }[]>`
-    SELECT
-      count(*)::text AS names,
-      count(*) FILTER (WHERE owner_user_id IS NULL)::text AS unowned,
-      count(*) FILTER (
-        WHERE
-          (next_action_at IS NOT NULL AND next_action_at < now())
-          OR (
-            first_response_due IS NOT NULL
-            AND first_responded_at IS NULL
-            AND first_response_due < now()
-          )
-      )::text AS late
-    FROM leads
+    SELECT names::text, unowned::text, late::text FROM arth_book_counts()
   `;
 
   const perOwner = await tx<{ owner_user_id: string; owned: string; late: string }[]>`
-    SELECT
-      owner_user_id::text,
-      count(*)::text AS owned,
-      count(*) FILTER (
-        WHERE
-          (next_action_at IS NOT NULL AND next_action_at < now())
-          OR (
-            first_response_due IS NOT NULL
-            AND first_responded_at IS NULL
-            AND first_response_due < now()
-          )
-      )::text AS late
-    FROM leads
-    WHERE owner_user_id IS NOT NULL
-    GROUP BY owner_user_id
+    SELECT owner_user_id::text, owned::text, late::text FROM arth_owner_load()
   `;
   const load = new Map(perOwner.map((r) => [r.owner_user_id, r]));
 

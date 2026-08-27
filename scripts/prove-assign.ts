@@ -70,7 +70,9 @@ async function main() {
     }
 
     const iyerQ = await listQueue(tx as unknown as Tx, IYER);
+    await tx`SELECT set_config('app.user_id', ${NAIR}, true)`;
     const nairQ = await listQueue(tx as unknown as Tx, NAIR);
+    await tx`SELECT set_config('app.user_id', ${IYER}, true)`;
     if (!iyerQ.some((r) => r.id === ANITA)) {
       throw new Error("Anita must be on Iyer Today while unowned");
     }
@@ -97,7 +99,9 @@ async function main() {
       throw new Error(`Anita should belong to Iyer after reach, got ${after.owner_user_id}`);
     }
 
+    await tx`SELECT set_config('app.user_id', ${NAIR}, true)`;
     const nairAfter = await listQueue(tx as unknown as Tx, NAIR);
+    await tx`SELECT set_config('app.user_id', ${IYER}, true)`;
     if (nairAfter.some((r) => r.id === ANITA)) {
       throw new Error("Anita must leave Nair Today after Iyer reached her");
     }
