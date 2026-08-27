@@ -1,6 +1,47 @@
-export const DEMO_USERS = {
+export type SeatKind = "dealer" | "platform";
+
+export type Seat = {
+  seatKey: string;
+  kind: SeatKind;
+  tenantId: string;
+  userId: string;
+  name: string;
+  roleKey: string;
+  roleLabel: string;
+  workspaceKey: string;
+  tenantName: string;
+  username: string;
+};
+
+export const ROLE_LABEL: Record<string, string> = {
+  tele: "telecaller",
+  svctele: "service telecaller",
+  sales: "sales consultant",
+  lead: "team leader",
+  mgr: "digital desk manager",
+  owner: "dealer principal",
+  ops: "Advito support on this dealer",
+  adv_admin: "Advito admin",
+  adv_support: "Advito support",
+};
+
+export function roleLabel(roleKey: string) {
+  return ROLE_LABEL[roleKey] ?? roleKey;
+}
+
+export function landingPath(seat: Pick<Seat, "kind" | "workspaceKey">) {
+  if (seat.kind === "platform") return "/a/dealers";
+  if (seat.workspaceKey === "dayb") return "/w/dayb";
+  if (seat.workspaceKey === "desk") return "/w/desk";
+  if (seat.workspaceKey === "prin") return "/w/prin";
+  if (seat.workspaceKey === "tele") return "/w/tele";
+  return "/w/pipe";
+}
+
+const DEMO_HASH_SEATS = {
   iyer: {
     seatKey: "iyer",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd1",
     name: "A. Iyer",
@@ -12,6 +53,7 @@ export const DEMO_USERS = {
   },
   nair: {
     seatKey: "nair",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd3",
     name: "K. Nair",
@@ -23,6 +65,7 @@ export const DEMO_USERS = {
   },
   pinto: {
     seatKey: "pinto",
+    kind: "dealer" as const,
     tenantId: "22222222-2222-2222-2222-222222222222",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd2",
     name: "M. Pinto",
@@ -34,6 +77,7 @@ export const DEMO_USERS = {
   },
   rao: {
     seatKey: "rao",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd4",
     name: "S. Rao",
@@ -45,6 +89,7 @@ export const DEMO_USERS = {
   },
   dsouza: {
     seatKey: "dsouza",
+    kind: "dealer" as const,
     tenantId: "22222222-2222-2222-2222-222222222222",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd5",
     name: "M. Dsouza",
@@ -56,6 +101,7 @@ export const DEMO_USERS = {
   },
   menon: {
     seatKey: "menon",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd6",
     name: "P. Menon",
@@ -67,59 +113,89 @@ export const DEMO_USERS = {
   },
   gupta: {
     seatKey: "gupta",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd7",
     name: "R. Gupta",
     roleKey: "mgr",
-    roleLabel: "branch manager",
-    workspaceKey: "pipe",
+    roleLabel: "digital desk manager",
+    workspaceKey: "desk",
     tenantName: "Whitefield Motors",
     username: "gupta",
   },
   shah: {
     seatKey: "shah",
+    kind: "dealer" as const,
     tenantId: "11111111-1111-1111-1111-111111111111",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd8",
     name: "D. Shah",
     roleKey: "owner",
     roleLabel: "dealer principal",
-    workspaceKey: "pipe",
+    workspaceKey: "prin",
     tenantName: "Whitefield Motors",
     username: "shah",
   },
   fernandes: {
     seatKey: "fernandes",
+    kind: "dealer" as const,
     tenantId: "22222222-2222-2222-2222-222222222222",
     userId: "dddddddd-dddd-dddd-dddd-ddddddddddd9",
     name: "L. Fernandes",
     roleKey: "mgr",
-    roleLabel: "branch manager",
-    workspaceKey: "pipe",
+    roleLabel: "digital desk manager",
+    workspaceKey: "desk",
     tenantName: "Coastal Cars",
     username: "fernandes",
   },
   kamath: {
     seatKey: "kamath",
+    kind: "dealer" as const,
     tenantId: "22222222-2222-2222-2222-222222222222",
     userId: "dddddddd-dddd-dddd-dddd-dddddddddd10",
     name: "A. Kamath",
     roleKey: "owner",
     roleLabel: "dealer principal",
-    workspaceKey: "pipe",
+    workspaceKey: "prin",
     tenantName: "Coastal Cars",
     username: "kamath",
   },
-} as const;
+  advito: {
+    seatKey: "advito",
+    kind: "platform" as const,
+    tenantId: "",
+    userId: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1",
+    name: "Advito admin",
+    roleKey: "adv_admin",
+    roleLabel: "Advito admin",
+    workspaceKey: "adealers",
+    tenantName: "Advito",
+    username: "advito",
+  },
+  support: {
+    seatKey: "support",
+    kind: "platform" as const,
+    tenantId: "",
+    userId: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee2",
+    name: "Advito support",
+    roleKey: "adv_support",
+    roleLabel: "Advito support",
+    workspaceKey: "adealers",
+    tenantName: "Advito",
+    username: "support",
+  },
+} satisfies Record<string, Seat>;
+
+export const DEMO_USERS = DEMO_HASH_SEATS;
 
 export type SeatKey = keyof typeof DEMO_USERS;
-export type Seat = (typeof DEMO_USERS)[SeatKey];
 
 export function hasDemoSession(rawSeat: string | undefined): boolean {
-  return resolveSeatKey(rawSeat) !== null;
+  return Boolean(rawSeat && /^[a-z0-9._-]{2,40}$/i.test(rawSeat.trim()));
 }
 
 export function resolveSeatKey(rawSeat: string | undefined): SeatKey | null {
-  if (rawSeat && rawSeat in DEMO_USERS) return rawSeat as SeatKey;
+  const key = rawSeat?.trim().toLowerCase();
+  if (key && key in DEMO_USERS) return key as SeatKey;
   return null;
 }
 
@@ -133,6 +209,12 @@ export function screenFromPath(pathname: string): string | null {
     "/w/new": "new",
     "/w/notif": "notif",
     "/w/profile": "profile",
+    "/w/desk": "desk",
+    "/w/prin": "prin",
   };
   return map[pathname] ?? null;
+}
+
+export function isPlatformRole(roleKey: string) {
+  return roleKey === "adv_admin" || roleKey === "adv_support";
 }

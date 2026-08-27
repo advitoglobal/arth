@@ -28,15 +28,17 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | rao | Whitefield sales |
 | dsouza | Coastal sales |
 | menon | Whitefield team leader |
-| gupta | Whitefield branch manager |
+| gupta | Whitefield digital desk manager |
 | shah | Whitefield dealer principal |
-| fernandes | Coastal branch manager |
+| fernandes | Coastal digital desk manager |
 | kamath | Coastal dealer principal |
+| advito | Advito admin |
+| support | Advito support |
 
 ## How the floor works
 
 - **Shared new book.** New names are on Today for every telecaller at the branch. The name stays there until someone **reaches** the customer (a connected call of 20 seconds or more). Then it belongs only to that telecaller. Search and Filter follow the same wall.
-- **Buckets.** Telecaller: own book plus unowned new names at the branch. Team leader: that team. Branch manager: that branch. Dealer principal: that dealer only. Postgres forced RLS enforces this. Missing `app.user_id` sees nothing. Another dealer never appears.
+- **Buckets.** Telecaller: own book plus unowned new names at the branch. Digital desk: that branch team. Dealer principal: that dealer only. Advito admin lists dealers and onboards. Advito support enters one dealer at a time. Postgres forced RLS enforces this. Missing `app.user_id` sees nothing. Another dealer never appears.
 - **Qualify, then hand to sales.** Telecalling qualifies. **Hand to sales** moves ownership to the branch sales consultant. Conversion is their job.
 - **Auto caller.** On Today, **Start next call** loads the highest-priority name. After you record the outcome, the next one loads until the list is finished.
 - **Dial and duration.** Dial on this device or the desk phone. The on-screen timer is the duration Arth stores. There is no recording file until a telephone provider is connected.
@@ -54,6 +56,8 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | Search | `/w/search` | One search box, then Filter |
 | File enquiry | `/w/new` | When Search finds nothing |
 | Notifications | `/w/notif` | Each row says why it arrived |
-| My profile | `/w/profile` | Seat, hours, points |
+| The floor | `/w/desk` | Digital desk: team load, shared book, place a name |
+| This dealer | `/w/prin` | Dealer principal: this dealer only |
+| Dealers | `/a/dealers` | Advito: list, enter one, onboard (admin) |
 
-`npm run prove` prints isolation, clock, assign (shared pool), access, scope, search, ledger, disposition, queue, points, and walls. `WALLS_OK` is required before any new department.
+`npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue, points, walls, desk, and platform.

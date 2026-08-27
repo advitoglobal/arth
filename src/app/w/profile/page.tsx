@@ -1,20 +1,11 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { asSeat, canOpen } from "@/db/session";
 import { branchHoursForUser, pointsTotal } from "@/services/telecalling";
 import { RuleHeading } from "@/components/brand/type";
-import { Button } from "@/components/ui/button";
+import { LeaveFloor } from "@/components/leave-floor";
 import { Forbidden } from "@/components/forbidden";
+import { landingPath } from "@/lib/seats";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-async function leave() {
-  "use server";
-  const jar = await cookies();
-  jar.set("arth_seat", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
-  jar.set("arth_tenant", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
-  redirect("/w/login");
-}
 
 export default async function ProfilePage() {
   return asSeat(async (tx, seat) => {
@@ -28,7 +19,7 @@ export default async function ProfilePage() {
         <div className="max-w-lg space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p><span className="text-[var(--arth-n60)]">Name </span>{seat.name}</p>
           <p><span className="text-[var(--arth-n60)]">Seat </span>{seat.roleLabel}</p>
-          <p><span className="text-[var(--arth-n60)]">Opens on </span>{seat.workspaceKey === "dayb" ? "Today" : seat.workspaceKey === "pipe" ? "My enquiries" : "Log a call"}</p>
+          <p><span className="text-[var(--arth-n60)]">Opens on </span>{landingPath(seat)}</p>
           <p><span className="text-[var(--arth-n60)]">Tenant </span>{seat.tenantName}</p>
           <p><span className="text-[var(--arth-n60)]">Branch </span>{branch}</p>
           <p><span className="text-[var(--arth-n60)]">Username </span><span className="font-data">{seat.username}</span></p>
@@ -36,11 +27,7 @@ export default async function ProfilePage() {
           <p className="text-sm text-[var(--arth-n60)]">
             Points = outcome base × difficulty. Connected under 20 seconds scores nothing. Duration comes from the on-screen timer, not a telephone recording.
           </p>
-          <form action={leave}>
-            <Button type="submit" variant="outline" className="mt-2 h-9 rounded-[3px]">
-              Log out
-            </Button>
-          </form>
+          <LeaveFloor />
         </div>
         <div className="max-w-lg border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">

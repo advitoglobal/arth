@@ -6,6 +6,8 @@ import { LeaveFloor } from "@/components/leave-floor";
 
 const items = [
   { href: "/w/dayb", screen: "dayb", label: "Today" },
+  { href: "/w/desk", screen: "desk", label: "The floor" },
+  { href: "/w/prin", screen: "prin", label: "This dealer" },
   { href: "/w/tele", screen: "tele", label: "Log a call" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
   { href: "/w/search", screen: "search", label: "Search" },
@@ -41,7 +43,11 @@ export function FloorNav({
             ? "Telecalling"
             : seat.roleKey === "sales"
               ? "Sales"
-              : "Management"}
+              : seat.roleKey === "mgr"
+                ? "Digital desk"
+                : seat.roleKey === "owner"
+                  ? "Dealer principal"
+                  : "Management"}
         </p>
         <p className="mb-6 mt-1 text-sm">{seat.tenantName}</p>
         <nav className="flex flex-col gap-1">

@@ -1,7 +1,7 @@
 # Status
 
 **Date:** 26 Aug 2026
-**What you get this cycle:** the telecalling floor, including username/password login, a shared new book until a telecaller reaches the customer, auto caller, on-screen call duration, points with the 20-second floor, WhatsApp templates, and handoff to sales. Four visibility walls (dealer, branch, team, owner) are registered as platform law for every later department. Not a live telephone exchange, not a recording file, not the Exception Cockpit.
+**What you get this cycle:** the telecalling floor plus the first control set: digital desk manager, dealer principal, Advito admin (onboard dealers), and Advito support (enter one dealer at a time). Four visibility walls stay in force. Not a live telephone exchange, not a recording file, not the Exception Cockpit, not other departments' managers.
 
 **Governing pack:** 00-START-HERE, VISIBILITY-WALLS, ARTH-ARCHITECTURE, SCOPE-BRIEF-TELECALLING, Brand System v2.9, .cursorrules
 

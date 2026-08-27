@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { clearSeatCookies } from "@/lib/session-cookies";
 
 async function leave() {
   "use server";
   const jar = await cookies();
-  jar.set("arth_seat", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
-  jar.set("arth_tenant", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+  clearSeatCookies(jar);
   redirect("/w/login");
 }
 

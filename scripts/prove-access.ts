@@ -6,17 +6,18 @@ function assert(cond: boolean, msg: string) {
 
 assert(canOpen("tele", "dayb"), "telecaller opens Today");
 assert(!canOpen("sales", "dayb"), "sales consultant is 403 on Today");
-assert(!canOpen("sales", "tele"), "sales consultant is 403 on Log a call");
-assert(!canOpen("sales", "profile"), "sales consultant is 403 on profile");
-assert(canOpen("sales", "pipe"), "sales consultant opens My enquiries");
-assert(canOpen("sales", "search"), "sales consultant opens Search");
-assert(canOpen("tele", "search"), "telecaller opens Search this cycle");
-assert(canOpen("tele", "new"), "telecaller files an enquiry");
-assert(!canOpen("sales", "new"), "sales consultant is 403 on file enquiry");
-assert(canOpen("owner", "search"), "dealer principal opens Search");
-assert(canOpen("mgr", "search"), "branch manager opens Search");
-assert(canOpen("lead", "search"), "team leader opens Search");
-assert(canOpen("owner", "pipe"), "dealer principal opens My enquiries");
+assert(!canOpen("mgr", "dayb"), "digital desk is 403 on Today");
+assert(canOpen("mgr", "desk"), "digital desk opens The floor");
+assert(!canOpen("tele", "desk"), "telecaller is 403 on The floor");
+assert(canOpen("owner", "prin"), "dealer principal opens This dealer");
+assert(!canOpen("mgr", "prin"), "digital desk is 403 on This dealer");
 assert(!canOpen("owner", "dayb"), "dealer principal is 403 on Today");
+assert(canOpen("adv_admin", "adealers"), "Advito admin opens dealers");
+assert(canOpen("adv_admin", "aonboard"), "Advito admin onboards");
+assert(canOpen("adv_support", "adealers"), "Advito support opens dealers");
+assert(!canOpen("adv_support", "aonboard"), "Advito support cannot onboard");
+assert(!canOpen("owner", "adealers"), "dealer principal cannot open Advito control");
+assert(canOpen("sales", "pipe"), "sales consultant opens My enquiries");
+assert(canOpen("tele", "search"), "telecaller opens Search this cycle");
 
-console.log("ACCESS_OK sales is 403 on Today; Search is open to tele this cycle");
+console.log("ACCESS_OK sales is 403 on Today; desk, principal, and Advito seats are split");

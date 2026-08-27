@@ -5,6 +5,9 @@ Read this before designing anything.
 
 ---
 
+## 2026-08-27 · Telecalling control seats, then other departments
+Digital desk manager runs the telecalling team at a branch. Dealer principal sees this dealer only. Advito admin onboards dealers. Advito support enters one dealer at a time to fix a floor problem, logged. Support cannot onboard. No dealer sees another dealer. Other department managers wait. Law: `docs/books/CONTROL-SEATS.md`.
+
 ## 2026-08-26 · Four visibility walls, every department
 Dealer, then branch, then team, then owner. After a telecaller reaches the customer, Search and Filter hide that enquiry from other telecallers. Team leader sees the team. Branch manager sees the branch. Dealer principal sees this dealer only. Forced RLS plus `arth_lead_visible`. Fail closed without `app.user_id`. Law: `docs/books/VISIBILITY-WALLS.md`. Sales, service, and every later department inherit this. A bypass is a defect.
 

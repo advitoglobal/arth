@@ -20,6 +20,11 @@ user, or mismatched dealer means **zero rows**, not a fallback seat.
 Dealer principal and dealer admin see **this dealer only**, all branches of
 this dealer, never another dealer.
 
+Advito admin and Advito support are not dealer seats. They list dealers from
+outside the wall. To read enquiries they enter **one** dealer. That session
+cannot include another dealer's rows.
+
+
 ## Who sees what
 
 | Seat | Bucket |
@@ -27,8 +32,8 @@ this dealer, never another dealer.
 | Telecaller / service telecaller | Own book, plus unowned names at this branch that nobody has reached |
 | Sales consultant | Own book only (handed over to convert) |
 | Team leader | Team books, plus unowned new names at the branch |
-| Branch manager | This branch |
-| Dealer principal / dealer admin / advisor | This dealer |
+| Digital desk manager | Telecalling team at this branch, plus unowned names there |
+| Dealer principal / dealer admin / advisor / Advito ops-on-dealer | This dealer |
 
 ## How it is enforced
 

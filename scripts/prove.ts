@@ -12,6 +12,8 @@ const checks: [string, string][] = [
   ["db:queue", "QUEUE_OK"],
   ["db:points", "POINTS_OK"],
   ["db:walls", "WALLS_OK"],
+  ["db:desk", "DESK_OK"],
+  ["db:platform", "PLATFORM_OK"],
 ];
 
 let failed = 0;

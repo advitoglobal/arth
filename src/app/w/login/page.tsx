@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authenticateSeat } from "@/lib/auth";
+import { landingPath } from "@/lib/seats";
+import { applySeatCookies } from "@/lib/session-cookies";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
 
@@ -13,13 +15,8 @@ async function enter(formData: FormData) {
     redirect(`/w/login?e=1`);
   }
   const jar = await cookies();
-  jar.set("arth_seat", result.seat.seatKey, { httpOnly: true, sameSite: "lax", path: "/" });
-  jar.set(
-    "arth_tenant",
-    result.seat.tenantId.startsWith("2222") ? "coastal" : "whitefield",
-    { httpOnly: true, sameSite: "lax", path: "/" },
-  );
-  redirect(`/w/${result.seat.workspaceKey}`);
+  applySeatCookies(jar, result.seat);
+  redirect(landingPath(result.seat));
 }
 
 export default async function LoginPage({
@@ -30,20 +27,20 @@ export default async function LoginPage({
   const { e } = await searchParams;
   return (
     <div className="mx-auto max-w-xl space-y-8 py-8">
-      <RuleHeading>Sign in to the telecalling floor</RuleHeading>
+      <RuleHeading>Sign in to Arth</RuleHeading>
       <p className="text-[var(--arth-n60)]">
-        Telecalling qualifies the enquiry and hands it to sales. Sales converts. New names are on every telecaller list until someone reaches the customer. Then that name stays with that telecaller.
+        Telecalling qualifies the enquiry and hands it to sales. The digital desk runs that team. The dealer principal sees this dealer only. Advito admin onboards dealers. Advito support enters one dealer at a time to fix a problem.
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--arth-n60)]">
         <li>iyer · Whitefield telecaller. Password is the demonstration password.</li>
         <li>nair · Whitefield telecaller. Same shared new book until a connect.</li>
         <li>pinto · Coastal telecaller.</li>
         <li>rao · Whitefield sales. Today is refused. Converts after handoff.</li>
-        <li>dsouza · Coastal sales.</li>
-        <li>menon · Whitefield team leader. Sees Iyer and Nair books.</li>
-        <li>gupta · Whitefield branch manager. Sees this branch only.</li>
+        <li>gupta · Whitefield digital desk manager. Telecalling team at this branch only.</li>
         <li>shah · Whitefield dealer principal. This dealer only, never Coastal.</li>
-        <li>fernandes / kamath · Coastal manager and principal.</li>
+        <li>fernandes / kamath · Coastal digital desk and principal.</li>
+        <li>advito · Advito admin. Onboard dealers. Enter one dealer at a time.</li>
+        <li>support · Advito support. Enter one dealer at a time. Cannot onboard.</li>
       </ul>
       <p className="text-sm text-[var(--arth-n60)]">
         Demonstration password for every seat: <span className="font-data">arth-demo</span>. Production uses a server session and SSO.

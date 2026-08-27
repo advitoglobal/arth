@@ -481,3 +481,72 @@ export async function scheduleNextAction(
   const { hours, timeZone } = await branchHours(tx, lead.branch_id);
   return nextActionDue(from, hours, timeZone);
 }
+
+export async function placeWithTelecaller(
+  tx: Tx,
+  input: { leadId: string; teleId: string; actorId: string },
+) {
+  const [actor] = await tx<{ role_key: string; branch_id: string | null }[]>`
+    SELECT u.role_key, p.branch_id::text
+    FROM users u
+    LEFT JOIN positions p ON p.id = u.position_id
+    WHERE u.id = ${input.actorId}::uuid AND u.is_active
+  `;
+  if (!actor || !["mgr", "owner", "ops"].includes(actor.role_key)) {
+    throw new Error("Only the digital desk, the dealer principal, or Advito support can place a name.");
+  }
+
+  const [tele] = await tx<{ role_key: string; branch_id: string | null; full_name: string }[]>`
+    SELECT u.role_key, p.branch_id::text, u.full_name
+    FROM users u
+    LEFT JOIN positions p ON p.id = u.position_id
+    WHERE u.id = ${input.teleId}::uuid AND u.is_active
+  `;
+  if (!tele || tele.role_key !== "tele") {
+    throw new Error("Place the name with a telecaller at this dealer.");
+  }
+  if (actor.role_key === "mgr" && actor.branch_id && tele.branch_id !== actor.branch_id) {
+    throw new Error("The digital desk can only place names on this branch.");
+  }
+
+  const [lead] = await tx<{ id: string; branch_id: string; owner_user_id: string | null }[]>`
+    SELECT id::text, branch_id::text, owner_user_id::text
+    FROM leads
+    WHERE id = ${input.leadId}::uuid
+      AND lost_reason_key IS NULL
+  `;
+  if (!lead) throw new Error("This enquiry is not in your bucket.");
+  if (actor.role_key === "mgr" && actor.branch_id && lead.branch_id !== actor.branch_id) {
+    throw new Error("The digital desk can only place names on this branch.");
+  }
+
+  const [row] = await tx<{ id: string }[]>`
+    UPDATE leads SET
+      owner_user_id = ${input.teleId}::uuid,
+      assigned_at = COALESCE(assigned_at, now()),
+      stage_key = CASE WHEN stage_key = 'new' THEN 'assigned' ELSE stage_key END
+    WHERE id = ${input.leadId}::uuid
+    RETURNING id::text
+  `;
+  if (!row) throw new Error("This enquiry is not in your bucket.");
+
+  await tx`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'assigned',
+      'USER',
+      ${input.actorId}::uuid,
+      ${"Placed with " + tele.full_name + " by the digital desk."},
+      ${tx.json({
+        owner_user_id: input.teleId,
+        previous_owner_user_id: lead.owner_user_id,
+        placed_by: actor.role_key,
+      })}
+    )
+  `;
+
+  return { recorded: `Placed with ${tele.full_name}.` };
+}

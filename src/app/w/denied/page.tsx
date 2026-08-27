@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { currentSeat } from "@/db/session";
-import { hasDemoSession } from "@/lib/seats";
+import { hasDemoSession, landingPath } from "@/lib/seats";
 import { Forbidden } from "@/components/forbidden";
 
 export default async function DeniedPage() {
@@ -10,5 +10,5 @@ export default async function DeniedPage() {
     redirect("/w/login");
   }
   const seat = await currentSeat();
-  return <Forbidden landing={`/w/${seat.workspaceKey}`} />;
+  return <Forbidden landing={landingPath(seat)} />;
 }

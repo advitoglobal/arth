@@ -3,7 +3,7 @@
  * Application code must not invent a wider path.
  */
 export const VISIBILITY_ROLES = {
-  dealer: ["owner", "adv", "admin"],
+  dealer: ["owner", "adv", "admin", "ops"],
   branch: ["mgr"],
   team: ["lead"],
   personal: ["tele", "sales", "svctele"],

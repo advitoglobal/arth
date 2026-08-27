@@ -53,7 +53,7 @@ that otherwise look arbitrary.
 | 3 | `ARTH-BUILD-SPECIFICATION.md` | Objects, state machines, access matrix, **Appendix B: all 80 screens with routes and access lists** |
 | 4 | `Arth-Platform.html` | **The visual reference. Open it in a browser now.** 80 screens, 22 seats, switch roles in the sidebar |
 | 5 | `SCOPE-BRIEF-TELECALLING.md` | The first milestone, and why it is that one |
-| 6 | `DECISIONS.md` and `docs/books/VISIBILITY-WALLS.md` | Rulings, and the four walls every department inherits |
+| 6 | `DECISIONS.md`, `docs/books/VISIBILITY-WALLS.md`, `docs/books/CONTROL-SEATS.md` | Rulings, walls, and telecalling control seats |
 | 7 | `REWORK-REGISTER.md` | Designs already rejected, with the condition for revisiting each. **Before proposing anything** |
 | 8 | `ARTH-PROJECT-CONFIGURATION-BOOK.html` | What is configurable and by whom, integrations, failure modes, runbooks |
 | 9 | `EIGHT-DECISIONS-ANSWERED.md` | Eight product rulings with full reasoning |

@@ -27,7 +27,8 @@ and recording files are still excluded until a provider is contracted.
   transaction-scoped session setting. All database access goes through withTenant().
   There is no other path. Inside a dealer the four walls apply to every department:
   dealer, branch, team, owner. Search and Filter included. Law:
-  `docs/books/VISIBILITY-WALLS.md`. A new table or workspace that skips this is a defect.
+  `docs/books/VISIBILITY-WALLS.md`. Telecalling control seats: digital desk, dealer
+  principal, Advito admin, Advito support. `docs/books/CONTROL-SEATS.md`.
 - Derived, never stored: chain state, exception state, Parked.
 - Nine stages: new, assigned, contacted, qualified, test_drive, quotation, negotiation,
   booked, delivered. After booked, progress belongs to the delivery chain.

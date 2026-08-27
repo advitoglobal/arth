@@ -787,7 +787,10 @@ export async function branchHoursForUser(tx: Tx, userId: string) {
       b.timezone
     FROM users u
     JOIN positions p ON p.id = u.position_id
-    JOIN branches b ON b.id = p.branch_id
+    JOIN branches b ON b.id = COALESCE(
+      p.branch_id,
+      (SELECT id FROM branches WHERE tenant_id = u.tenant_id ORDER BY name LIMIT 1)
+    )
     JOIN working_hours wh ON wh.branch_id = b.id
     WHERE u.id = ${userId}::uuid
     ORDER BY wh.day_of_week
