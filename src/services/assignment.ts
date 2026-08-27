@@ -51,7 +51,9 @@ export async function armUnownedClocks(tx: Tx) {
     WHERE owner_user_id IS NULL
       AND lost_reason_key IS NULL
       AND first_responded_at IS NULL
+      AND (first_response_due IS NULL OR next_action_at IS NULL)
     ORDER BY created_at ASC
+    LIMIT 80
   `;
 
   let armed = 0;

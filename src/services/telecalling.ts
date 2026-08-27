@@ -1,9 +1,5 @@
 import type { Tx } from "@/db/with-tenant";
 import {
-  isFirstResponseLate,
-  isFollowUpLate,
-  isOnDayQueue,
-  isParked,
   needsCallbackReason,
   revisitDayToInstant,
   STAGE_KEYS,
@@ -45,7 +41,12 @@ export type LeadRow = {
   created_at?: Date | null;
 };
 
-export async function listQueue(tx: Tx, ownerId: string) {
+export const LIST_LIMIT = 80;
+export const QUEUE_LIMIT = 200;
+export const LATE_LIST_LIMIT = 40;
+
+export async function hydrateLeads(tx: Tx, ids: string[]) {
+  if (ids.length === 0) return [] as LeadRow[];
   const rows = await tx<LeadRow[]>`
     SELECT
       l.id,
@@ -64,215 +65,8 @@ export async function listQueue(tx: Tx, ownerId: string) {
       l.difficulty_band,
       l.expected_value_paise::text,
       l.owner_user_id,
-      e.disposition_key,
-      e.revisit_at,
-      l.first_response_due,
-      l.first_responded_at,
-      l.lost_reason_key
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
-    LEFT JOIN LATERAL (
-      SELECT
-        CASE
-          WHEN d.label IS NOT NULL THEN d.label
-          WHEN ev.event_type = 'assigned' THEN 'Assigned'
-          WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
-          WHEN ev.event_type = 'correction' THEN 'Correction'
-          WHEN ev.event_type = 'created' THEN 'Filed'
-          WHEN ev.event_type = 'whatsapp' THEN 'WhatsApp sent'
-          WHEN ev.event_type = 'handoff' THEN 'Handed to sales'
-          WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
-          ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
-        END AS last_event,
-        ev.created_at,
-        ev.disposition_key,
-        ev.revisit_at
-      FROM lead_events ev
-      LEFT JOIN config_dispositions d
-        ON d.tenant_id = ev.tenant_id AND d.key = ev.disposition_key
-      WHERE ev.lead_id = l.id
-      ORDER BY ev.created_at DESC
-      LIMIT 1
-    ) e ON true
-    WHERE (
-        l.owner_user_id = ${ownerId}
-        OR (
-          l.owner_user_id IS NULL
-          AND l.first_responded_at IS NULL
-          AND l.lost_reason_key IS NULL
-          AND l.branch_id = (
-            SELECT p.branch_id FROM users u
-            JOIN positions p ON p.id = u.position_id
-            WHERE u.id = ${ownerId}::uuid
-          )
-        )
-      )
-      AND l.stage_key <> 'delivered'
-      AND l.lost_reason_key IS NULL
-    ORDER BY l.next_action_at ASC NULLS LAST
-  `;
-  return rows
-    .filter((r) => {
-      if (isParked(r) && r.next_action_at && new Date(r.next_action_at) > new Date()) {
-        return false;
-      }
-      return isOnDayQueue(r.next_action_at);
-    })
-    .sort((a, b) => {
-      const lateA =
-        isFirstResponseLate(a) || isFollowUpLate(a.next_action_at) ? 0 : 1;
-      const lateB =
-        isFirstResponseLate(b) || isFollowUpLate(b.next_action_at) ? 0 : 1;
-      if (lateA !== lateB) return lateA - lateB;
-      const ta = a.next_action_at ? new Date(a.next_action_at).getTime() : 0;
-      const tb = b.next_action_at ? new Date(b.next_action_at).getTime() : 0;
-      return ta - tb;
-    });
-}
-
-export async function listPipeline(tx: Tx, ownerId: string) {
-  const [viewer] = await tx<{ role_key: string }[]>`
-    SELECT role_key FROM users WHERE id = ${ownerId}::uuid
-  `;
-  if (!viewer) {
-    throw new Error("This seat does not belong to this dealer.");
-  }
-  const personal = isPersonalRole(viewer.role_key);
-  return tx<LeadRow[]>`
-    SELECT
-      l.id,
-      c.full_name AS customer_name,
-      c.phone,
-      l.model_interest,
-      l.variant_interest,
-      l.source_key,
-      l.source_detail,
-      l.stage_key,
-      s.label AS stage_label,
-      s.sort_order AS stage_order,
-      e.last_event,
-      e.created_at AS last_event_at,
-      l.next_action_at,
-      l.difficulty_band,
-      l.expected_value_paise::text,
-      l.owner_user_id,
-      e.disposition_key,
-      e.revisit_at,
-      l.first_response_due,
-      l.first_responded_at,
-      l.lost_reason_key
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
-    LEFT JOIN LATERAL (
-      SELECT
-        CASE
-          WHEN d.label IS NOT NULL THEN d.label
-          WHEN ev.event_type = 'assigned' THEN 'Assigned'
-          WHEN ev.event_type = 'clock_deferred' THEN 'Clock deferred'
-          WHEN ev.event_type = 'correction' THEN 'Correction'
-          WHEN ev.event_type = 'created' THEN 'Filed'
-          WHEN ev.event_type = 'whatsapp' THEN 'WhatsApp sent'
-          WHEN ev.event_type = 'handoff' THEN 'Handed to sales'
-          WHEN ev.event_type = 'stage_change' THEN COALESCE(NULLIF(ev.note, ''), 'Stage moved')
-          ELSE COALESCE(NULLIF(ev.note, ''), 'Activity')
-        END AS last_event,
-        ev.created_at,
-        ev.disposition_key,
-        ev.revisit_at
-      FROM lead_events ev
-      LEFT JOIN config_dispositions d
-        ON d.tenant_id = ev.tenant_id AND d.key = ev.disposition_key
-      WHERE ev.lead_id = l.id
-      ORDER BY ev.created_at DESC
-      LIMIT 1
-    ) e ON true
-    WHERE (
-      ${personal} = false
-      OR l.owner_user_id = ${ownerId}
-    )
-    ORDER BY l.expected_value_paise DESC
-  `;
-}
-
-export async function searchByPhone(tx: Tx, q: string) {
-  return searchEnquiries(tx, { q });
-}
-
-export type SearchFilters = {
-  q?: string;
-  source?: string;
-  stage?: string;
-  overdue?: string;
-  parked?: string;
-  model?: string;
-  from?: string;
-  to?: string;
-  on?: string;
-};
-
-function istDay(value: Date | string | null | undefined) {
-  if (!value) return null;
-  return new Date(value).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-}
-
-function present(value?: string) {
-  const v = value?.trim() ?? "";
-  return v.length ? v : "";
-}
-
-function matchesSearchBox(row: LeadRow, q: string) {
-  const raw = q.trim();
-  if (!raw) return true;
-  const digits = raw.replace(/\D/g, "");
-  const text = raw.toLowerCase();
-  const compact = raw.replace(/-/g, "").toLowerCase();
-  const hay = `${row.customer_name} ${row.model_interest ?? ""} ${row.variant_interest ?? ""}`.toLowerCase();
-  const id = String(row.id).replace(/-/g, "").toLowerCase();
-  const phoneHit = digits.length >= 4 && String(row.phone).includes(digits);
-  const textHit = text.length >= 2 && hay.includes(text);
-  const no = enquiryNo(String(row.id)).toLowerCase();
-  const idHit =
-    (compact.length === 8 && no === compact) ||
-    (compact.length >= 12 && id.endsWith(compact));
-  return phoneHit || textHit || idHit;
-}
-
-export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
-  const q = present(filters.q);
-  const source = present(filters.source);
-  const stage = present(filters.stage);
-  const overdue = present(filters.overdue);
-  const parked = present(filters.parked);
-  const model = present(filters.model);
-  const from = present(filters.from);
-  const to = present(filters.to);
-  const on = present(filters.on);
-  const hasQ = q.length >= 2;
-  const hasFilter = Boolean(source || stage || overdue || parked || model || from || to);
-  if (!hasQ && !hasFilter) return [];
-
-  const rows = await tx<LeadRow[]>`
-    SELECT
-      l.id,
-      c.full_name AS customer_name,
-      c.phone,
-      l.model_interest,
-      l.variant_interest,
-      l.source_key,
-      l.source_detail,
-      l.stage_key,
-      s.label AS stage_label,
-      s.sort_order AS stage_order,
-      e.last_event,
-      e.created_at AS last_event_at,
-      l.next_action_at,
-      l.difficulty_band,
-      l.expected_value_paise::text,
-      l.owner_user_id,
-      e.disposition_key,
-      e.revisit_at,
+      COALESCE(e.disposition_key, l.last_disposition_key) AS disposition_key,
+      COALESCE(e.revisit_at, l.last_revisit_at) AS revisit_at,
       l.first_response_due,
       l.first_responded_at,
       l.lost_reason_key,
@@ -303,35 +97,243 @@ export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
       ORDER BY ev.created_at DESC
       LIMIT 1
     ) e ON true
-    ORDER BY l.created_at DESC
-    LIMIT 80
+    WHERE l.id = ANY(${ids}::uuid[])
   `;
+  const rank = new Map(ids.map((id, i) => [id, i]));
+  return rows.sort((a, b) => (rank.get(String(a.id)) ?? 0) - (rank.get(String(b.id)) ?? 0));
+}
 
-  return rows.filter((r) => {
-    if (!matchesSearchBox(r, q)) return false;
-    if (source && r.source_key !== source) return false;
-    if (stage && r.stage_key !== stage) return false;
-    if (model) {
-      const m = model.toLowerCase();
-      const hay = `${r.model_interest ?? ""} ${r.variant_interest ?? ""}`.toLowerCase();
-      if (!hay.includes(m)) return false;
-    }
-    const late =
-      (!!r.next_action_at && new Date(r.next_action_at).getTime() < Date.now()) ||
-      (!!r.first_response_due &&
-        !r.first_responded_at &&
-        new Date(r.first_response_due).getTime() < Date.now());
-    if (overdue === "yes" && !late) return false;
-    if (overdue === "no" && late) return false;
-    const isParkedRow = isParked(r);
-    if (parked === "yes" && !isParkedRow) return false;
-    if (parked === "no" && isParkedRow) return false;
-    const pivot = on === "due" ? r.next_action_at : (r.created_at ?? null);
-    const day = istDay(pivot);
-    if (from && (!day || day < from)) return false;
-    if (to && (!day || day > to)) return false;
-    return true;
-  }).map((r) => ({ ...r, enquiryNo: enquiryNo(r.id) }));
+export async function listQueue(tx: Tx, ownerId: string) {
+  const found = await tx<{ id: string }[]>`
+    SELECT l.id
+    FROM leads l
+    WHERE (
+        l.owner_user_id = ${ownerId}
+        OR (
+          l.owner_user_id IS NULL
+          AND l.first_responded_at IS NULL
+          AND l.lost_reason_key IS NULL
+          AND l.branch_id = (
+            SELECT p.branch_id FROM users u
+            JOIN positions p ON p.id = u.position_id
+            WHERE u.id = ${ownerId}::uuid
+          )
+        )
+      )
+      AND l.stage_key <> 'delivered'
+      AND l.lost_reason_key IS NULL
+      AND (
+        l.next_action_at IS NULL
+        OR (timezone('Asia/Kolkata', l.next_action_at))::date
+          <= (timezone('Asia/Kolkata', now()))::date
+      )
+      AND NOT (
+        l.last_disposition_key = 'postponed'
+        AND l.last_revisit_at IS NOT NULL
+        AND l.last_revisit_at > now()
+        AND l.next_action_at IS NOT NULL
+        AND l.next_action_at > now()
+      )
+    ORDER BY
+      CASE
+        WHEN l.first_response_due IS NOT NULL
+          AND l.first_responded_at IS NULL
+          AND l.first_response_due < now() THEN 0
+        WHEN l.next_action_at IS NOT NULL AND l.next_action_at < now() THEN 0
+        ELSE 1
+      END,
+      l.next_action_at ASC NULLS LAST
+    LIMIT ${QUEUE_LIMIT}
+  `;
+  return hydrateLeads(tx, found.map((r) => String(r.id)));
+}
+
+export type PipelinePage = {
+  rows: LeadRow[];
+  total: number;
+  counts: Record<string, number>;
+  limit: number;
+};
+
+export async function listPipeline(
+  tx: Tx,
+  ownerId: string,
+  opts?: { stage?: string; limit?: number },
+): Promise<PipelinePage> {
+  const [viewer] = await tx<{ role_key: string }[]>`
+    SELECT role_key FROM users WHERE id = ${ownerId}::uuid
+  `;
+  if (!viewer) {
+    throw new Error("This seat does not belong to this dealer.");
+  }
+  const personal = isPersonalRole(viewer.role_key);
+  const limit = Math.min(200, Math.max(1, opts?.limit ?? LIST_LIMIT));
+  const stage = opts?.stage?.trim() ?? "";
+  const stageFilter = STAGE_KEYS.includes(stage as (typeof STAGE_KEYS)[number])
+    ? stage
+    : "";
+
+  const grouped = await tx<{ stage_key: string; n: string }[]>`
+    SELECT l.stage_key, count(*)::text AS n
+    FROM leads l
+    WHERE (
+      ${personal} = false
+      OR l.owner_user_id = ${ownerId}
+    )
+    GROUP BY l.stage_key
+  `;
+  const counts: Record<string, number> = {};
+  let total = 0;
+  for (const row of grouped) {
+    const n = Number(row.n);
+    counts[row.stage_key] = n;
+    total += n;
+  }
+
+  const found = await tx<{ id: string }[]>`
+    SELECT l.id
+    FROM leads l
+    WHERE (
+      ${personal} = false
+      OR l.owner_user_id = ${ownerId}
+    )
+    AND (
+      ${stageFilter} = ''
+      OR l.stage_key = ${stageFilter}
+    )
+    ORDER BY l.expected_value_paise DESC
+    LIMIT ${limit}
+  `;
+  const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
+  return { rows, total, counts, limit };
+}
+
+export async function searchByPhone(tx: Tx, q: string) {
+  return searchEnquiries(tx, { q });
+}
+
+export type SearchFilters = {
+  q?: string;
+  source?: string;
+  stage?: string;
+  overdue?: string;
+  parked?: string;
+  model?: string;
+  from?: string;
+  to?: string;
+  on?: string;
+};
+
+function present(value?: string) {
+  const v = value?.trim() ?? "";
+  return v.length ? v : "";
+}
+
+export async function searchEnquiries(tx: Tx, filters: SearchFilters) {
+  const q = present(filters.q);
+  const source = present(filters.source);
+  const stage = present(filters.stage);
+  const overdue = present(filters.overdue);
+  const parked = present(filters.parked);
+  const model = present(filters.model);
+  const from = present(filters.from);
+  const to = present(filters.to);
+  const on = present(filters.on);
+  const hasQ = q.length >= 2;
+  const hasFilter = Boolean(source || stage || overdue || parked || model || from || to);
+  if (!hasQ && !hasFilter) return [];
+
+  const digits = q.replace(/\D/g, "");
+  const compact = q.replace(/-/g, "");
+  const text = q.trim();
+
+  const found = await tx<{ id: string }[]>`
+    SELECT l.id
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE (
+      ${!hasQ} = true
+      OR (
+        (${digits.length >= 4} = true AND c.phone LIKE ${"%" + digits + "%"})
+        OR (${text.length >= 2} = true AND c.full_name ILIKE ${"%" + text + "%"})
+        OR (${text.length >= 2} = true AND l.model_interest ILIKE ${"%" + text + "%"})
+        OR (${text.length >= 2} = true AND l.variant_interest ILIKE ${"%" + text + "%"})
+        OR (${compact.length === 8} = true AND upper(right(replace(l.id::text, '-', ''), 8)) = ${compact.toUpperCase()})
+        OR (${compact.length >= 12} = true AND replace(l.id::text, '-', '') LIKE ${"%" + compact.toLowerCase()})
+      )
+    )
+    AND (${source === ""} = true OR l.source_key = ${source})
+    AND (${stage === ""} = true OR l.stage_key = ${stage})
+    AND (
+      ${model === ""} = true
+      OR l.model_interest ILIKE ${"%" + model + "%"}
+      OR l.variant_interest ILIKE ${"%" + model + "%"}
+    )
+    AND (
+      ${overdue === ""} = true
+      OR (
+        ${overdue === "yes"} = true
+        AND (
+          (l.next_action_at IS NOT NULL AND l.next_action_at < now())
+          OR (
+            l.first_response_due IS NOT NULL
+            AND l.first_responded_at IS NULL
+            AND l.first_response_due < now()
+          )
+        )
+      )
+      OR (
+        ${overdue === "no"} = true
+        AND NOT (
+          (l.next_action_at IS NOT NULL AND l.next_action_at < now())
+          OR (
+            l.first_response_due IS NOT NULL
+            AND l.first_responded_at IS NULL
+            AND l.first_response_due < now()
+          )
+        )
+      )
+    )
+    AND (
+      ${parked === ""} = true
+      OR (
+        ${parked === "yes"} = true
+        AND l.last_disposition_key = 'postponed'
+        AND l.last_revisit_at IS NOT NULL
+        AND l.last_revisit_at > now()
+      )
+      OR (
+        ${parked === "no"} = true
+        AND NOT (
+          l.last_disposition_key = 'postponed'
+          AND l.last_revisit_at IS NOT NULL
+          AND l.last_revisit_at > now()
+        )
+      )
+    )
+    AND (
+      ${from === ""} = true
+      OR (
+        CASE
+          WHEN ${on === "due"} = true THEN (timezone('Asia/Kolkata', l.next_action_at))::date
+          ELSE (timezone('Asia/Kolkata', l.created_at))::date
+        END
+      ) >= ${from || "1900-01-01"}::date
+    )
+    AND (
+      ${to === ""} = true
+      OR (
+        CASE
+          WHEN ${on === "due"} = true THEN (timezone('Asia/Kolkata', l.next_action_at))::date
+          ELSE (timezone('Asia/Kolkata', l.created_at))::date
+        END
+      ) <= ${to || "2999-12-31"}::date
+    )
+    ORDER BY l.created_at DESC
+    LIMIT ${LIST_LIMIT}
+  `;
+  const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
+  return rows.map((r) => ({ ...r, enquiryNo: enquiryNo(r.id) }));
 }
 
 export async function getLead(tx: Tx, id: string) {
@@ -358,6 +360,7 @@ export async function getLead(tx: Tx, id: string) {
     LEFT JOIN config_dispositions d ON d.tenant_id = e.tenant_id AND d.key = e.disposition_key
     WHERE e.lead_id = ${id}::uuid
     ORDER BY e.created_at DESC
+    LIMIT 400
   `;
   return { lead: row, events };
 }
@@ -481,6 +484,7 @@ export async function recordDisposition(
     await tx`
       UPDATE leads
       SET lost_reason_key = ${input.lostReasonKey ?? null},
+          last_disposition_key = ${input.dispositionKey},
           next_action_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
@@ -492,7 +496,8 @@ export async function recordDisposition(
     );
     await tx`
       UPDATE leads SET
-        next_action_at = ${revisit.toISOString()}::timestamptz
+        next_action_at = ${revisit.toISOString()}::timestamptz,
+        last_disposition_key = ${input.dispositionKey}
       WHERE id = ${input.leadId}::uuid
     `;
   } else {
@@ -503,7 +508,8 @@ export async function recordDisposition(
     );
     await tx`
       UPDATE leads SET
-        next_action_at = ${next.toISOString()}::timestamptz
+        next_action_at = ${next.toISOString()}::timestamptz,
+        last_disposition_key = ${input.dispositionKey}
       WHERE id = ${input.leadId}::uuid
     `;
   }
@@ -701,38 +707,36 @@ export async function sendWhatsApp(
 }
 
 export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
-  const rows = await tx<{ id: string; customer_name: string }[]>`
-    SELECT l.id::text, c.full_name AS customer_name
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    WHERE l.owner_user_id = ${userId}::uuid
-      AND l.first_response_due IS NOT NULL
-      AND l.first_response_due < now()
-      AND l.first_responded_at IS NULL
-      AND l.lost_reason_key IS NULL
-      AND l.stage_key <> 'delivered'
+  const inserted = await tx<{ n: string }[]>`
+    WITH due AS (
+      SELECT l.id, c.full_name AS customer_name
+      FROM leads l
+      JOIN customers c ON c.id = l.customer_id
+      WHERE l.owner_user_id = ${userId}::uuid
+        AND l.first_response_due IS NOT NULL
+        AND l.first_response_due < now()
+        AND l.first_responded_at IS NULL
+        AND l.lost_reason_key IS NULL
+        AND l.stage_key <> 'delivered'
+        AND NOT EXISTS (
+          SELECT 1 FROM notifications n
+          WHERE n.user_id = ${userId}::uuid
+            AND n.href = '/w/rec?id=' || l.id::text
+            AND n.read_at IS NULL
+        )
+      LIMIT 40
+    )
+    INSERT INTO notifications (tenant_id, user_id, title, why, href)
+    SELECT
+      current_setting('app.tenant_id')::uuid,
+      ${userId}::uuid,
+      due.customer_name || ' still needs a first call',
+      'You own this enquiry and the first call is late. The clock only runs while the branch is open.',
+      '/w/rec?id=' || due.id::text
+    FROM due
+    RETURNING id
   `;
-  let raised = 0;
-  for (const row of rows) {
-    const href = `/w/rec?id=${row.id}`;
-    const existing = await tx<{ n: string }[]>`
-      SELECT count(*)::text AS n FROM notifications
-      WHERE user_id = ${userId}::uuid AND href = ${href} AND read_at IS NULL
-    `;
-    if (Number(existing[0]?.n) > 0) continue;
-    await tx`
-      INSERT INTO notifications (tenant_id, user_id, title, why, href)
-      VALUES (
-        current_setting('app.tenant_id')::uuid,
-        ${userId}::uuid,
-        ${row.customer_name + " still needs a first call"},
-        'You own this enquiry and the first call is late. The clock only runs while the branch is open.',
-        ${href}
-      )
-    `;
-    raised += 1;
-  }
-  return { raised };
+  return { raised: inserted.length };
 }
 
 export async function countUnread(tx: Tx, userId: string) {
@@ -748,6 +752,7 @@ export async function listNotifications(tx: Tx, userId: string) {
     SELECT * FROM notifications
     WHERE user_id = ${userId}::uuid
     ORDER BY created_at DESC
+    LIMIT 80
   `;
 }
 

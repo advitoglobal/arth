@@ -210,7 +210,7 @@ export default async function SearchPage({
         {rows.length > 0 ? (
           <div>
             <p className="mb-2 text-sm text-[var(--arth-n60)]">
-              {rows.length} on your book. Other telecallers’ names are not in this list.
+              {rows.length} on your book{rows.length >= 80 ? ", first 80 matches" : ""}. Other telecallers’ names are not in this list. Type more of the number if the list is long.
             </p>
             <EnquiryList
               rows={rows}

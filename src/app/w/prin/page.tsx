@@ -66,7 +66,14 @@ export default async function PrincipalPage() {
           {snap.late.length === 0 ? (
             <p>Nothing is late at this dealer.</p>
           ) : (
-            <EnquiryList rows={snap.late} canCall={false} showValue={showValue} />
+            <>
+              {snap.counts.late > snap.late.length ? (
+                <p className="text-sm text-[var(--arth-n60)]">
+                  {snap.counts.late} late at this dealer. Showing {snap.late.length}. Use Search for a name.
+                </p>
+              ) : null}
+              <EnquiryList rows={snap.late} canCall={false} showValue={showValue} />
+            </>
           )}
         </section>
         <ActionButton href="/w/pipe">Open the full book</ActionButton>

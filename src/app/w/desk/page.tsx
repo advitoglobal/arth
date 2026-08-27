@@ -76,6 +76,12 @@ export default async function DeskPage() {
           {snap.unowned.length === 0 ? (
             <p>Nothing is waiting in the shared book.</p>
           ) : (
+            <>
+              {snap.counts.unowned > snap.unowned.length ? (
+                <p className="text-sm text-[var(--arth-n60)]">
+                  {snap.counts.unowned} still shared. Showing the newest {snap.unowned.length}.
+                </p>
+              ) : null}
             <ul className="space-y-4">
               {snap.unowned.slice(0, 12).map((row) => (
                 <li key={row.id} className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
@@ -89,6 +95,7 @@ export default async function DeskPage() {
                 </li>
               ))}
             </ul>
+            </>
           )}
         </section>
         <section className="space-y-3">
@@ -96,7 +103,14 @@ export default async function DeskPage() {
           {snap.late.length === 0 ? (
             <p>Nothing is late on this desk.</p>
           ) : (
-            <EnquiryList rows={snap.late} canCall={false} showValue={showValue} />
+            <>
+              {snap.counts.late > snap.late.length ? (
+                <p className="text-sm text-[var(--arth-n60)]">
+                  {snap.counts.late} late on this desk. Showing {snap.late.length}. Use Search for a name.
+                </p>
+              ) : null}
+              <EnquiryList rows={snap.late} canCall={false} showValue={showValue} />
+            </>
           )}
         </section>
         <ActionButton href="/w/pipe">Open the full book</ActionButton>

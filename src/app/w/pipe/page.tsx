@@ -17,11 +17,10 @@ export default async function PipePage({
   const { stage } = await searchParams;
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "pipe")) return <Forbidden />;
-    const rows = await listPipeline(tx, seat.userId);
     const active = STAGE_KEYS.includes(stage as (typeof STAGE_KEYS)[number])
       ? stage
       : undefined;
-    const shown = active ? rows.filter((r) => r.stage_key === active) : rows;
+    const page = await listPipeline(tx, seat.userId, { stage: active });
     const canCall = canOpen(seat.roleKey, "tele");
 
     return (
@@ -33,6 +32,9 @@ export default async function PipePage({
             : seat.roleKey === "tele"
               ? "Your full book, in nine stages. Today is only what is due now. New names stay on Today for every telecaller until you reach the customer. After you qualify, hand the enquiry to sales. Open a name for the history."
               : "Names in your bucket only: team, branch, or this dealer. Never another dealer."}
+        </p>
+        <p className="text-sm text-[var(--arth-n60)]">
+          Counts are the whole book. The list shows the {page.limit} highest-value names in the stage you opened. Use Search for a person, a number, or an enquiry number. A dealer can dump an old book of twenty lakh names; this screen will not load them all.
         </p>
         <FigureSource
           source="your full book"
@@ -48,10 +50,10 @@ export default async function PipePage({
             href="/w/pipe"
             className={`flex h-11 items-center justify-center rounded-[3px] border px-2 text-center text-sm ${!active ? "border-[var(--arth-ink)] font-semibold" : "border-[var(--arth-n10)]"}`}
           >
-            All · {rows.length}
+            All · {page.total}
           </Link>
           {STAGE_KEYS.map((key) => {
-            const n = rows.filter((r) => r.stage_key === key).length;
+            const n = page.counts[key] ?? 0;
             return (
               <Link
                 key={key}
@@ -63,7 +65,7 @@ export default async function PipePage({
             );
           })}
         </nav>
-        {shown.length === 0 ? (
+        {page.rows.length === 0 ? (
           <p>
             {active
               ? `No enquiries in ${STAGE_LABEL[active]}. They appear here when the stage moves.`
@@ -79,7 +81,13 @@ export default async function PipePage({
             ) : null}
           </p>
         ) : (
-          <EnquiryList rows={shown} canCall={canCall} />
+          <>
+            <p className="text-sm text-[var(--arth-n60)]">
+              Showing {page.rows.length}
+              {active ? ` in ${STAGE_LABEL[active]}` : ""} of {active ? (page.counts[active] ?? 0) : page.total}.
+            </p>
+            <EnquiryList rows={page.rows} canCall={canCall} />
+          </>
         )}
       </div>
     );

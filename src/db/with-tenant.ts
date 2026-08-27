@@ -7,7 +7,7 @@ if (!url) {
 }
 
 export const sql = postgres(url, {
-  max: 8,
+  max: 48,
   idle_timeout: 20,
   connect_timeout: 10,
 });
@@ -43,18 +43,33 @@ export async function withTenant<T>(
   const userId = requireSessionId(ctx.userId ?? "");
 
   return sql.begin(async (tx) => {
+    await tx`SELECT set_config('statement_timeout', '8000', true)`;
     await tx`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
     await tx`SELECT set_config('app.user_id', ${userId}, true)`;
     await tx`SELECT set_config('app.platform_user_id', '', true)`;
-    const [seat] = await tx<{ id: string }[]>`
-      SELECT id::text FROM users
-      WHERE id = ${userId}::uuid
-        AND tenant_id = ${tenantId}::uuid
-        AND is_active
+    const [seat] = await tx<{
+      id: string;
+      role_key: string;
+      branch_id: string | null;
+      position_id: string | null;
+    }[]>`
+      SELECT
+        u.id::text,
+        u.role_key,
+        p.branch_id::text,
+        u.position_id::text
+      FROM users u
+      LEFT JOIN positions p ON p.id = u.position_id
+      WHERE u.id = ${userId}::uuid
+        AND u.tenant_id = ${tenantId}::uuid
+        AND u.is_active
     `;
     if (!seat) {
       throw new Error("This seat does not belong to this dealer.");
     }
+    await tx`SELECT set_config('app.role_key', ${seat.role_key}, true)`;
+    await tx`SELECT set_config('app.branch_id', ${seat.branch_id ?? ""}, true)`;
+    await tx`SELECT set_config('app.position_id', ${seat.position_id ?? ""}, true)`;
     return fn(tx);
   }) as Promise<T>;
 }
@@ -66,9 +81,13 @@ export async function withPlatform<T>(
   const id = requireSessionId(platformUserId);
 
   return sql.begin(async (tx) => {
+    await tx`SELECT set_config('statement_timeout', '8000', true)`;
     await tx`SELECT set_config('app.platform_user_id', ${id}, true)`;
     await tx`SELECT set_config('app.tenant_id', '', true)`;
     await tx`SELECT set_config('app.user_id', '', true)`;
+    await tx`SELECT set_config('app.role_key', '', true)`;
+    await tx`SELECT set_config('app.branch_id', '', true)`;
+    await tx`SELECT set_config('app.position_id', '', true)`;
     const [row] = await tx<{ id: string }[]>`
       SELECT id::text FROM platform_users
       WHERE id = ${id}::uuid AND is_active
@@ -88,6 +107,7 @@ export async function withPlatformDealer<T>(
   const tenantId = requireSessionId(ctx.tenantId ?? "");
 
   return sql.begin(async (tx) => {
+    await tx`SELECT set_config('statement_timeout', '8000', true)`;
     await tx`SELECT set_config('app.platform_user_id', ${platformUserId}, true)`;
     await tx`SELECT set_config('app.tenant_id', '', true)`;
     await tx`SELECT set_config('app.user_id', '', true)`;
@@ -99,6 +119,19 @@ export async function withPlatformDealer<T>(
     }
     await tx`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
     await tx`SELECT set_config('app.user_id', ${ops.id}, true)`;
+    const [seat] = await tx<{
+      role_key: string;
+      branch_id: string | null;
+      position_id: string | null;
+    }[]>`
+      SELECT u.role_key, p.branch_id::text, u.position_id::text
+      FROM users u
+      LEFT JOIN positions p ON p.id = u.position_id
+      WHERE u.id = ${ops.id}::uuid
+    `;
+    await tx`SELECT set_config('app.role_key', ${seat?.role_key ?? "ops"}, true)`;
+    await tx`SELECT set_config('app.branch_id', ${seat?.branch_id ?? ""}, true)`;
+    await tx`SELECT set_config('app.position_id', ${seat?.position_id ?? ""}, true)`;
     return fn(tx);
   }) as Promise<T>;
 }

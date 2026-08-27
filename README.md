@@ -34,6 +34,9 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | kamath | Coastal dealer principal |
 | advito | Advito admin |
 | support | Advito support |
+| captele | Capacity Motors telecaller (20 lakh book, load checks) |
+| capdesk | Capacity Motors digital desk |
+| capprin | Capacity Motors dealer principal |
 
 ## How the floor works
 
@@ -61,3 +64,6 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | Dealers | `/a/dealers` | Advito: list, enter one, onboard (admin) |
 
 `npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue, points, walls, desk, and platform.
+
+A dealer book of twenty lakh enquiries is a separate dealer (Capacity Motors). `npm run db:load-capacity` then `npm run db:capacity` must print `CAPACITY_OK`. Details: `docs/CAPACITY.md`.
+

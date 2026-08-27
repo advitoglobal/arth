@@ -120,7 +120,7 @@ export default async function DayPanelPage() {
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Your list for today: late calls first, then what you still promised to do today. New names are on this list for every telecaller at the branch until someone reaches the customer. After that they stay with that seat. Qualify, then hand to sales. The rest of your book is in My enquiries.
+          Your list for today: late calls first, then what you still promised to do today. New names are on this list for every telecaller at the branch until someone reaches the customer. After that they stay with that seat. Qualify, then hand to sales. The rest of your book is in My enquiries. Today loads at most 200 due names so a dumped old book cannot stall this screen.
         </p>
         <FigureSource
           source="your queue"
