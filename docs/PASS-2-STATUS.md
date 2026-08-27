@@ -55,7 +55,9 @@
 
 Existing proofs were not rewritten except where connected callback now requires a revisit day (`prove-assign`, `prove-points`). That matches batch 1. `npm run prove` must still print `PROVE_OK`.
 
-Control seats (digital desk, dealer principal, Advito) stay in the product so you can print them against the director note. Pass 2 hard-stopped those screens. Advito asked for them afterwards. They are extra, not a floor rebuild.
+## Proof run
+
+**VERIFIED 27 August 2026:** `npm run prove` printed `PROVE_OK` after this pass, including `DISPOSITION_OK`, `LEDGER_OK`, `QUEUE_OK`, `POINTS_OK`, `WALLS_OK`, `DESK_OK`, `PLATFORM_OK`.
 
 ---
 
