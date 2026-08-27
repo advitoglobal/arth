@@ -190,13 +190,26 @@ export async function ensureCapacityBook(target: number) {
     console.log(`capacity book already ${have} (target ${target})`);
     return have;
   }
+  psql(`
+DROP INDEX IF EXISTS customers_phone_trgm_idx;
+DROP INDEX IF EXISTS customers_name_trgm_idx;
+DROP INDEX IF EXISTS leads_model_trgm_idx;
+DROP INDEX IF EXISTS leads_variant_trgm_idx;
+  `);
   const start = Math.max(1, have);
   const chunk = 100_000;
   for (let from = start; from <= target; from += chunk) {
     const to = Math.min(target, from + chunk - 1);
     insertChunk(from, to);
   }
-  psql(`ANALYZE customers; ANALYZE leads;`);
+  psql(`
+CREATE INDEX IF NOT EXISTS customers_phone_trgm_idx ON customers USING gin (phone gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS customers_name_trgm_idx ON customers USING gin (full_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS leads_model_trgm_idx ON leads USING gin (model_interest gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS leads_variant_trgm_idx ON leads USING gin (variant_interest gin_trgm_ops);
+ANALYZE customers;
+ANALYZE leads;
+  `);
   const n = countLeads();
   console.log(`capacity book now ${n}`);
   return n;
