@@ -58,7 +58,7 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | Enquiry record | `/w/rec?id=` | Full ledger |
 | Search | `/w/search` | One search box, then Filter |
 | File enquiry | `/w/new` | When Search finds nothing |
-| Performance | `/w/perf` | Holding, gaps, and a plan from the live book for this seat |
+| Performance | `/w/perf` | Charts, score, ranking, holding, gaps, and a plan on this seat's wall |
 | The floor | `/w/desk` | Digital desk: team load, shared book, place a name |
 | This dealer | `/w/prin` | Dealer principal: this dealer only |
 | Dealers | `/a/dealers` | Advito: list, enter one, onboard (admin) |

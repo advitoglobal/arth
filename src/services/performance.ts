@@ -30,8 +30,52 @@ export type PerformanceSnapshot = {
   today_handoffs: number;
 };
 
+export type RankRow = {
+  user_id: string;
+  full_name: string;
+  username?: string | null;
+  branch?: string | null;
+  role_key: string;
+  owned: number;
+  late: number;
+  connects_today: number;
+  points_today: number;
+  handoffs_today: number;
+  short_connects_today: number;
+  unowned_bucket: number;
+  score: number;
+  rank: number;
+  you: boolean;
+};
+
+export type ManagedBoard = {
+  kind: string;
+  label: string;
+  rows: RankRow[];
+};
+
+export type PerformanceRanks = {
+  ok: boolean;
+  board_label: string;
+  you: RankRow | null;
+  board: RankRow[];
+  managed: ManagedBoard[];
+};
+
+export type DealerWallRank = {
+  id: string;
+  name: string;
+  status: string;
+  teles: number;
+  unowned: number;
+  connects_today: number;
+  score: number;
+  rank: number;
+};
+
 export type PerformanceView = {
   snapshot: PerformanceSnapshot;
+  ranks: PerformanceRanks;
   holding: string[];
   gaps: string[];
   plan: { text: string; href?: string }[];
@@ -89,7 +133,75 @@ function names(n: number, one: string, many: string) {
   return n === 1 ? `1 ${one}` : `${n} ${many}`;
 }
 
-export function analysePerformance(snap: PerformanceSnapshot): PerformanceView {
+function parseRankRow(raw: Partial<RankRow> | undefined): RankRow | null {
+  if (!raw || !raw.user_id) return null;
+  return {
+    user_id: String(raw.user_id),
+    full_name: String(raw.full_name ?? ""),
+    username: raw.username,
+    branch: raw.branch,
+    role_key: String(raw.role_key ?? ""),
+    owned: n(raw.owned),
+    late: n(raw.late),
+    connects_today: n(raw.connects_today),
+    points_today: n(raw.points_today),
+    handoffs_today: n(raw.handoffs_today),
+    short_connects_today: n(raw.short_connects_today),
+    unowned_bucket: n(raw.unowned_bucket),
+    score: n(raw.score),
+    rank: n(raw.rank),
+    you: raw.you === true || raw.you === "t" || raw.you === "true",
+  };
+}
+
+export async function performanceRanks(tx: Tx): Promise<PerformanceRanks> {
+  const [row] = await tx<{ ranks: PerformanceRanks }[]>`
+    SELECT arth_performance_ranks() AS ranks
+  `;
+  const raw = (typeof row?.ranks === "string" ? JSON.parse(row.ranks) : row?.ranks) as
+    | PerformanceRanks
+    | undefined;
+  if (!raw || raw.ok === false) {
+    throw new Error("Ranking for this seat could not be read.");
+  }
+  const board = (raw.board ?? []).map((r) => parseRankRow(r)).filter((r): r is RankRow => r !== null);
+  const you = parseRankRow(raw.you ?? board.find((r) => r.you));
+  const managed = (raw.managed ?? []).map((b) => ({
+    kind: String(b.kind),
+    label: String(b.label),
+    rows: (b.rows ?? []).map((r) => parseRankRow(r)).filter((r): r is RankRow => r !== null),
+  }));
+  return {
+    ok: true,
+    board_label: raw.board_label || "this wall",
+    you,
+    board,
+    managed,
+  };
+}
+
+export async function dealerWallRanks(tx: Tx): Promise<DealerWallRank[]> {
+  const [row] = await tx<{ ranks: DealerWallRank[] }[]>`
+    SELECT arth_dealer_wall_ranks() AS ranks
+  `;
+  const raw = (typeof row?.ranks === "string" ? JSON.parse(row.ranks) : row?.ranks) as
+    | DealerWallRank[]
+    | undefined;
+  return (raw ?? [])
+    .map((d) => ({
+      id: String(d.id),
+      name: String(d.name),
+      status: String(d.status),
+      teles: n(d.teles),
+      unowned: n(d.unowned),
+      connects_today: n(d.connects_today),
+      score: n(d.score),
+      rank: n(d.rank),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+}
+
+export function analysePerformance(snap: PerformanceSnapshot, ranks: PerformanceRanks): PerformanceView {
   const holding: string[] = [];
   const gaps: string[] = [];
   const plan: { text: string; href?: string }[] = [];
@@ -254,6 +366,22 @@ export function analysePerformance(snap: PerformanceSnapshot): PerformanceView {
     plan.push({ text: "Open the book if you need a name. Use Search, not a dump of twenty lakh rows.", href: "/w/search" });
   }
 
+  const you = ranks.you;
+  const of = ranks.board.length;
+  if (you && of > 1) {
+    if (you.rank === 1) {
+      holding.push(`You rank 1 of ${of} on ${ranks.board_label}. Score ${you.score} today.`);
+    } else {
+      gaps.push(
+        `You rank ${you.rank} of ${of} on ${ranks.board_label}. Score ${you.score}. Late and short connects drag this number.`,
+      );
+    }
+  } else if (you) {
+    holding.push(
+      `Score ${you.score} on this seat. You are the only name on ${ranks.board_label}, ranked the same way as a fuller board.`,
+    );
+  }
+
   if (holding.length === 0) {
     holding.push("No strength is visible on this read yet. The gaps below are the work.");
   }
@@ -264,16 +392,26 @@ export function analysePerformance(snap: PerformanceSnapshot): PerformanceView {
     plan.push({ text: "Open your landing screen and work the list in front of you." });
   }
 
-  return { snapshot: snap, holding, gaps, plan };
+  return { snapshot: snap, ranks, holding, gaps, plan };
 }
 
 export async function loadPerformance(tx: Tx): Promise<PerformanceView> {
   const snapshot = await performanceSnapshot(tx);
-  return analysePerformance(snapshot);
+  const ranks = await performanceRanks(tx);
+  return analysePerformance(snapshot, ranks);
 }
 
 export function stageMix(snap: PerformanceSnapshot) {
   return Object.entries(STAGE_LABEL)
     .map(([key, label]) => ({ key, label, n: n(snap.stages[key]) }))
     .filter((row) => row.n > 0);
+}
+
+export function clockMix(snap: PerformanceSnapshot) {
+  return [
+    { label: "Late", n: snap.late, fill: "var(--arth-overdue)" },
+    { label: "Due today", n: snap.due_today, fill: "var(--arth-brass)" },
+    { label: "Parked", n: snap.parked, fill: "var(--arth-n50)" },
+    { label: "Still shared", n: snap.unowned, fill: "var(--arth-slate)" },
+  ].filter((row) => row.n > 0);
 }

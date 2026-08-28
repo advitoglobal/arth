@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { asPlatform, canOpen } from "@/db/session";
 import { listPlatformDealers } from "@/services/platform";
+import { dealerWallRanks } from "@/services/performance";
 import { PlatformPerformance } from "@/components/platform-performance";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
@@ -12,6 +13,7 @@ export default async function DealersPage() {
       return <Forbidden landing="/w/login" />;
     }
     const dealers = await listPlatformDealers(tx);
+    const ranks = await dealerWallRanks(tx);
     return (
       <div className="space-y-6">
         <RuleHeading>Dealers</RuleHeading>
@@ -44,7 +46,7 @@ export default async function DealersPage() {
             ))}
             </ul>
           )}
-        <PlatformPerformance dealers={dealers} canOnboard={seat.roleKey === "adv_admin"} />
+        <PlatformPerformance dealers={dealers} ranks={ranks} canOnboard={seat.roleKey === "adv_admin"} />
       </div>
     );
   });

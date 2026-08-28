@@ -1,6 +1,58 @@
 import { ActionButton } from "@/components/action-button";
 import { FigureSource } from "@/components/figure-source";
-import { stageMix, type PerformanceView } from "@/services/performance";
+import { PerformanceCharts } from "@/components/performance-charts";
+import { clockMix, stageMix, type PerformanceView, type RankRow } from "@/services/performance";
+
+function RankTable({
+  title,
+  hint,
+  rows,
+}: {
+  title: string;
+  hint: string;
+  rows: RankRow[];
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div>
+      <h3 className="font-display text-[20px] font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-[var(--arth-n60)]">{hint}</p>
+      <div className="mt-3 overflow-x-auto border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+        <table className="w-full min-w-[36rem] text-left text-sm">
+          <thead>
+            <tr className="border-b border-[var(--arth-ink)] text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
+              <th className="px-4 py-2">Rank</th>
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2 text-right">Score</th>
+              <th className="px-4 py-2 text-right">Late</th>
+              <th className="px-4 py-2 text-right">Connects</th>
+              <th className="px-4 py-2 text-right">On book</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.user_id}
+                className={row.you ? "bg-[var(--arth-brass-wash)]" : "border-t border-[var(--arth-n10)]"}
+              >
+                <td className="px-4 py-2 font-data tabular-nums">{row.rank}</td>
+                <td className="px-4 py-2">
+                  {row.full_name}
+                  {row.you ? <span className="ml-2 text-[var(--arth-n60)]">you</span> : null}
+                  {row.branch ? <span className="ml-2 text-[var(--arth-n60)]">{row.branch}</span> : null}
+                </td>
+                <td className="px-4 py-2 text-right font-data tabular-nums">{row.score}</td>
+                <td className="px-4 py-2 text-right font-data tabular-nums">{row.late}</td>
+                <td className="px-4 py-2 text-right font-data tabular-nums">{row.connects_today}</td>
+                <td className="px-4 py-2 text-right font-data tabular-nums">{row.owned}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export function PerformancePanel({
   view,
@@ -11,14 +63,21 @@ export function PerformancePanel({
 }) {
   const snap = view.snapshot;
   const mix = stageMix(snap);
-  const figures: [string, number][] = [
+  const ranks = view.ranks;
+  const you = ranks.you;
+  const figures: [string, number | string][] = [
+    ["Score today", you?.score ?? 0],
+    [
+      "Rank",
+      you && ranks.board.length > 0 ? `${you.rank} of ${ranks.board.length}` : "n/a",
+    ],
     ["In this bucket", snap.book],
     ["Late", snap.late],
     ["Due today", snap.due_today],
     ["Parked", snap.parked],
   ];
   if (snap.role === "tele" || snap.role === "svctele" || snap.role === "sales" || snap.role === "lead") {
-    figures.splice(1, 0, ["You own", snap.owned]);
+    figures.splice(2, 0, ["You own", snap.owned]);
   }
   if (snap.role === "tele" || snap.role === "svctele" || snap.role === "lead" || snap.role === "mgr" || snap.role === "owner" || snap.role === "ops") {
     figures.push(["Still shared", snap.unowned]);
@@ -34,7 +93,7 @@ export function PerformancePanel({
           {title}
         </p>
         <p className="mt-2 max-w-[68ch] text-sm text-[var(--arth-n60)]">
-          What is true on this seat now, against the book you are allowed to see. Use it to plan the day and to answer a superior. Another dealer never appears. Figures are live, not a target sheet. Targets still come from your manager; this is the current state those targets have to move.
+          What is true on this seat now, against the book you are allowed to see. Score and rank use the same walls. Another dealer never appears. Figures are live, not a target sheet. Targets still come from your manager; this is the current state those targets have to move.
         </p>
       </div>
       <FigureSource source={snap.scope} period="India Standard Time, now, plus today" />
@@ -48,6 +107,37 @@ export function PerformancePanel({
           </div>
         ))}
       </dl>
+      <p className="max-w-[68ch] text-sm text-[var(--arth-n60)]">
+        Score is live behaviour on this wall: points and scoring connects today, plus handoffs to sales, minus connected calls under 20 seconds, late clocks, and unreached names where this seat owns that bucket. It is not incentive pay and it is not a monthly rating.
+      </p>
+      <PerformanceCharts
+        clock={clockMix(snap)}
+        stages={mix.map((row) => ({ label: row.label, n: row.n, fill: "var(--arth-ink)" }))}
+        board={ranks.board.map((row) => ({
+          name: row.you ? `${row.full_name} (you)` : row.full_name,
+          score: row.score,
+          you: row.you,
+        }))}
+        team={snap.team.map((t) => ({
+          name: t.full_name,
+          late: t.late,
+          connects: t.connects_today,
+        }))}
+        boardLabel={ranks.board_label}
+      />
+      <RankTable
+        title={`Ranking: ${ranks.board_label}`}
+        hint="Same formula for every name on this board. Coastal never appears on a Whitefield board."
+        rows={ranks.board}
+      />
+      {ranks.managed.map((board) => (
+        <RankTable
+          key={board.kind + board.label}
+          title={`Ranking: ${board.label}`}
+          hint="People you can see on this wall. Use it to coach, not to mix dealers."
+          rows={board.rows}
+        />
+      ))}
       {mix.length > 0 ? (
         <div>
           <h3 className="font-display text-[20px] font-semibold">Stage mix</h3>
