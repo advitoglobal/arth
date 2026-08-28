@@ -1,5 +1,7 @@
 import { asSeat, canOpen, canSeeValue } from "@/db/session";
 import { controlSnapshot } from "@/services/control";
+import { loadPerformance } from "@/services/performance";
+import { PerformancePanel } from "@/components/performance-panel";
 import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { FigureSource } from "@/components/figure-source";
@@ -12,6 +14,7 @@ export default async function PrincipalPage() {
     if (!canOpen(seat.roleKey, "prin")) return <Forbidden landing="/w/pipe" />;
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);
+    const perf = await loadPerformance(tx);
 
     return (
       <div className="space-y-8">
@@ -77,6 +80,7 @@ export default async function PrincipalPage() {
           )}
         </section>
         <ActionButton href="/w/pipe">Open the full book</ActionButton>
+        <PerformancePanel view={perf} />
       </div>
     );
   });

@@ -73,6 +73,15 @@ async function main() {
     throw new Error("Search plus source filter must not return a mismatched source");
   }
 
+  const JOSEPH = "ffffffff-ffff-ffff-ffff-ffffffffff10";
+  await inTenant(WHITEFIELD, IYER, async (tx) => {
+    await tx`
+      UPDATE leads
+      SET last_disposition_key = 'postponed',
+          last_revisit_at = now() + interval '3 days'
+      WHERE id = ${JOSEPH}::uuid
+    `;
+  });
   const parked = await inTenant(WHITEFIELD, IYER, (tx) => searchEnquiries(tx, { parked: "yes" }));
   if (!parked.some((r) => r.customer_name === "Joseph Abel")) {
     throw new Error("Parked filter should include Joseph Abel");

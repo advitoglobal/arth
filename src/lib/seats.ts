@@ -211,6 +211,7 @@ export function screenFromPath(pathname: string): string | null {
     "/w/profile": "profile",
     "/w/desk": "desk",
     "/w/prin": "prin",
+    "/w/perf": "perf",
   };
   return map[pathname] ?? null;
 }

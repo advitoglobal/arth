@@ -42,6 +42,7 @@ export default async function LoginPage({
         <li>advito · Advito admin. Onboard dealers. Enter one dealer at a time.</li>
         <li>support · Advito support. Enter one dealer at a time. Cannot onboard.</li>
         <li>captele · Capacity Motors. A twenty lakh enquiry book for load checks. Not the Whitefield walk-through.</li>
+        <li>Every dealer seat has Performance: what is holding, what is late, and what to do next from the live book.</li>
       </ul>
       <p className="text-sm text-[var(--arth-n60)]">
         Demonstration password for every seat: <span className="font-data">arth-demo</span>. Production uses a server session and SSO.

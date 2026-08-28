@@ -26,6 +26,7 @@
 - Enquiry numbers (last eight of the id) on the tile, the record, Log a call, and Search.
 - Demo seats: A. Iyer, K. Nair, M. Pinto, S. Rao, M. Dsouza. Username and password. Opening Today as S. Rao keeps `/w/dayb` and shows *You cannot open this screen*.
 - Search: one box for phone, name, enquiry number, or model. A separate Filter panel for source, stage, overdue, parked, and arrived or follow-up dates. Filters run in SQL. A 20 lakh dump is a separate dealer; see `docs/CAPACITY.md`.
+- Performance analysis on each current seat (telecaller, sales, team leader, digital desk, dealer principal, Advito). Holding, gaps, and a plan from the live book. `/w/perf`.
 
 ## How to run
 

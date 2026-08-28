@@ -8,6 +8,7 @@ const items = [
   { href: "/w/dayb", screen: "dayb", label: "Today" },
   { href: "/w/desk", screen: "desk", label: "The floor" },
   { href: "/w/prin", screen: "prin", label: "This dealer" },
+  { href: "/w/perf", screen: "perf", label: "Performance" },
   { href: "/w/tele", screen: "tele", label: "Log a call" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
   { href: "/w/search", screen: "search", label: "Search" },

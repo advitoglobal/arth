@@ -58,12 +58,12 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | Enquiry record | `/w/rec?id=` | Full ledger |
 | Search | `/w/search` | One search box, then Filter |
 | File enquiry | `/w/new` | When Search finds nothing |
-| Notifications | `/w/notif` | Each row says why it arrived |
+| Performance | `/w/perf` | Holding, gaps, and a plan from the live book for this seat |
 | The floor | `/w/desk` | Digital desk: team load, shared book, place a name |
 | This dealer | `/w/prin` | Dealer principal: this dealer only |
 | Dealers | `/a/dealers` | Advito: list, enter one, onboard (admin) |
 
-`npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue, points, walls, desk, and platform.
+`npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue, points, walls, desk, platform, and performance.
 
 A dealer book of twenty lakh enquiries is a separate dealer (Capacity Motors). `npm run db:load-capacity` then `npm run db:capacity` must print `CAPACITY_OK`. Details: `docs/CAPACITY.md`.
 

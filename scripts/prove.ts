@@ -14,6 +14,7 @@ const checks: [string, string][] = [
   ["db:walls", "WALLS_OK"],
   ["db:desk", "DESK_OK"],
   ["db:platform", "PLATFORM_OK"],
+  ["db:perf", "PERF_OK"],
 ];
 
 let failed = 0;

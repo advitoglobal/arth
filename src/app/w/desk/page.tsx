@@ -1,5 +1,7 @@
 import { asSeat, canOpen, canSeeValue } from "@/db/session";
 import { controlSnapshot } from "@/services/control";
+import { loadPerformance } from "@/services/performance";
+import { PerformancePanel } from "@/components/performance-panel";
 import { EnquiryList } from "@/components/enquiry-row";
 import { PlaceForm } from "@/components/place-form";
 import { RuleHeading } from "@/components/brand/type";
@@ -18,6 +20,7 @@ export default async function DeskPage() {
     }
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);
+    const perf = await loadPerformance(tx);
 
     return (
       <div className="space-y-8">
@@ -114,6 +117,7 @@ export default async function DeskPage() {
           )}
         </section>
         <ActionButton href="/w/pipe">Open the full book</ActionButton>
+        <PerformancePanel view={perf} />
       </div>
     );
   });

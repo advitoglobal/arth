@@ -1,6 +1,8 @@
 import { asSeat, canOpen } from "@/db/session";
 import { listQueue, raiseFirstResponseBreaches } from "@/services/telecalling";
 import { armUnownedClocks } from "@/services/assignment";
+import { loadPerformance } from "@/services/performance";
+import { PerformancePanel } from "@/components/performance-panel";
 import { EnquiryList } from "@/components/enquiry-row";
 import { FigureSource } from "@/components/figure-source";
 import { RuleHeading } from "@/components/brand/type";
@@ -92,6 +94,7 @@ export default async function DayPanelPage() {
     const rest = rows.filter((r) => !seen.has(r.id));
     const pool = rows.filter((r) => !r.owner_user_id).length;
     const next = rows[0];
+    const perf = await loadPerformance(tx);
 
     return (
       <div className="space-y-8">
@@ -149,6 +152,7 @@ export default async function DayPanelPage() {
             ) : null}
           </>
         )}
+        <PerformancePanel view={perf} />
       </div>
     );
   });

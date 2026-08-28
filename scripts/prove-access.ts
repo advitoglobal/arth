@@ -19,5 +19,8 @@ assert(!canOpen("adv_support", "aonboard"), "Advito support cannot onboard");
 assert(!canOpen("owner", "adealers"), "dealer principal cannot open Advito control");
 assert(canOpen("sales", "pipe"), "sales consultant opens My enquiries");
 assert(canOpen("tele", "search"), "telecaller opens Search this cycle");
+assert(canOpen("tele", "perf"), "telecaller opens Performance");
+assert(canOpen("sales", "perf"), "sales opens Performance");
+assert(!canOpen("adv_admin", "perf"), "Advito admin does not open floor Performance");
 
 console.log("ACCESS_OK sales is 403 on Today; desk, principal, and Advito seats are split");

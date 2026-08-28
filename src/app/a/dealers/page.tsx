@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { asPlatform, canOpen } from "@/db/session";
 import { listPlatformDealers } from "@/services/platform";
+import { PlatformPerformance } from "@/components/platform-performance";
 import { RuleHeading } from "@/components/brand/type";
 import { Forbidden } from "@/components/forbidden";
 import { ActionButton } from "@/components/action-button";
@@ -41,8 +42,9 @@ export default async function DealersPage() {
                 <span className="font-data text-sm text-[var(--arth-n60)]">{d.plan_key}</span>
               </li>
             ))}
-          </ul>
-        )}
+            </ul>
+          )}
+        <PlatformPerformance dealers={dealers} canOnboard={seat.roleKey === "adv_admin"} />
       </div>
     );
   });

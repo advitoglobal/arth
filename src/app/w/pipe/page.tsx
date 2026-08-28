@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { asSeat, canOpen } from "@/db/session";
 import { listPipeline } from "@/services/telecalling";
+import { loadPerformance } from "@/services/performance";
+import { PerformancePanel } from "@/components/performance-panel";
 import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
@@ -22,6 +24,8 @@ export default async function PipePage({
       : undefined;
     const page = await listPipeline(tx, seat.userId, { stage: active });
     const canCall = canOpen(seat.roleKey, "tele");
+    const showPerf = ["sales", "lead"].includes(seat.roleKey);
+    const perf = showPerf ? await loadPerformance(tx) : null;
 
     return (
       <div className="space-y-6">
@@ -89,6 +93,7 @@ export default async function PipePage({
             <EnquiryList rows={page.rows} canCall={canCall} />
           </>
         )}
+        {perf ? <PerformancePanel view={perf} /> : null}
       </div>
     );
   });

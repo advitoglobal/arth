@@ -18,6 +18,12 @@ service, or any other department.
 The dealer principal sees telecalling health at this dealer. Not the Exception
 Cockpit. Not another dealer.
 
+Every dealer seat in this set has **Performance analysis** (`/w/perf`, and on the
+landing screen). It reads the live book for that seat only: what is holding, what
+is late or still shared, and what to execute next. It is not a target-entry form.
+Targets still come from the superior. Advito reads dealer walls on Dealers, then
+one dealer at a time for floor figures.
+
 ## Advito seats
 
 Advito operators are **not** dealer users. They live on `platform_users`. A missing

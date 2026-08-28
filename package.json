@@ -22,6 +22,7 @@
     "db:walls": "npx tsx scripts/prove-visibility.ts",
     "db:desk": "npx tsx scripts/prove-desk.ts",
     "db:platform": "npx tsx scripts/prove-platform.ts",
+    "db:perf": "npx tsx scripts/prove-performance.ts",
     "db:capacity": "npx tsx scripts/prove-capacity.ts",
     "db:load-capacity": "npx tsx scripts/load-capacity.ts",
     "prove": "npx tsx scripts/prove.ts"

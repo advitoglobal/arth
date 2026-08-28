@@ -4,6 +4,8 @@ import { asPlatform, canOpen, currentSeat } from "@/db/session";
 import { withPlatformDealer } from "@/db/with-tenant";
 import { getPlatformDealer, logPlatformAction } from "@/services/platform";
 import { controlSnapshot } from "@/services/control";
+import { loadPerformance } from "@/services/performance";
+import { PerformancePanel } from "@/components/performance-panel";
 import { searchEnquiries } from "@/services/telecalling";
 import { PlaceForm } from "@/components/place-form";
 import { EnquiryList } from "@/components/enquiry-row";
@@ -58,6 +60,10 @@ export default async function DealerControlPage({
   const snap = await withPlatformDealer(
     { platformUserId: seat.userId, tenantId: id },
     (tx) => controlSnapshot(tx),
+  );
+  const perf = await withPlatformDealer(
+    { platformUserId: seat.userId, tenantId: id },
+    (tx) => loadPerformance(tx),
   );
   const hits = q && q.trim().length >= 2
     ? await withPlatformDealer({ platformUserId: seat.userId, tenantId: id }, (tx) =>
@@ -153,6 +159,7 @@ export default async function DealerControlPage({
           </ul>
         )}
       </section>
+      <PerformancePanel view={perf} />
     </div>
   );
 }

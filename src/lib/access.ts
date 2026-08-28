@@ -8,6 +8,7 @@ export function canOpen(roleKey: string, screen: string): boolean {
     new: ["tele"],
     notif: ["tele", "sales", "svc", "lead", "mgr", "owner"],
     profile: ["tele", "lead", "mgr", "owner", "adv_admin", "adv_support"],
+    perf: ["tele", "sales", "lead", "mgr", "owner", "ops"],
     desk: ["mgr", "ops"],
     prin: ["owner"],
     adealers: ["adv_admin", "adv_support"],
