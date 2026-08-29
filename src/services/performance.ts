@@ -150,7 +150,7 @@ function parseRankRow(raw: Partial<RankRow> | undefined): RankRow | null {
     unowned_bucket: n(raw.unowned_bucket),
     score: n(raw.score),
     rank: n(raw.rank),
-    you: raw.you === true || raw.you === "t" || raw.you === "true",
+    you: Boolean(raw.you) && raw.you !== false,
   };
 }
 

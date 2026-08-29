@@ -25,7 +25,7 @@ export async function writeAudit(
       ${actorId}::uuid,
       ${action},
       ${entity},
-      ${tx.json(payload)}
+      ${JSON.stringify(payload)}::jsonb
     )
   `;
 }
