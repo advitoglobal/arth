@@ -9,6 +9,8 @@ import { FigureSource } from "@/components/figure-source";
 import { Forbidden } from "@/components/forbidden";
 import { ActionButton } from "@/components/action-button";
 import { enquiryNo } from "@/lib/labels";
+import { assignmentMode, whyWeLose } from "@/services/floor-register";
+import { AssignmentModeForm, UploadBatchForm } from "@/components/register-forms";
 
 export default async function DeskPage() {
   return asSeat(async (tx, seat) => {
@@ -21,6 +23,13 @@ export default async function DeskPage() {
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);
     const perf = await loadPerformance(tx);
+    const lose = await whyWeLose(tx);
+    const [pos] = await tx<{ branch_id: string | null }[]>`
+      SELECT p.branch_id::text FROM users u
+      LEFT JOIN positions p ON p.id = u.position_id
+      WHERE u.id = ${seat.userId}::uuid
+    `;
+    const mode = pos?.branch_id ? await assignmentMode(tx, pos.branch_id, "*") : "direct";
 
     return (
       <div className="space-y-8">
@@ -117,6 +126,30 @@ export default async function DeskPage() {
           )}
         </section>
         <ActionButton href="/w/pipe">Open the full book</ActionButton>
+        <AssignmentModeForm current={mode} />
+        <UploadBatchForm />
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">Why we lose</h2>
+          <p className="text-sm text-[var(--arth-n60)]">
+            Lost reasons on this branch book, with the last note. A lost enquiry is not a penalty.
+          </p>
+          {lose.length === 0 ? (
+            <p>No lost reasons recorded yet.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--arth-n10)] border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+              {lose.map((row) => (
+                <li key={row.key} className="px-4 py-3">
+                  <p className="font-semibold">
+                    {row.label} · {row.n}
+                  </p>
+                  {row.sample ? (
+                    <p className="text-sm text-[var(--arth-n60)]">{row.sample}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
         <PerformancePanel view={perf} />
       </div>
     );

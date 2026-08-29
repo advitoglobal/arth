@@ -1,5 +1,7 @@
 import { asSeat, canOpen } from "@/db/session";
 import { getLead, listQueue } from "@/services/telecalling";
+import { StageLadder } from "@/components/stage-ladder";
+import { assignmentMode, listSalesReceivers, listPrices, listRates, emiPaise } from "@/services/floor-register";
 import { CallDesk } from "@/components/call-desk";
 import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, indianMobile } from "@/lib/format";
@@ -49,6 +51,16 @@ export default async function TelePage({
     const remaining = queue.filter((r) => r.id !== leadId);
     const nextUp = remaining[0];
     const handedToSales = Boolean(ownerId) && ownerId !== seat.userId && String(lead.owner_name ?? "").length > 0;
+    const salesPeople = await listSalesReceivers(tx, String(lead.branch_id));
+    const mode = await assignmentMode(tx, String(lead.branch_id), String(lead.source_key));
+    const prices = await listPrices(tx);
+    const rates = await listRates(tx);
+    const price = prices.find((p) => p.model === String(lead.model_interest ?? "")) ?? prices[0];
+    const rate = rates[0];
+    const onRoad = price
+      ? Number(price.ex_showroom_paise) + Number(price.rto_paise) + Number(price.insurance_paise) + Number(price.accessories_paise)
+      : 0;
+    const emi = price && rate ? emiPaise(onRoad, rate.rate_bps, rate.tenure_months) : 0;
 
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -70,12 +82,16 @@ export default async function TelePage({
             <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
               {`Enquiry ${enquiryNo(String(lead.id))}`}
             </p>
-            <p className="mt-3 text-sm">
-              {lead.model_interest}
-              {lead.variant_interest ? ` ${lead.variant_interest}` : ""}
-              {" · "}
-              {lead.stage_label ?? lead.stage_key}
-            </p>
+            <div className="mt-4">
+              <StageLadder current={String(lead.stage_key)} />
+            </div>
+            {lead.intake_kind ? (
+              <p className="mt-2 text-sm text-[var(--arth-n60)]">
+                {String(lead.intake_kind) === "manager_upload"
+                  ? `Uploaded by manager${lead.intake_batch_name ? ` · ${lead.intake_batch_name}` : ""}`
+                  : "Pushed from telecalling"}
+              </p>
+            ) : null}
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
               {ownerId
                 ? `Owner ${lead.owner_name} · call by ${istDateTime(lead.first_response_due)}`
@@ -124,6 +140,18 @@ export default async function TelePage({
               autoContinue={autoContinue}
               dispositions={dispositions}
               lostReasons={lostReasons}
+              salesPeople={salesPeople}
+              mode={mode}
+              priceLine={
+                price
+                  ? `On-road about ₹${Math.round(onRoad / 100).toLocaleString("en-IN")}. Ex-showroom confirmed ${price.confirmed_at}. Approximate days if booked today: 21 to 35, an estimate until sales allocation.`
+                  : "No price on the master for this model yet."
+              }
+              emiLine={
+                rate
+                  ? `EMI example ${rate.bank_key} ${rate.tenure_months} months at ${(rate.rate_bps / 100).toFixed(2)} percent, confirmed ${rate.confirmed_at}: ₹${Math.round(emi / 100).toLocaleString("en-IN")} a month.`
+                  : "No bank rate on the table yet."
+              }
             />
           ) : (
             <p>

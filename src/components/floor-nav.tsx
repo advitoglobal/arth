@@ -13,6 +13,8 @@ const items = [
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
   { href: "/w/search", screen: "search", label: "Search" },
   { href: "/w/notif", screen: "notif", label: "Notifications" },
+  { href: "/w/admin", screen: "admin", label: "Dealer setup" },
+  { href: "/w/books", screen: "books", label: "Accounts" },
   { href: "/w/profile", screen: "profile", label: "My profile" },
 ];
 
@@ -48,6 +50,12 @@ export function FloorNav({
                 ? "Digital desk"
                 : seat.roleKey === "owner"
                   ? "Dealer principal"
+                  : seat.roleKey === "admin"
+                    ? "Dealer admin"
+                    : seat.roleKey === "acct"
+                      ? "Accounts"
+                      : seat.roleKey === "svctele"
+                        ? "Service telecalling"
                   : "Management"}
         </p>
         <p className="mb-6 mt-1 text-sm">{seat.tenantName}</p>

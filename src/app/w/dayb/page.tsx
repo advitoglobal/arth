@@ -10,6 +10,8 @@ import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
+import { DailyWelcome } from "@/components/daily-welcome";
+import { loadWelcome } from "@/services/floor-register";
 
 function listNames(rows: LeadRow[]) {
   const names = rows.map((r) => r.customer_name);
@@ -95,9 +97,18 @@ export default async function DayPanelPage() {
     const pool = rows.filter((r) => !r.owner_user_id).length;
     const next = rows[0];
     const perf = await loadPerformance(tx);
+    const welcome = await loadWelcome(tx, seat.userId);
 
     return (
       <div className="space-y-8">
+        {!welcome.dismissed ? (
+          <DailyWelcome
+            late={welcome.late}
+            due={welcome.due}
+            firstName={welcome.firstName}
+            yesterdayOutcomes={welcome.yesterdayOutcomes}
+          />
+        ) : null}
         <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
             {new Date().toLocaleDateString("en-IN", {

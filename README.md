@@ -2,21 +2,24 @@
 
 Enquiry accountability for Indian car dealerships. Not a CRM.
 
-This repository is the **telecalling floor**. Telecalling qualifies an enquiry and hands it to sales. Sales converts. An enquiry has a clock, a call outcome, points, and an append-only ledger.
+Telecalling is the front door: qualify, capture, route. Sales converts. Service telecalling is a separate seat. An enquiry has a clock, a call outcome, points, and an append-only ledger.
 
-Governed by `00-START-HERE.md`, `docs/books/VISIBILITY-WALLS.md`, `docs/books/SCOPE-BRIEF-TELECALLING.md`, `docs/ARTH-ARCHITECTURE.md`, and THE ARTH BRAND SYSTEM v2.9.
+Governed by `00-START-HERE.md`, `docs/books/VISIBILITY-WALLS.md`, `docs/books/REQUIREMENTS-REGISTER-29-AUG.md`, and THE ARTH BRAND SYSTEM v2.9.
 
 ## Run
 
 ```bash
 cp .env.example .env.local
 npm install
-npm run db:migrate
+npx tsx scripts/migrate.ts 0027
+npx tsx scripts/migrate.ts 0028
+npx tsx scripts/migrate.ts 0029
+npx tsx scripts/migrate.ts 0030
 npm run prove
 npm run dev              # 127.0.0.1:43127
 ```
 
-Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product. Sign in on `/w/login` with a username and password.
+Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product. Sign in on `/w/login`.
 
 Demonstration seats (same demonstration password for every seat: `arth-demo`):
 
@@ -30,40 +33,45 @@ Demonstration seats (same demonstration password for every seat: `arth-demo`):
 | menon | Whitefield team leader |
 | gupta | Whitefield digital desk manager |
 | shah | Whitefield dealer principal |
+| padma | Whitefield dealer admin |
+| books | Whitefield accounts (export only) |
+| devi | Whitefield service telecaller |
 | fernandes | Coastal digital desk manager |
 | kamath | Coastal dealer principal |
 | advito | Advito admin |
 | support | Advito support |
+| onboard | Advito onboarding (no dealer book) |
 | captele | Capacity Motors telecaller (20 lakh book, load checks) |
 | capdesk | Capacity Motors digital desk |
 | capprin | Capacity Motors dealer principal |
 
 ## How the floor works
 
-- **Shared new book.** New names are on Today for every telecaller at the branch. The name stays there until someone **reaches** the customer (a connected call of 20 seconds or more). Then it belongs only to that telecaller. Search and Filter follow the same wall.
-- **Buckets.** Telecaller: own book plus unowned new names at the branch. Digital desk: that branch team. Dealer principal: that dealer only. Advito admin lists dealers and onboards. Advito support enters one dealer at a time. Postgres forced RLS enforces this. Missing `app.user_id` sees nothing. Another dealer never appears.
-- **Qualify, then hand to sales.** Telecalling qualifies. **Hand to sales** moves ownership to the branch sales consultant. Conversion is their job.
-- **Auto caller.** On Today, **Start next call** loads the highest-priority name. After you record the outcome, the next one loads until the list is finished.
-- **Dial and duration.** Dial on this device or the desk phone. The on-screen timer is the duration Arth stores. There is no recording file until a telephone provider is connected.
-- **WhatsApp.** On a call, send brochure, quotation, or both. The message uses the model and variant, plus what was said. It opens WhatsApp with a prepared text and writes a row on the enquiry history. Attach the PDF from the phone. A WhatsApp Business API is not connected.
-- **Points.** Outcome base × difficulty (hot 1.0, warm 1.5, cold 2.5, very cold 3.5). A connected call under 20 seconds scores nothing. Totals are on My profile.
+- **Shared new book.** New names are on Today for every telecaller at the branch, in that department, until someone reaches the customer (a connected call of 20 seconds or more).
+- **Meeting, not Qualified.** Nine stages. The ladder is on the list and the record.
+- **Direct or pool.** Direct: the telecaller names the receiving executive. Pool: first to claim owns it.
+- **Consent.** WhatsApp brochure and quotation refuse if the customer has withdrawn.
+- **Prices and EMI.** Dealer price master and a dated bank-rate table. Not inferred by a model. Quotations freeze.
+- **Wallet.** Each point movement is named. Penalties are for concealment only.
+- **Accounts.** Incentive export. No enquiry content.
+- **Dial and duration.** The on-screen timer is the duration Arth stores. This is not a live telephone exchange.
 
 ## Floor
 
 | Screen | Route | Job |
 |---|---|---|
-| Today | `/w/dayb` | Late first, shared new names, Start next call |
-| Log a call | `/w/tele` | Dial, WhatsApp, outcome, stage, hand to sales |
-| My enquiries | `/w/pipe` | Nine stages. Sales sees handed-over names |
-| Enquiry record | `/w/rec?id=` | Full ledger |
+| Today | `/w/dayb` | Late first, daily welcome, Start next call |
+| Log a call | `/w/tele` | Dial, WhatsApp, outcome, stage, hand on |
+| My enquiries | `/w/pipe` | Nine stages. Sales also sees the unclaimed pool |
+| Enquiry record | `/w/rec?id=` | Full ledger, claim, reassign |
 | Search | `/w/search` | One search box, then Filter |
-| File enquiry | `/w/new` | When Search finds nothing |
-| Performance | `/w/perf` | Charts, score, ranking, holding, gaps, and a plan on this seat's wall |
-| The floor | `/w/desk` | Digital desk: team load, shared book, place a name |
+| Add enquiry | `/w/new` | Capture, then qualify |
+| Performance | `/w/perf` | Charts, score, ranking, holding, gaps, plan |
+| The floor | `/w/desk` | Digital desk: team, assignment mode, why we lose, upload |
 | This dealer | `/w/prin` | Dealer principal: this dealer only |
-| Dealers | `/a/dealers` | Advito: list, enter one, onboard (admin) |
+| Dealer setup | `/w/admin` | Price master, rates, audit |
+| Accounts | `/w/books` | Incentive export only |
+| Dealers | `/a/dealers` | Advito: list, enter one |
+| Onboard | `/a/onboard` | Advito admin and onboarding |
 
-`npm run prove` prints isolation, clock, assign, access, scope, search, ledger, disposition, queue, points, walls, desk, platform, and performance.
-
-A dealer book of twenty lakh enquiries is a separate dealer (Capacity Motors). `npm run db:load-capacity` then `npm run db:capacity` must print `CAPACITY_OK`. Details: `docs/CAPACITY.md`.
-
+`npm run prove` must print `PROVE_OK`. A twenty lakh book is Capacity Motors. See `docs/CAPACITY.md`.

@@ -7,7 +7,11 @@ import { enquiryNo, sourceLabel } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
 import { StagePanel } from "@/components/stage-panel";
 import { Forbidden } from "@/components/forbidden";
+import { StageLadder } from "@/components/stage-ladder";
+import { ClaimButton } from "@/components/claim-button";
 import { FigureSource } from "@/components/figure-source";
+import { QuoteButton, ReassignForm } from "@/components/register-forms";
+import { listBranchPeople } from "@/services/floor-register";
 
 export default async function RecPage({
   searchParams,
@@ -39,6 +43,10 @@ export default async function RecPage({
       !lead.first_responded_at &&
       new Date(String(lead.first_response_due)).getTime() < Date.now();
     const settled = lead.stage_key === "delivered";
+    const canReassign = ["lead", "mgr", "owner", "admin", "ops"].includes(seat.roleKey);
+    const people = canReassign
+      ? await listBranchPeople(tx, String(lead.branch_id))
+      : [];
 
     return (
       <div className="space-y-6">
@@ -56,6 +64,15 @@ export default async function RecPage({
           <p className="font-data">{indianMobile(String(lead.phone))}</p>
           <p className="mt-1 font-data text-sm text-[var(--arth-n60)]">
             {`Enquiry ${enquiryNo(String(lead.id))}`}
+          </p>
+          <div className="mt-4">
+            <StageLadder current={String(lead.stage_key)} />
+          </div>
+          <p className="mt-3 text-sm text-[var(--arth-n60)]">
+            {String(lead.intake_kind) === "manager_upload"
+              ? `Uploaded by manager${lead.intake_batch_name ? ` · ${String(lead.intake_batch_name)}` : ""}`
+              : "Pushed from telecalling"}
+            {lead.department_key ? ` · ${String(lead.department_key)}` : ""}
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
@@ -113,11 +130,21 @@ export default async function RecPage({
               </ActionButton>
             </div>
           ) : null}
-          {canOpen(seat.roleKey, "rec") &&
-          String(lead.owner_user_id ?? "") === seat.userId &&
-          seat.roleKey === "sales" ? (
+          {seat.roleKey === "sales" && lead.pool_open ? (
             <div className="mt-6">
+              <ClaimButton leadId={String(lead.id)} />
+            </div>
+          ) : null}
+          {String(lead.owner_user_id ?? "") === seat.userId ||
+          ["sales", "lead", "mgr", "owner", "admin"].includes(seat.roleKey) ? (
+            <div className="mt-6 space-y-4">
               <StagePanel leadId={String(lead.id)} stageKey={String(lead.stage_key)} />
+              <QuoteButton leadId={String(lead.id)} />
+            </div>
+          ) : null}
+          {canReassign ? (
+            <div className="mt-6">
+              <ReassignForm leadId={String(lead.id)} people={people} />
             </div>
           ) : null}
         </div>

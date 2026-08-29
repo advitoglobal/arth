@@ -69,7 +69,7 @@ export function middleware(req: NextRequest) {
 
   if (path.startsWith("/w/") && role && isPlatformRole(role)) {
     const home = req.nextUrl.clone();
-    home.pathname = "/a/dealers";
+    home.pathname = role === "adv_onboard" ? "/a/onboard" : "/a/dealers";
     home.search = "";
     return NextResponse.redirect(home);
   }

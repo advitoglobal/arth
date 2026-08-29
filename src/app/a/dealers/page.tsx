@@ -20,13 +20,18 @@ export default async function DealersPage() {
         <p className="max-w-[68ch] text-[var(--arth-n60)]">
           Advito onboards dealers onto Arth. Each dealer is a wall. Opening a dealer shows that dealer only. Support cannot onboard. Admin cannot see two dealers' enquiries on one screen.
         </p>
-        {seat.roleKey === "adv_admin" ? (
+        {seat.roleKey === "adv_admin" || seat.roleKey === "adv_onboard" ? (
           <ActionButton href="/a/onboard">Onboard a dealer</ActionButton>
         ) : (
           <p className="text-sm text-[var(--arth-n60)]">
             Support enters one dealer to fix a floor problem. Every entry is written to the Advito log. Pricing is not on this seat.
           </p>
         )}
+        {seat.roleKey === "adv_onboard" ? (
+          <p className="text-sm text-[var(--arth-n60)]">
+            You see dealer configuration. You cannot open a dealer book, names, or phones.
+          </p>
+        ) : null}
         {dealers.length === 0 ? (
           <p>No dealers are on the product yet.</p>
         ) : (

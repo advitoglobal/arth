@@ -2,6 +2,7 @@ import { asSeat, canOpen } from "@/db/session";
 import { RuleHeading } from "@/components/brand/type";
 import { AddEnquiryForm } from "@/components/add-enquiry-form";
 import { Forbidden } from "@/components/forbidden";
+import { listRates } from "@/services/floor-register";
 
 export default async function NewEnquiryPage({
   searchParams,
@@ -9,15 +10,20 @@ export default async function NewEnquiryPage({
   searchParams: Promise<{ phone?: string }>;
 }) {
   const { phone } = await searchParams;
-  return asSeat(async (_tx, seat) => {
+  return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "new")) return <Forbidden />;
+    const rates = await listRates(tx);
+    const rate = rates[0];
+    const rateLine = rate
+      ? `EMI uses the dated table. Example ${rate.bank_key} ${rate.tenure_months} months at ${(rate.rate_bps / 100).toFixed(2)} percent, confirmed ${String(rate.confirmed_at).slice(0, 10)}. Not inferred by a model.`
+      : undefined;
     return (
       <div className="space-y-6">
-        <RuleHeading>File an enquiry</RuleHeading>
+        <RuleHeading>Add enquiry</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Use this when Search finds no match. You become the owner. The first call is due after the branch next opens, not while it is closed.
+          Capture four fields first so the enquiry exists. Qualify on the same screen as you go. You become the owner from the first save.
         </p>
-        <AddEnquiryForm presetPhone={phone} />
+        <AddEnquiryForm presetPhone={phone} rateLine={rateLine} />
       </div>
     );
   });

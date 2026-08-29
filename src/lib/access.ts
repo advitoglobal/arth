@@ -1,18 +1,21 @@
 export function canOpen(roleKey: string, screen: string): boolean {
   const access: Record<string, string[]> = {
-    dayb: ["tele"],
+    dayb: ["tele", "svctele"],
     tele: ["tele", "mgr", "svctele", "ops"],
-    pipe: ["tele", "lead", "mgr", "sales", "owner", "ops"],
-    rec: ["tele", "lead", "mgr", "sales", "owner", "ops"],
-    search: ["tele", "sales", "adv", "lead", "mgr", "owner", "ops"],
-    new: ["tele"],
-    notif: ["tele", "sales", "svc", "lead", "mgr", "owner"],
-    profile: ["tele", "lead", "mgr", "owner", "adv_admin", "adv_support"],
-    perf: ["tele", "sales", "lead", "mgr", "owner", "ops"],
+    pipe: ["tele", "svctele", "lead", "mgr", "sales", "owner", "ops", "admin"],
+    rec: ["tele", "svctele", "lead", "mgr", "sales", "owner", "ops", "admin"],
+    search: ["tele", "svctele", "sales", "adv", "lead", "mgr", "owner", "ops", "admin"],
+    new: ["tele", "svctele"],
+    notif: ["tele", "svctele", "sales", "svc", "lead", "mgr", "owner", "admin"],
+    profile: ["tele", "svctele", "sales", "lead", "mgr", "owner", "admin", "acct", "adv_admin", "adv_support", "adv_onboard"],
+    perf: ["tele", "svctele", "sales", "lead", "mgr", "owner", "ops", "admin"],
     desk: ["mgr", "ops"],
     prin: ["owner"],
-    adealers: ["adv_admin", "adv_support"],
-    aonboard: ["adv_admin"],
+    admin: ["admin", "owner"],
+    books: ["acct", "owner", "admin"],
+    upload: ["mgr", "owner", "admin"],
+    adealers: ["adv_admin", "adv_support", "adv_onboard"],
+    aonboard: ["adv_admin", "adv_onboard"],
   };
   return (access[screen] ?? []).includes(roleKey);
 }

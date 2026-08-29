@@ -29,12 +29,12 @@ export function whatsappMessage(input: {
     : "";
   const sign = `${input.dealer}, ${input.sender}`;
   if (input.kind === "brochure") {
-    return `Namaste ${name}. Sharing the brochure for ${vehicle}.${talked} Please reply here if you want a quotation or a visit. — ${sign}`;
+    return `Namaste ${name}. Sharing the brochure for ${vehicle}.${talked} Please reply here if you want a quotation or a visit. ${sign}`;
   }
   if (input.kind === "quotation") {
-    return `Namaste ${name}. Sharing a quotation for ${vehicle}.${talked} Reply here with any change you want on the numbers. — ${sign}`;
+    return `Namaste ${name}. Sharing a quotation for ${vehicle}.${talked} Reply here with any change you want on the numbers. ${sign}`;
   }
-  return `Namaste ${name}. Sharing the brochure and a quotation for ${vehicle}.${talked} Open the files on this chat and tell me if you want a test drive. — ${sign}`;
+  return `Namaste ${name}. Sharing the brochure and a quotation for ${vehicle}.${talked} Open the files on this chat and tell me if you want a test drive. ${sign}`;
 }
 
 export function waMeUrl(phone: string, text: string) {

@@ -13,6 +13,7 @@ export async function POST(req: Request) {
         leadId: body.leadId,
         userId: seat.userId,
         note: String(body.note ?? ""),
+        salesUserId: body.salesUserId ? String(body.salesUserId) : undefined,
       });
       return NextResponse.json(result);
     });

@@ -32,9 +32,9 @@ export default async function PipePage({
         <RuleHeading>My enquiries</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
           {seat.roleKey === "sales"
-            ? "Enquiries handed to you after telecalling qualifies them. Convert them here. Stage moves write to the ledger."
+            ? "Enquiries handed to you after telecalling reaches Meeting. Convert them here. Unclaimed pool names at this branch sit here until you claim them. Stage moves write to the ledger."
             : seat.roleKey === "tele"
-              ? "Your full book, in nine stages. Today is only what is due now. New names stay on Today for every telecaller until you reach the customer. After you qualify, hand the enquiry to sales. Open a name for the history."
+              ? "Your full book, in nine stages. Today is only what is due now. New names stay on Today for every telecaller until you reach the customer. After Meeting, hand the enquiry to sales. Open a name for the history."
               : "Names in your bucket only: team, branch, or this dealer. Never another dealer."}
         </p>
         <p className="text-sm text-[var(--arth-n60)]">

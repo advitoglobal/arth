@@ -206,7 +206,7 @@ export function analysePerformance(snap: PerformanceSnapshot, ranks: Performance
   const gaps: string[] = [];
   const plan: { text: string; href?: string }[] = [];
   const role = snap.role;
-  const qualified = n(snap.stages.qualified);
+  const meeting = n(snap.stages.meeting ?? snap.stages.qualified);
   const booked = n(snap.stages.booked);
   const delivered = n(snap.stages.delivered);
   const heaviest = [...snap.team].sort((a, b) => b.late - a.late)[0];
@@ -244,9 +244,9 @@ export function analysePerformance(snap: PerformanceSnapshot, ranks: Performance
     if (snap.parked > 0) {
       gaps.push(`${names(snap.parked, "name is", "names are")} parked. They are off Today until the revisit day.`);
     }
-    if (qualified > 0 && snap.today_handoffs === 0) {
+    if (meeting > 0 && snap.today_handoffs === 0) {
       gaps.push(
-        `${names(qualified, "enquiry sits", "enquiries sit")} at Qualified. Hand to sales when the customer is ready to convert. Telecalling does not close the deal.`,
+        `${names(meeting, "enquiry sits", "enquiries sit")} at Meeting. Hand to sales when the customer is ready to convert. Telecalling does not close the deal.`,
       );
     }
     if (snap.due_today > 0) {
@@ -257,8 +257,8 @@ export function analysePerformance(snap: PerformanceSnapshot, ranks: Performance
     } else {
       plan.push({ text: "Today is clear. File new inbound names in Search, or open My enquiries for the rest of the book.", href: "/w/search" });
     }
-    if (qualified > 0) {
-      plan.push({ text: "Open Qualified names and hand them to sales.", href: "/w/pipe?stage=qualified" });
+    if (meeting > 0) {
+      plan.push({ text: "Open Meeting names and hand them to sales.", href: "/w/pipe?stage=meeting" });
     }
   } else if (role === "sales") {
     if (snap.late === 0 && snap.owned > 0) {

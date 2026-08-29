@@ -5,6 +5,7 @@ import { landingPath } from "@/lib/seats";
 import { applySeatCookies } from "@/lib/session-cookies";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
+import { ForgotPassword } from "@/components/register-forms";
 
 async function enter(formData: FormData) {
   "use server";
@@ -39,6 +40,10 @@ export default async function LoginPage({
         <li>gupta · Whitefield digital desk manager. Telecalling team at this branch only.</li>
         <li>shah · Whitefield dealer principal. This dealer only, never Coastal.</li>
         <li>fernandes / kamath · Coastal digital desk and principal.</li>
+        <li>padma · Whitefield dealer admin. Price master, assignment mode, audit.</li>
+        <li>books · Whitefield accounts. Incentive export only. No enquiry content.</li>
+        <li>devi · Whitefield service telecaller. Service-due names, labelled as uploaded by manager.</li>
+        <li>onboard · Advito onboarding. Provisions a dealer. Cannot enter a dealer book.</li>
         <li>advito · Advito admin. Onboard dealers. Enter one dealer at a time.</li>
         <li>support · Advito support. Enter one dealer at a time. Cannot onboard.</li>
         <li>captele · Capacity Motors. A twenty lakh enquiry book for load checks. Not the Whitefield walk-through.</li>
@@ -72,6 +77,7 @@ export default async function LoginPage({
           Sign in
         </Button>
       </form>
+      <ForgotPassword />
     </div>
   );
 }

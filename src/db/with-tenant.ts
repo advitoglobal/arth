@@ -20,7 +20,8 @@ export function isSessionGuardError(err: unknown) {
     message.includes("Session is incomplete") ||
     message.includes("does not belong to this dealer") ||
     message.includes("not an Advito operator") ||
-    message.includes("No signed-in seat")
+    message.includes("No signed-in seat") ||
+    message.includes("never a dealer book")
   );
 }
 
@@ -111,6 +112,13 @@ export async function withPlatformDealer<T>(
     await tx`SELECT set_config('app.platform_user_id', ${platformUserId}, true)`;
     await tx`SELECT set_config('app.tenant_id', '', true)`;
     await tx`SELECT set_config('app.user_id', '', true)`;
+    const [plat] = await tx<{ role_key: string }[]>`
+      SELECT role_key FROM platform_users
+      WHERE id = ${platformUserId}::uuid AND is_active
+    `;
+    if (plat?.role_key === "adv_onboard") {
+      throw new Error("Advito onboarding sees configuration, never a dealer book.");
+    }
     const [ops] = await tx<{ id: string | null }[]>`
       SELECT arth_platform_ops_user(${tenantId}::uuid)::text AS id
     `;

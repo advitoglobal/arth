@@ -20,21 +20,29 @@ export const ROLE_LABEL: Record<string, string> = {
   lead: "team leader",
   mgr: "digital desk manager",
   owner: "dealer principal",
+  admin: "dealer admin",
+  acct: "accounts",
   ops: "Advito support on this dealer",
   adv_admin: "Advito admin",
   adv_support: "Advito support",
+  adv_onboard: "Advito onboarding",
 };
 
 export function roleLabel(roleKey: string) {
   return ROLE_LABEL[roleKey] ?? roleKey;
 }
 
-export function landingPath(seat: Pick<Seat, "kind" | "workspaceKey">) {
-  if (seat.kind === "platform") return "/a/dealers";
+export function landingPath(seat: Pick<Seat, "kind" | "workspaceKey" | "roleKey">) {
+  if (seat.kind === "platform") {
+    if (seat.roleKey === "adv_onboard") return "/a/onboard";
+    return "/a/dealers";
+  }
   if (seat.workspaceKey === "dayb") return "/w/dayb";
   if (seat.workspaceKey === "desk") return "/w/desk";
   if (seat.workspaceKey === "prin") return "/w/prin";
   if (seat.workspaceKey === "tele") return "/w/tele";
+  if (seat.workspaceKey === "admin") return "/w/admin";
+  if (seat.workspaceKey === "books") return "/w/books";
   return "/w/pipe";
 }
 
@@ -183,6 +191,54 @@ const DEMO_HASH_SEATS = {
     tenantName: "Advito",
     username: "support",
   },
+  padma: {
+    seatKey: "padma",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd41",
+    name: "R. Padma",
+    roleKey: "admin",
+    roleLabel: "dealer admin",
+    workspaceKey: "admin",
+    tenantName: "Whitefield Motors",
+    username: "padma",
+  },
+  books: {
+    seatKey: "books",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd42",
+    name: "K. Books",
+    roleKey: "acct",
+    roleLabel: "accounts",
+    workspaceKey: "books",
+    tenantName: "Whitefield Motors",
+    username: "books",
+  },
+  devi: {
+    seatKey: "devi",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd43",
+    name: "S. Devi",
+    roleKey: "svctele",
+    roleLabel: "service telecaller",
+    workspaceKey: "dayb",
+    tenantName: "Whitefield Motors",
+    username: "devi",
+  },
+  onboard: {
+    seatKey: "onboard",
+    kind: "platform" as const,
+    tenantId: "",
+    userId: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3",
+    name: "Advito onboarding",
+    roleKey: "adv_onboard",
+    roleLabel: "Advito onboarding",
+    workspaceKey: "aonboard",
+    tenantName: "Advito",
+    username: "onboard",
+  },
 } satisfies Record<string, Seat>;
 
 export const DEMO_USERS = DEMO_HASH_SEATS;
@@ -212,10 +268,12 @@ export function screenFromPath(pathname: string): string | null {
     "/w/desk": "desk",
     "/w/prin": "prin",
     "/w/perf": "perf",
+    "/w/admin": "admin",
+    "/w/books": "books",
   };
   return map[pathname] ?? null;
 }
 
 export function isPlatformRole(roleKey: string) {
-  return roleKey === "adv_admin" || roleKey === "adv_support";
+  return roleKey === "adv_admin" || roleKey === "adv_support" || roleKey === "adv_onboard";
 }

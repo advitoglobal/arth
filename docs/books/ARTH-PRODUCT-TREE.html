@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arth · Product Tree</title>
+<style>
+:root{--ink:#0F2A33;--ink-2:#16333D;--ink-3:#1B3D48;--ink-line:#2A4D57;--slate:#2E5C68;
+--brass:#B07F2C;--brass-deep:#8F6620;--brass-lift:#D0A155;--brass-wash:#F3E7CE;--brass-pill:#7A5716;
+--n00:#fff;--n05:#F1F4F4;--n10:#E3E9E9;--n20:#C9D3D4;--n40:#9FADB0;--n50:#748689;--n60:#5A6C71;
+--n80:#47585D;--n90:#263D45;--over:#B23B2E;--over-w:#F6E3E0;--set:#27735A;--set-w:#DEEDE7;
+--on-ink:#DCE7EA;--on-ink-mut:#9FB6BD;--on-ink-dim:#7FA0A9;
+--d:"Anek Latin","Segoe UI",system-ui,sans-serif;--b:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+--m:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--b);background:var(--n05);color:var(--n90);font-size:14px;line-height:1.5}
+.app{display:grid;grid-template-columns:1fr 370px;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/-1;background:var(--ink);color:#fff;padding:14px 26px;display:flex;
+ align-items:center;gap:22px;flex-wrap:wrap}
+header .mk{display:flex;align-items:flex-end;gap:9px}
+header .mk i{width:32px;height:2px;background:var(--brass);margin-bottom:8px;display:block}
+header .mk b{font-family:var(--d);font-size:20px;color:#fff;line-height:.9}
+header h1{font-family:var(--d);font-size:15px;font-weight:500;color:var(--on-ink-mut)}
+header .sp{flex:1}
+header button{background:transparent;border:1px solid var(--ink-line);color:var(--on-ink-mut);
+ padding:5px 11px;border-radius:3px;font-size:12px;cursor:pointer;font-family:var(--b)}
+header button:hover{color:#fff;border-color:var(--brass)}
+header .key{display:flex;gap:11px;font-size:11px;color:var(--on-ink-dim);flex-wrap:wrap}
+header .key s{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+header .key em{width:8px;height:8px;border-radius:2px;display:inline-block;font-style:normal}
+.tree{overflow:auto;padding:16px 22px 70px}
+ul{list-style:none;margin:0;padding:0 0 0 20px}
+ul.root{padding-left:0}
+li{position:relative}
+li>ul{border-left:1px solid var(--n20);margin-left:9px}
+.nd{display:flex;align-items:flex-start;gap:7px;padding:3px 7px;border-radius:3px;cursor:pointer;
+ margin:1px 0}
+.nd:hover{background:var(--n10)}
+.nd.sel{background:var(--brass-wash);outline:1px solid var(--brass)}
+.tw{width:14px;flex:0 0 14px;font-family:var(--m);font-size:10px;color:var(--n50);
+ text-align:center;line-height:1.7;user-select:none}
+.tw.leaf{color:var(--n20)}
+.lb{flex:1}
+.lb .t{font-size:13.5px;color:var(--n90)}
+.nd.dep>.lb .t{font-family:var(--d);font-size:15px;font-weight:600;color:var(--ink)}
+.nd.role>.lb .t{font-weight:600;color:var(--ink)}
+.nd.act>.lb .t{color:var(--n80);font-size:13px}
+.nd.act .tw{color:var(--brass)}
+.lb .n{font-size:11.5px;color:var(--n60);margin-top:1px}
+.bg{font-family:var(--m);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;
+ padding:2px 6px;border-radius:2px;font-weight:600;white-space:nowrap;margin-top:2px}
+.b-built{background:var(--set-w);color:var(--set)}
+.b-spec{background:#E4ECEF;color:var(--slate)}
+.b-p5{background:var(--brass-wash);color:var(--brass-pill)}
+.b-p6{background:var(--n10);color:var(--n60)}
+.b-p7{background:var(--n10);color:var(--n60)}
+.b-never{background:var(--over-w);color:var(--over)}
+.side{background:var(--n00);border-left:1px solid var(--n10);overflow-y:auto;padding:20px 20px 70px}
+.side .eye{font-family:var(--m);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;
+ color:var(--brass-deep)}
+.side .rl{width:38px;height:2px;background:var(--brass);margin:6px 0 8px}
+.side h2{font-family:var(--d);font-size:19px;font-weight:600;color:var(--ink);line-height:1.25}
+.side .path{font-family:var(--m);font-size:10.5px;color:var(--n50);margin:7px 0 12px;line-height:1.6}
+.side .what{font-size:13.5px;color:var(--n80);margin-bottom:12px}
+.side h4{font-family:var(--m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--slate);margin:16px 0 6px;padding-top:10px;border-top:1px solid var(--n10)}
+.side .why{background:var(--brass-wash);border-left:3px solid var(--brass);padding:11px 13px;
+ border-radius:0 4px 4px 0;font-size:12.5px;color:var(--brass-pill)}
+.side .why b{color:#5C3E10}
+.side .goes{font-size:12.5px;color:var(--n80);background:var(--n05);border:1px solid var(--n10);
+ border-radius:4px;padding:10px 12px}
+.side .goes b{color:var(--ink)}
+.side li{font-size:12.5px;color:var(--n80);margin-bottom:5px;list-style:none;padding-left:13px}
+.side li:before{content:"\2192";margin-left:-13px;margin-right:5px;color:var(--brass)}
+.side .kids{font-size:12.5px}
+.side .kids a{display:block;padding:4px 0;color:var(--slate);cursor:pointer;border-bottom:1px solid var(--n10)}
+.side .kids a:hover{color:var(--brass-deep)}
+.empty{color:var(--n50);font-size:13px;padding-top:40px;text-align:center}
+@media(max-width:1150px){.app{grid-template-columns:1fr 300px}}
+</style></head><body>
+<div class="app">
+<header>
+ <div class="mk"><i></i><b>arth</b></div>
+ <h1>Product tree · every role, every screen, every action</h1>
+ <div class="sp"></div>
+ <button onclick="setAll(true)">Expand all</button>
+ <button onclick="setAll(false)">Collapse all</button>
+ <div class="key">
+  <s><em style="background:var(--set)"></em>Built</s>
+  <s><em style="background:var(--slate)"></em>Specified</s>
+  <s><em style="background:var(--brass)"></em>Phase 5</s>
+  <s><em style="background:var(--n40)"></em>Later</s>
+  <s><em style="background:var(--over)"></em>Never</s>
+ </div>
+</header>
+<main class="tree" id="tree"></main>
+<aside class="side" id="side"><div class="empty">Click any node to see what it is,<br>what happens when it is used,<br>and where it goes.</div></aside>
+</div>
+<script>
+// N = [label, status, what it is, why/where it goes, children]
+const N=(l,s,w,g,c)=>({l,s,w,g,c:c||[]});
+const A=(l,w,g)=>({l,s:'act',w,g,c:[]});
+
+const TREE = N('arth.com','built','The public website. Anonymous. No login.',
+ 'Its only job is to get a dealer principal to ask for a demonstration. It never shows dealer data.',[
+
+ N('Marketing site','built','Four public pages.',
+  'Deliberately in the same application as the floor for now. Note that every defect found on the marketing side has been cosmetic, and every defect on the floor has been behavioural.',[
+  A('Home','The positioning, three proof panels, and two buttons.','No login. Nothing here reads the database.'),
+  A('How records are kept','Explains the append-only ledger to a buyer.','This is the sales argument: an editable record is worth nothing in a payout dispute.'),
+  A('Open the product →','The only route inwards.','Goes to Login.'),
+  A('Request a demonstration','Captures an enquiry about Arth itself.','Goes to Advito, not to any dealer tenant.')]),
+
+ N('Login','built','One screen. Phone number and password in production.',
+  'The seat decides everything that follows. A person lands on exactly one workspace, never a chooser: a chooser hands someone a decision instead of a day.',[
+  A('Sign in','Resolves the person to a seat.','Sets three things at once: the landing workspace, the permission set, and the record scope.'),
+  A('Wrong seat for a URL','403 at the same address, with the reason.','Never a silent redirect. "This screen is for another seat" plus a route back to your own landing.'),
+  N('What a seat carries','spec','Three separate layers people confuse constantly.','',[
+   A('Landing','Exactly one workspace.','Where you start. Stored on the user record as workspaceKey.'),
+   A('Permission','Which screens you may open.','Granted per role. A branch manager may open telecalling even though he lands elsewhere.'),
+   A('Scope','Which records inside those screens.','own · team · branch · brand · group. Two people with identical permissions can see different amounts.')])]),
+
+ // ============ DIGITAL MARKETING / TELECALLING ============
+ N('Digital Marketing and Telecalling','built','THE FRONT DOOR. Every lead in the product enters here.',
+  'Not a department beside sales and service: the entrance to all of them. Digital and telecalling attend every lead, qualify it, then route it to sales, service, insurance, used car or accessories. A telecaller job ends at assignment. Each department also has a second intake, uploaded by its own manager, and the two are labelled differently.',[
+  N('The routing rule','spec','Where a qualified lead goes next.','',[
+   A('Sales lead','Goes to a sales executive.','Telecaller responsibility ends. The receiving executive owns it from that point.'),
+   A('Service lead','Goes to a service advisor.',''),
+   A('Insurance, used car, accessories','Goes to that department executive.',''),
+   A('Two assignment modes','Direct, or pool.','Chosen by the digital marketing manager, per source or per branch. Direct names one executive. Pool assigns to a branch and notifies the whole team; first to claim owns it.'),
+   A('Unclaimed pool lead','Escalates on a clock.','After the first-response window it auto-assigns by the rule and the team leader is told. A lead everyone can take becomes a lead nobody takes.'),
+   A('Reassignment','Team leader, manager, GM/VP or dealer principal.','Always with a reason, always a ledger row.'),
+   A('Lead labels','Pushed from telecalling, or Uploaded by manager.','Visible on every row with the batch name and date. A service telecaller must tell them apart at a glance: they are different conversations.')]),
+
+  N('Telecaller','built','The heaviest daily user. Lands on Today.','',[
+   N('Today','built','The morning queue. Late first, then due later, then also due.',
+    'A morning with an end, not the whole book. The count falls as work is logged, which is most of why the screen works.',[
+    A('Summary card','Names who is late, in a sentence.','No click. "Meera Joshi and 4 more are late" is a morning; "6 overdue" is a report.'),
+    A('Row · tap the name','Opens that enquiry.','Goes to Enquiry record.'),
+    A('Row · tap Call','Opens the console for that enquiry.','Goes to Log a call.'),
+    A('Late · n remaining','A live count.','Decrements when a disposition is saved. No click.')]),
+   N('Log a call','built','The console. Customer, history, disposition panel.',
+    'The screen the product exists for. Everything else is a way of writing to the ledger; this is where it is written.',[
+    A('Outcome select','Six outcomes in two groups.','Choosing one reveals only the fields that outcome requires. Nothing is pre-selected.'),
+    A('Revisit date','Required by Postponed and Callback.','Beyond 14 days it also demands a reason. Sets the lead next action date.'),
+    A('Lost reason','Seven controlled reasons.','Each demands a different specific fact: quoted amount, competitor, financier, timeline. Feeds Why we lose.'),
+    A('Record outcome','Writes the row.','Six things change at once: a permanent lead_events row, the next action date, the queue count, the derived status, the points it would earn, and the manager floor view.'),
+    A('Undo','Available for about 1.5 seconds.','Inserts a correcting row. Never deletes. The original disposition stays visible forever.'),
+    A('Auto-advance','Loads the next due enquiry.','No decision required between calls. A queue that asks you to choose every time is abandoned by 11am.'),
+    A('History panel','The ledger for this enquiry.','Read only. Tap an entry to open the full record, or play the recording.'),
+    A('Call recording','Saved against the enquiry.','Playable here and by whoever receives the lead next. A sales executive who can hear what the customer actually said is a materially better sales executive, and no competitor does this. Needs telephony.'),
+    A('Autodialer','One button, with the lead detail on screen.','Places the call, captures duration, starts the recording. Duration is what enforces the 20-second connect floor, which is what makes points safe to ship.'),
+    A('Send the brochure','WhatsApp, one press.','Consent-checked. A customer who has withdrawn gets a refusal with the reason, not a silent failure.'),
+    A('Send the price','WhatsApp.','Carries the date each price component was last confirmed.'),
+    A('Send a quotation','WhatsApp or email.','Freezes the price and scheme versions live at that moment. A quotation that reprices itself later is worthless in a dispute.'),
+    A('Add an alternative choice','A second vehicle on the same enquiry.','Its own brochure, price and quotation. Common on a real floor and currently unrecorded anywhere.'),
+    A('EMI calculator','Inline, never leaves the call.','Bank, tenure, rate, processing fee, and the date the rate was confirmed. Rates come from a maintained table refreshed monthly and approved by a human, never inferred by a model: a rate quoted to a customer is a commitment.'),
+    A('Car availability','Approximate days if booked today.','Approximate, and it says so. Sales sees the exact allocation. Until the DMS read strategy is settled, allocation is entered by the sales admin.'),
+    A('Bay availability','Approximate service window.','Approximate only. The service advisor confirms the appointment, because only he knows the work involved.')]),
+   N('My enquiries','built','The whole book, at every stage.',
+    'Today is the morning; this is the year. Different job, same row.',[
+    A('Stage chips','Filter to one of nine stages.','New, Assigned, Contacted, Meeting, Test drive, Quotation, Negotiation, Booked, Delivered. Meeting replaces Qualified because it is what a floor actually says. Retail is not a stage: it is a delivery chain step, and modelling chain steps as stages is the error that produced twelve stages before.'),
+    A('Row','Opens the record.','Goes to Enquiry record.'),
+    A('Call','Opens the console.','Available on every row, not only due ones.')]),
+   N('Enquiry record','built','Everything that ever happened to one enquiry.',
+    'The evidence. There is no edit control anywhere, and not because it is hidden: UPDATE and DELETE are revoked at the database.',[
+    A('Activity ledger','Every event, newest first, with its actor.','A human actor and System never look the same. A decision and an automatic act carry different weight in a dispute.'),
+    A('Call this customer','The only action on the screen.','Goes to Log a call. Reading a record never changes it.')]),
+   N('Search','built','Phone first, from four digits.',
+    'Every inbound call starts here. Names are unreliable across three scripts; a number is a number.',[
+    A('Search box','Phone, then name, then enquiry number.','Results use the same standard row as every other screen.'),
+    A('Filters','Stage, Source, Model, Status.','Kept in a separate panel. Typing and narrowing are different intents.'),
+    A('No match','Offers to file the enquiry.','Goes to File an enquiry. The miss is the most valuable moment on this screen: someone new is on the phone.')]),
+   N('Add enquiry','built','Capture and qualify. Renamed from File an enquiry.',
+    'Two stages on one screen. Stage 1 saves in four fields so nothing is ever lost on a live call. Stage 2 qualifies, saving as it goes. A twenty-field form on a live call means the telecaller fills it from memory afterwards, and the data then looks complete and is partly invented.',[
+    A('Stage 1 · four fields','Phone, name, model interest, source.','Saves immediately. The enquiry exists and has an owner from this point.'),
+    A('Stage 2 · vehicle','Variant, colour, alternative choice.','The alternative choice can be sent to the customer as its own brochure and price.'),
+    A('Stage 2 · intent','Expected booking date, expected delivery date.',''),
+    A('Stage 2 · buyer type','First time, additional, replacement, exchange.','Controlled list. It changes which questions follow.'),
+    A('Stage 2 · exchange','Car to exchange, evaluation needed, date, showroom or customer place.','Feeds the used car evaluator queue.'),
+    A('Stage 2 · meeting','Showroom visit or home visit, with date and time.','Creates the commitment and its deadline.'),
+    A('Stage 2 · test drive','Needed, preferred date.',''),
+    A('Stage 2 · finance','Needed, bank preference, EMI calculated inline.','The rate table is shown with the date each rate was confirmed.'),
+    A('Phone · first field','Checks for a duplicate as you type.','A match offers the existing record instead of creating a second one. One customer, one record, across every department.'),
+    A('Model and Source','Controlled lists, never free text.','Both end up in a GROUP BY. That is the test for every field in the product.'),
+    A('Branch','Sets which rooftop owns it.','Decides which working hours govern the clock. The wrong branch means the wrong deadline and the wrong person blamed.'),
+    A('Add enquiry','Creates the lead.','Assignment runs by the chosen mode. The lead appears in someone Today, or in a branch pool.')]),
+   N('Notifications','built','Only what needs this person.','',[
+    A('Any row','Opens the enquiry.','Every notification states why it was sent. One that cannot say why should not have been sent.'),
+    A('Cannot be switched off','Two of them.','Lead assigned to you, and commitment due.')]),
+   N('My profile','built','What the system believes about you.','',[
+    A('Working hours','The branch hours, day by day.','Read only. Set by the dealer admin.'),
+    A('Why they are here','They explain the clock.','A lead arriving at 21:40 starts its clock at the next open, and the delay is recorded against the branch, not you.')]),
+   N('My score','p7','Designed, not built.',
+    'Points need call duration to enforce the 20-second connect floor. Duration needs telephony. Shipping a score before its anti-gaming control exists teaches a floor to game it.',[
+    A('Base points','Test drive 8, visit 5, quotation 4, callback 2, postponed 1.','Dealer-configurable rows, not code. Every scoring outcome also demands a fact.'),
+    A('Difficulty multiplier','Hot 1.0, warm 1.5, cold 2.5, very cold 3.5.','Computed at assignment and frozen. Hidden from the executive. On raw points the person taking easy leads looks best; weighted, he is worst.'),
+    A('Anti-gaming rules','Six moves, six controls.','Under 20 seconds earns no points and no penalty. Closures demand a fact. Bands are never manager-set. Waivers count against the manager who granted them.'),
+    A('Points are not targets','Two numbers, never merged.','Points measure behaviour, which you control. Targets measure outcome, which you partly do not. Merged, the combined number is gamed within six weeks.'),
+    A('The score wallet','Points animate into it as they are earned.','Positive in settled green, negative in overdue red. It shows the movement, never a total that jumps: a figure that changes with no explanation beside it is a number nobody trusts.'),
+    A('The monthly list','Every point earned and every point lost.','Each row names the action that caused it. A score you cannot audit is a score you cannot argue with, and one people will assume is wrong.'),
+    A('Negative points','Only three things.','Not logging an outcome at all, letting a first response lapse with no attempt, and a commitment missed with no note. The rule is: penalise concealment, never outcomes. Penalise a lost lead and you get fake dispositions, which is how not-interested reached 31% of all closures.'),
+    A('Every penalty has a safe path','A way to do the right thing and avoid it.','A penalty with no safe path is a pressure, and a pressure produces the behaviour it was meant to stop.')]),
+   N('The daily welcome','p7','Once a day, on the landing screen, dismissible.',
+    'Not a pop-up over the screen and never blocking the queue. Three parts: what was genuinely good, what today holds, and one line of encouragement.',[
+    A('What was good','Drawn from yesterday.','"You closed 19 of 24. Best on the floor."'),
+    A('What today holds','The queue, named.','"6 late, 12 due. Meera Joshi first."'),
+    A('On a bad day','It must not invent a positive.','A person who had a bad day and is told they were wonderful learns the product does not tell the truth, and then disbelieves the rest of it. It says something true and forward-looking instead.')]),
+   N('Lead score','p7','A score on the enquiry itself, not the person.',
+    'Built from the call transcripts, the messages sent, and the activity on the lead, updating until conversion.',[
+    A('It shows its reasons','Always, next to the number.','"Rising: asked about finance twice, requested a test drive, mentioned a deadline." A number with no reasons is a number a floor stops believing in a fortnight, and then they stop believing the rest of the product.'),
+    A('It never overrides a human','It ranks and it flags.','It does not close a lead, does not reassign, and does not change a difficulty band.'),
+    A('It depends on transcription','So it depends on telephony.','It arrives after recordings, not before.')])]),
+
+  N('Digital desk manager','spec','The telecalling floor manager. Lands on Floor today.','',[
+   N('Floor today','spec','His team today, not his own book.','',[
+    A('Five headline figures','Due, late, unassigned, median response, contacted in 24h.','Scope is his team. Not the branch, not the group.'),
+    A('By person table','Due, late, logged, median response, load.','Four columns chosen so effort can be told from outcome. Load is a bar because a manager at 10am compares shapes.'),
+    A('Exception card','Names the problem and the likely cause.','Offers both fixes: move the work, or fix the data that caused the bad assignment. A card with no action is a report.'),
+    A('Breaching now','Windows closing in under 10 minutes.','The only list on the floor still recoverable. Goes to Assignment.')]),
+   N('Assignment','spec','Where unowned work gets an owner.','',[
+    A('The rule, stated on screen','Round robin weighted by load, inside working hours.','Visible because a floor will otherwise invent one. Arguing about the rule is cheaper than arguing about fairness.'),
+    A('Assign all by the rule','One press for the whole queue.','A suggestion, not a decision. Automation that cannot be overridden gets worked around.'),
+    A('Override','Requires a typed reason.','Writes a row naming the manager, the reason and both telecallers. Not to police him: to make a pattern visible.')]),
+   N('Team scores','p7','Raw against weighted, with both ranks.',
+    'Depends on the points engine. Not in this release.',[
+    A('The comparison table','Same five people, ordered two ways.','Showing only weighted looks manipulated. Showing both makes the claim checkable.'),
+    A('Difficulty mix','What proportion of each person leads were hot, warm, cold.','The audit trail for the weighted score, and it prompts the better question: why did that happen.'),
+    A('Waivers you granted','Every penalty this manager waived.','Waiving is legitimate. Selective waiving corrupts a score, so it is counted against the grantor and visible to his principal.')]),
+   N('Why we lose','spec','419 losses turned into four actionable things.','',[
+    A('Reason, count, and the fact it demanded','Seven controlled reasons.','"Price" tells you nothing. "We quoted 9.4, they had 9.21" tells you the gap is consistent, which makes it a scheme problem.'),
+    A('The unreachable line','Fell from 31% of closures to 3.6%.','Nothing changed about the customers. The disposition began demanding six attempts, checked against the ledger.')]),
+   N('Response times','spec','The number that predicts every other number.','',[
+    A('By source','Because a Meta lead and a walk-in are not the same job.','A single median hides everything. Split, it shows one campaign at 2h14 and another at 19 minutes.'),
+    A('Never contacted','441, worth about 39 lakh.','Goes to the principal. A floor manager cannot turn a campaign off.'),
+    A('Exclusions, published','Out of hours, outages, consent withdrawn.','Stated rather than silently dropped. The exclusion count is itself watched.')]),
+   N('Sources','spec','Which campaigns the floor can actually absorb.','',[
+    A('Volume against capacity','Enquiries per source against contact rate.','This is where cheap leads that nobody calls become visible.')])]),
+
+  N('Marketing head','spec','Read only. Campaign performance, no floor detail.','',[
+   A('Source performance','Cost per lead and cost per booking.','Read only. He cannot reassign work or open an enquiry record.'),
+   A('Creative performance','Which advert produced a delivered car.','The moat: Advito placed the spend, so spend and delivered cars sit in one database.')])]),
+ // ============ SALES ============
+ N('Sales','built','Four seats. Partially built.',
+  'Nine stages: New, Assigned, Contacted, Meeting, Test drive, Quotation, Negotiation, Booked, Delivered. The ladder is shown on every row and at the top of every record, with the current stage lit.',[
+  N('Sales consultant','built','Lands on My enquiries.','',[
+   A('My enquiries','The book, nine stage chips.','Same standard row as telecalling. Nothing is relearned between departments.'),
+   A('Enquiry record','The ledger for one enquiry.','Same screen the telecaller sees, scoped to his own records.'),
+   A('Log a visit','Showroom visit, test drive, quotation.','Same disposition mechanics as a call. Writes to the same ledger.'),
+   A('Quotation','Freezes the price and scheme versions live at that moment.','A quotation that reprices itself later is worthless in a dispute.'),
+   A('Awaiting delivery','Bookings with no car yet.','Read only for him. The delivery chain is another department job.'),
+   A('Search','Phone first.','Shared screen, own scope.')]),
+  N('Sales team leader','spec','Team scope. Approvals.','',[
+   A('Team pipeline','His team book, not his own.','Scope is team.'),
+   A('Discount approvals','Requests above his executives limit.','Every approval writes a row with the amount and the reason. Feeds discount leakage on the principal screen.'),
+   A('Lead difficulty','Visible to him, hidden from executives.','Visible, it becomes an argument about the assignment.')]),
+  N('Sales GM or VP','spec','Department head. Branch and brand scope.','',[
+   A('Pipeline by branch','Every rooftop he owns.','Process measures, not outcome. A comparison on cars sold becomes an argument about market conditions.'),
+   A('Stage conversion','Where the funnel leaks.','440 never contacted was found here.'),
+   A('Cost per booking','By source and by campaign.','Shared with the principal. No product margin.')]),
+  N('Sales admin','spec','Task queue seat. One list, large rows, one button.',
+   'Not a lesser product: the right one. A clerk who does one thing forty times a day will never open an eleven-item menu.',[
+   A('Paperwork queue','What needs a form today.','One action per row.')])]),
+
+ // ============ DELIVERY ============
+ N('Delivery','p5','The gap nobody has filled. Every competitor stops at the booking.',
+  'Twelve steps, three parallel lanes, four external parties. The promised date is the longest path through it.',[
+  N('Delivery coordinator','p5','Lands on the delivery queue.','',[
+   A('Delivery queue','Every booking not yet handed over.','The first screen worth demonstrating after telecalling.'),
+   A('The three lanes','Finance and insurance · vehicle and registration · preparation.','Run in parallel. The promise is the longest path, recomputed whenever any step moves.'),
+   A('Mark a step complete','Advances one lane.','Recomputes the promised date. If it moves, writes a new DeliveryPromise row.'),
+   A('Block a step','Requires a reason and a kind.','Internal or external. External blocks are excluded from promise accuracy, and the exclusion count is itself reported so a branch marking everything external is visible.'),
+   A('Override the date','Requires a reason.','A date typed with nothing behind it must not be possible.')]),
+  N('RTO clerk','p5','Task queue seat. One list, one button.','',[
+   A('Registrations due','Chassis, customer, what is needed.','He does one thing many times. He gets one screen.')]),
+  N('Accessories desk','p5','Task queue seat.','',[
+   A('Fitments due','What to fit, by vehicle.','Blocks the preparation lane if late.')]),
+  N('Pre-delivery inspection','p5','Task queue seat.','',[
+   A('PDI checklist','Per vehicle.','The last gate before handover.')]),
+  N('The customer tracker','p5','One page, no login, a signed link.',
+   'It names a human, never shows an internal step name, and never hides a slip. Telling a customer the truth on the 14th is survivable; his discovering it on the 18th is not.',[
+   A('Where is my car','Plain language status.','Link expires at delivery plus 30 days.'),
+   A('Commercially','This is the referral engine.','Status messages are WhatsApp utility messages, roughly seven times cheaper than marketing messages.')])]),
+
+ // ============ SERVICE ============
+ N('Service','p5','The profit centre. Four seats.','',[
+  N('Service advisor','p5','Lands on his bays.','',[
+   A('Job cards today','Against promised times.','Promise accuracy is his measure, not revenue.'),
+   A('Flag an upgrade','Customer looks ready for a new vehicle.','Goes to sales as a potential lead. He never sees the pipeline, the model, the value, or who is handling it. Information flows out of service, never in.'),
+   A('Renewals in my bays','Only cars physically with him.','Scoped to his own bays, deliberately.')]),
+  N('Service telecaller','p5','Booking and follow-up.','',[
+   A('Service due','By last visit and mileage.','Separate queue from sales telecalling. Same mechanics.')]),
+  N('Workshop manager','p5','Bay capacity and throughput.','',[
+   A('Bay utilisation','Revenue per bay-hour.','The measure that matters here.'),
+   A('Recurring failures','Same defect, same model.','Requires the shared defect taxonomy. Controlled from the first job card or this is unbuildable at any price.')]),
+  N('Service GM or VP','p5','Department head.','',[
+   A('Retention','Customers returning for the second and third service.','The number that predicts the used-car pipeline three years out.')])]),
+
+ // ============ INSURANCE ============
+ N('Insurance and renewals','p5','Insurance, warranty, RSA, AMC. Driven by expiry.','',[
+  N('Insurance executive','p5','Lands on expiring policies.','',[
+   A('Expiring in 30 days','By customer and vehicle.','Sorted by expiry, not by value.'),
+   A('Ranked recommendation','Top three, with reasons. No margin figure anywhere.','OPEN QUESTION for Prem. He has asked for ranking by best margin with the margin hidden. The earlier ruling was to rank on merit. Hiding the number does not solve it: the customer sees the premium, and if the top pick is always the dearest he works it out in three calls. Proposed compromise: rank on a blend of claim settlement ratio, cashless cover at our own workshop, price stability and margin as one input of four.'),
+   A('Lapse recovery','Already expired.','Still worth calling. Higher difficulty band.')]),
+  N('Insurance GM or VP','p5','Department head.','',[
+   A('Renewal conversion','By product and by branch.','No margin. That is dealer admin only.')])]),
+
+ // ============ USED CAR ============
+ N('Used car','p5','Valuation, stock, retail.','',[
+  N('Evaluator','p5','Lands on valuations due.','',[
+   A('Valuation','Condition, history, market.','Service history from the shared vehicle record settles it to within about 3%. That is only possible because one Vehicle is shared across departments.'),
+   A('Stock ageing','Days in stock against the floor-plan rate.','45 days default, dealer-configurable.')]),
+  N('Used car sales','p5','Retail of the stock.','',[
+   A('Available stock','What can be sold today.','Same nine stages, same row.')])]),
+
+ // ============ SMALLER DEPARTMENTS ============
+ N('Accessories','p5','Attachment at the point of sale, and fitment.','',[
+  A('Attach rate by model','What actually sells with what.','Feeds the attached gross figure inside expected value.'),
+  A('Fitment queue','Shared with the delivery preparation lane.','A late fitment moves a delivery promise.')]),
+
+ N('Driving school','p5','A separate small business inside the dealership.','',[
+  A('Enrolments and batches','Same enquiry mechanics.','A driving school enquiry is a future car buyer. Same customer record.')]),
+
+ N('Fleet','p5','Corporate and bulk.','',[
+  A('One deal, many cars','A twelve-vehicle order.','This is why deals closed and cars delivered are two different numbers. A screen treating them as one reports a fleet month as a retail collapse.')]),
+
+ // ============ MANAGEMENT ============
+ N('Management','spec','Branch head and dealer principal.','',[
+  N('Branch head','spec','One rooftop. Branch scope.','',[
+   A('Branch decisions','What needs him today.','Same card mechanics as the principal, scoped to his rooftop.'),
+   A('Branch P and L','His own only.','Salary and employee cost are never visible below the principal.'),
+   A('His floor comparison','Against other branches, on process.','First response, contact rate, promise accuracy. Not cars sold.')]),
+  N('Dealer principal','spec','Every rooftop. Lands on Decisions.','',[
+   N('Decisions','spec','Seven to nine cards a morning, each with a rupee figure.',
+    'A principal with forty cards reads none of them. The cut is by value and by whether he can still change the outcome.',[
+    A('Act','Press the action on the card.','The card closes. A row is written naming him, the action and the amount.'),
+    A('Acknowledge with a date','It returns on that date.','Not before, unless one of four triggers fires: the amount grows past 1.5x, a single branch starts breaching alone, a chain doubles, or it is the third consecutive deferral.'),
+    A('Delegate','Moves to a named person.','Stays visible to him. A footer counts what he actioned that is still unresolved.'),
+    A('Do nothing','Allowed.','There is no dismiss button anywhere. The age of an unexited card is counted and reported, which is how you catch a screen being read and ignored.'),
+    A('A walked-up card','Cannot be acknowledged again.','Act or delegate. That closes indefinite deferral of the same problem.')]),
+   A('What bookings cost','Cost per booking by source and campaign.','The screen that justifies the invoice, and the only thing on the programme a competitor cannot copy.'),
+   A('The delivery pipeline','Booked, no car delivered yet.','Eleven customers who have paid and have no car. Money committed and a promise made, and no principal has ever been shown it as one figure.'),
+   A('Compare branches','On process, never outcome.','The reason is printed on the screen, because somebody asks in the first meeting.'),
+   A('Why we lose','By reason, with the fact each demanded.','41 to one rival, median gap 19,000, consistent. Consistency makes it a scheme problem.'),
+   A('Approvals','Discounts above the branch limit.','Every approval writes a row.'),
+   A('People and access','Who can see what.','Includes the Advito audit log: every entry a support person made in his tenant, with their name.'),
+   A('Incentives','Computed and exported.','Arth never pays anybody and never touches a bank account.')])]),
+
+ // ============ DEALER ADMIN ============
+ N('Dealer admin','spec','The dealer own configuration seat.','',[
+  A('Working hours and shifts','Per branch, per day.','Item one in the build order. Every clock in the product runs through it.'),
+  A('First response targets and SLAs','Per source.','A portal lead and a walk-in are not the same job.'),
+  A('Escalation ladders','Four rungs.','Executive, team leader at 2h, branch head at 6h, principal at 24h with a rupee value attached, because that is what makes a principal act rather than note.'),
+  A('Points weights and difficulty bands','Within bounds.','Bounded, and every change is logged.'),
+  A('Prices and schemes','Model catalogue.','Monthly refresh proposed by an agent, approved by a human.'),
+  A('Figure visibility','Per figure, per role.','Two rows are never configurable: salary is never visible below the principal, and margin is dealer admin only.'),
+  A('Product margin','Currently the only seat that sees it.','OPEN QUESTION for Prem: he has asked for money to sit with the dealer principal, grantable downward. The two roles are often the same person. When they are not, this matters, and it needs a ruling.'),
+  A('Grant a figure to a role','Cost per lead, cost per conversion, margin.','Every grant writes a row and is reversible.'),
+  A('Login methods','Mobile and OTP, or username and password.','Forgot password notifies the manager, who sets a temporary credential. The person must change it on first use: a manager never knows a live password.'),
+  A('WhatsApp notifications','Captured at setup or in a profile.','The person chooses which categories. Utility messages, roughly seven times cheaper than marketing ones.'),
+  A('Price master','Ex-showroom, per variant.','The dealer own figures are the only authoritative version. RTO, insurance and logistics rules are maintained by Advito per state. Refresh is proposed monthly by an agent and approved by a human, never applied silently.')]),
+ // ============ ADVITO ============
+ N('Advito','spec','Three separate surfaces, not one admin panel.',
+  'Unscoped and recorded as such: it needs its own work order. A vendor who can enter a client data silently should not be trusted with it.',[
+  N('Advito Master','spec','Founder. The business behind the product.','',[
+   A('Tenants','Every dealer group, with adoption.','Adoption is the churn predictor, not satisfaction. A dealer whose service team has not signed in for nine days is a cancellation in slow motion.'),
+   A('Plans and billing','Core, Growth, Scale.','Plans are rows, not code. Existing contracts are pinned to the version they signed. Rates above 20% off need a second approval and are logged.'),
+   A('Cost to serve','Per tenant: messages, minutes, transcription, lookups, storage, support hours.','Without it nobody would know that a 20% discount turned one customer into a 3% gross margin.'),
+   A('Provisioning','The seven onboarding steps.','Step 3, working hours, is the one that stalls and looks the dullest. Nothing goes live until it is done for every branch.'),
+   A('Catalogues','Stages, dispositions, lost reasons, chain steps.','Copied per tenant at provisioning, never referenced across tenants. A dealer changing his list must not affect another dealer.'),
+   A('No customer data','Deliberate.','A platform admin has no business reading a dealer enquiries, and gets no shortcut into a tenant.')]),
+  N('Advito Support','spec','The most constrained seat on the platform.','',[
+   A('Tickets','Work is scoped to a ticket.','Access expires with it. Standing access is the thing that leaks.'),
+   A('Entering a tenant','A banner that never disappears.','Names the tenant, the ticket, the expiry, and that the dealer can see everything. A person who cannot forget they are inside a customer account behaves differently.'),
+   A('Configuration','Full access. This is the job.','Working hours, lists, seats, visibility.'),
+   A('Customer name and phone','Masked by default.','Unmasking is possible and writes a row. Making it impossible would push support to ask the dealer to send data over WhatsApp, which is worse.'),
+   A('Enquiry content and notes','Never visible.','Not needed to fix configuration.'),
+   A('Pricing, margin, cost to serve','Never visible.','Commercial. Founder only.'),
+   A('My audit trail','The same table the dealer sees.','Not a copy, not a summary. The same rows on their screen. An audit log with a vendor-only view is not an audit log.'),
+   A('Cannot delete anything','In any tenant, ever.','Append-only by database privilege.')]),
+  N('Advito Onboarding','spec','Sets a dealer up end to end before handover.',
+   'A separate account from Master, deliberately. Master holds pricing, margin and cost to serve and is the founder alone.',[
+   A('The seven provisioning steps','Brands, positions, hours, prices, sources, WhatsApp, existing data.','Step 3, working hours, is the one that stalls and looks the dullest. Nothing goes live until it is done for every branch.'),
+   A('OEM catalogue load','Brand chosen, models and variants follow.','Two-wheeler, four-wheeler or commercial. Vehicle type drives the delivery chain variant: EV adds two steps, commercial adds three, two-wheeler removes one.'),
+   A('Sees configuration, never customer data','Same rule as support.','Every action appears in the dealer own audit log.')]),
+  N('Advito Engineering','spec','Health and errors. No customer data in the clear.','',[
+   A('Platform health','Errors, latency, queue depth.','No dealer data.'),
+   A('Instruments','Nightly reconciliation, orphan sweep, scale thresholds, third-party watch.','Reconciliation reports disagreements and never silently corrects. A silent auto-correction destroys the evidentiary value of a ledger.')])]),
+
+ // ============ CROSS-CUTTING ============
+ N('Shared across every department','spec','Not a workspace. The layer that makes this one system.','',[
+  N('The record layer','built','One Customer, one Vehicle, one Household.','',[
+   A('One customer record','Shared by every department.','This is why a service advisor can see a renewal and an evaluator can price an exchange to within 3%. Every module keeping its own copy is the thing that breaks first.'),
+   A('Ownership','Attaches to activities, never to the customer.','A salesperson does not own a household for life.'),
+   A('Household','p6 · needs Service and Household.','"His wife has serviced a Swift here six times" is Phase 6. Until then a weaker true line from data already held.'),
+   A('Consent','One row per purpose. Never one tick.','Sales enquiry, service reminders, insurance renewal and offers are four separate permissions. A customer who agreed to service reminders has not agreed to a festive broadcast, and the system refuses to send it.')]),
+  N('The accountability layer','built','The ledger, the clocks, the escalations.',
+   'This is the product. Everything else is a workspace that writes to it.',[
+   A('The ledger','Append-only by privilege.','UPDATE and DELETE revoked from the application role. A correction is a new row. A column that must be written after insert cannot exist on such a table.'),
+   A('The clock','Working hours gate all of it.','A lead arriving at 21:40 starts its clock next working morning, and the delay is recorded against the branch rather than the person.'),
+   A('Escalation','Four rungs, all configurable.','Executive to team leader at 2h, branch head at 6h, principal at 24h with a rupee value attached.'),
+   A('The audit log','Access, permission and export events.','A separate ledger from lead activity. Visible to the dealer, including everything Advito does.')]),
+  N('The money layer','p6','Attribution and cost.','',[
+   A('Click identifiers captured','Already live from Phase 4.','Cannot be reconstructed later. This is why it was built before the screens that use it.'),
+   A('Cost per booking','Marketing cost, exact.','Never merged with total cost per booking, which adds salaries and rent and is directional. Allocate rent and the argument about the allocation destroys the first number, which was solid.'),
+   A('Conversions fed back','Delivered cars to Meta and Google.','We do not only measure the spend, we improve it. Cancelling Arth makes the same ad budget worse.')]),
+  N('The Exception Cockpit','p7','Deferred by ruling. DDL issued, awaiting authorisation.','',[
+   A('Nine aggregate card types','Identity is type times scope, never membership.','A card is the same card whether three branches or five are inside it.'),
+   A('ExceptionEvent','Append-only. Closure is a new row.','A closure is never a decision, it is an observation that a condition ended. Enforced by a database check: only SYSTEM may close.')])]),
+
+ // ============ NEVER ============
+ N('Deliberately never built','never','Recorded so each request is answered once rather than re-argued every quarter.','',[
+  A('Dealer management system','Manufacturer-mandated, five-year build.','An incumbent the dealer cannot remove. We show which jobs wait on which part, which the DMS cannot.'),
+  A('Accounting or payroll','Regulated, with statutory filings.','We compute what is payable and export it. Arth never pays anybody and never touches a bank account. An Accounts seat exists, read only, to see the computations and take the export.'),
+  A('Full HR','Beyond employment state and handover.','A leaver triggers a structured handover of their open work, and that is the whole HR surface. Requested as a department; recorded as a separate product conversation with a separate cost, not a department in this tree.'),
+  A('Spare parts inventory','The DMS owns it.','We show the dependency, not the stock.'),
+  A('Body shop and claims','A distinct workflow with distinct counterparties.','A separate product if ever.'),
+  A('Telematics','Hardware, and the manufacturer owns the vehicle data.',''),
+  A('Our own telephony or speech to text','Licensed businesses with their own regulators.','We integrate.'),
+  A('A native mobile app, this cycle','Store review on every release, two codebases.','Responsive web. Revisit when push or camera becomes essential.')])
+]);
+let SEL=null;
+const BADGE={built:['Built','b-built'],spec:['Specified','b-spec'],p5:['Phase 5','b-p5'],
+ p6:['Phase 6','b-p6'],p7:['Later','b-p7'],never:['Never','b-never'],act:['','']};
+function render(node,parent,path){
+ const li=document.createElement('li');
+ const d=document.createElement('div');
+ const kind=node.s==='act'?'act':(path.length<=1?'dep':(node.c.length?'role':'act'));
+ d.className='nd '+kind;
+ const hasKids=node.c.length>0;
+ const b=BADGE[node.s]||['',''];
+ d.innerHTML=`<span class="tw ${hasKids?'':'leaf'}">${hasKids?'+':'·'}</span>
+  <span class="lb"><span class="t">${node.l}</span></span>
+  ${b[0]?`<span class="bg ${b[1]}">${b[0]}</span>`:''}`;
+ li.appendChild(d);
+ let ul=null;
+ if(hasKids){
+  ul=document.createElement('ul'); ul.style.display='none';
+  node.c.forEach(c=>render(c,ul,path.concat(node.l)));
+  li.appendChild(ul);
+ }
+ d.onclick=e=>{
+  e.stopPropagation();
+  if(hasKids){const open=ul.style.display!=='none';
+   ul.style.display=open?'none':'block'; d.querySelector('.tw').textContent=open?'+':'\u2212';}
+  document.querySelectorAll('.nd.sel').forEach(x=>x.classList.remove('sel'));
+  d.classList.add('sel'); SEL=node; side(node,path,ul,d);
+ };
+ d._ul=ul; d._node=node; d._path=path;
+ parent.appendChild(li);
+}
+function side(node,path,ul,el){
+ const b=BADGE[node.s]||['',''];
+ const kids=node.c.length?`<h4>Inside this (${node.c.length})</h4><div class="kids">`+
+  node.c.map((c,i)=>`<a data-i="${i}">${c.l}</a>`).join('')+'</div>':'';
+ document.getElementById('side').innerHTML=`
+  <div class="eye">${b[0]||'Action'}</div><div class="rl"></div>
+  <h2>${node.l}</h2>
+  <div class="path">${path.concat(node.l).join(' &rsaquo; ')}</div>
+  <div class="what">${node.w}</div>
+  ${node.g?`<h4>What happens, and where it goes</h4><div class="${node.s==='act'?'goes':'why'}">${node.g}</div>`:''}
+  ${kids}`;
+ document.querySelectorAll('#side .kids a').forEach(a=>{
+  a.onclick=()=>{ if(ul){ul.style.display='block'; el.querySelector('.tw').textContent='\u2212';}
+   const child=ul.children[+a.dataset.i].querySelector('.nd'); child.click();
+   child.scrollIntoView({behavior:'smooth',block:'center'});};});
+}
+function setAll(open){
+ document.querySelectorAll('.tree ul').forEach(u=>{if(!u.classList.contains('root'))u.style.display=open?'block':'none';});
+ document.querySelectorAll('.tree .tw').forEach(t=>{if(t.textContent!=='\u00b7')t.textContent=open?'\u2212':'+';});
+}
+const root=document.createElement('ul'); root.className='root';
+render(TREE,root,[]); document.getElementById('tree').appendChild(root);
+root.querySelector('.nd').click();
+document.querySelectorAll('.tree>ul>li>ul').forEach(u=>{u.style.display='block';
+ const t=u.parentElement.querySelector('.tw'); if(t)t.textContent='\u2212';});
+</script></body></html>

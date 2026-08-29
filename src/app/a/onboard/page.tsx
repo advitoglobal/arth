@@ -32,7 +32,7 @@ export default async function OnboardPage({
     try {
       id = await asPlatform(async (tx, seat) => {
         if (!canOpen(seat.roleKey, "aonboard")) {
-          throw new Error("Advito admin only");
+          throw new Error("Advito admin or onboarding only");
         }
         return onboardDealer(tx, fields);
       });
@@ -51,7 +51,7 @@ export default async function OnboardPage({
       <div className="space-y-6">
         <RuleHeading>Onboard a dealer</RuleHeading>
         <p className="max-w-[68ch] text-[var(--arth-n60)]">
-          Creates a new dealer wall: branch hours, stages, dispositions, a dealer principal, a digital desk manager, and one telecaller. They cannot see Whitefield, Coastal, or any other dealer.
+        Creates a new dealer wall: branch hours, stages, dispositions, a dealer principal, a digital desk manager, and one telecaller. They cannot see Whitefield, Coastal, or any other dealer. Every action is written to that dealer&apos;s audit trail. This seat never opens a dealer book.
         </p>
         {e ? <p className="text-sm text-[var(--arth-overdue)]">{e}</p> : null}
         <form action={create} className="max-w-xl space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">

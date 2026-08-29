@@ -80,6 +80,9 @@ export async function asSeat<T>(fn: (tx: Tx, seat: Seat) => Promise<T>): Promise
   if (seat.kind === "platform") {
     const view = await viewTenantId();
     if (view) {
+      if (seat.roleKey === "adv_onboard") {
+        throw new Error("Advito onboarding sees configuration, never a dealer book.");
+      }
       return withPlatformDealer(
         { platformUserId: seat.userId, tenantId: view },
         (tx) => fn(tx, seat),

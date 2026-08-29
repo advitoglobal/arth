@@ -22,5 +22,12 @@ assert(canOpen("tele", "search"), "telecaller opens Search this cycle");
 assert(canOpen("tele", "perf"), "telecaller opens Performance");
 assert(canOpen("sales", "perf"), "sales opens Performance");
 assert(!canOpen("adv_admin", "perf"), "Advito admin does not open floor Performance");
+assert(canOpen("svctele", "dayb"), "service telecaller opens Today");
+assert(canOpen("admin", "admin"), "dealer admin opens Dealer setup");
+assert(canOpen("acct", "books"), "accounts opens Accounts");
+assert(!canOpen("acct", "rec"), "accounts cannot open an enquiry record");
+assert(!canOpen("acct", "search"), "accounts cannot search the book");
+assert(canOpen("adv_onboard", "aonboard"), "Advito onboarding can provision");
+assert(!canOpen("adv_onboard", "desk"), "onboarding cannot open a floor desk");
 
 console.log("ACCESS_OK sales is 403 on Today; desk, principal, and Advito seats are split");

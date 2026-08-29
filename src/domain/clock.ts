@@ -155,7 +155,7 @@ export const STAGE_KEYS = [
   "new",
   "assigned",
   "contacted",
-  "qualified",
+  "meeting",
   "test_drive",
   "quotation",
   "negotiation",

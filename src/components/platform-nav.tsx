@@ -13,7 +13,9 @@ export function PlatformNav({
 }) {
   const items = [
     { href: "/a/dealers", label: "Dealers" },
-    ...(seat.roleKey === "adv_admin" ? [{ href: "/a/onboard", label: "Onboard a dealer" }] : []),
+    ...(seat.roleKey === "adv_admin" || seat.roleKey === "adv_onboard"
+      ? [{ href: "/a/onboard", label: "Onboard a dealer" }]
+      : []),
     { href: "/a/profile", label: "My profile" },
   ];
   return (
@@ -29,7 +31,11 @@ export function PlatformNav({
           Advito
         </p>
         <p className="mb-6 mt-1 text-sm">
-          {seat.roleKey === "adv_admin" ? "Admin control" : "Support"}
+          {seat.roleKey === "adv_admin"
+            ? "Admin control"
+            : seat.roleKey === "adv_onboard"
+              ? "Onboarding"
+              : "Support"}
         </p>
         <nav className="flex flex-col gap-1">
           <FloorLinks items={items} invert />

@@ -6,7 +6,7 @@ import {
 } from "@/domain/clock";
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
-import { claimOnReach, scheduleNextAction } from "@/services/assignment";
+import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
 import { enquiryNo, stageLabel } from "@/lib/labels";
 import {
   type WhatsAppKind,
@@ -39,6 +39,10 @@ export type LeadRow = {
   first_responded_at: Date | null;
   lost_reason_key: string | null;
   created_at?: Date | null;
+  department_key?: string | null;
+  intake_kind?: string | null;
+  intake_batch_name?: string | null;
+  pool_open?: boolean | null;
 };
 
 export const LIST_LIMIT = 80;
@@ -70,7 +74,11 @@ export async function hydrateLeads(tx: Tx, ids: string[]) {
       l.first_response_due,
       l.first_responded_at,
       l.lost_reason_key,
-      l.created_at AS created_at
+      l.created_at AS created_at,
+      l.department_key,
+      l.intake_kind,
+      l.intake_batch_name,
+      l.pool_open
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -413,6 +421,13 @@ export async function recordDisposition(
   }
 
   const earned = pointsLine(points, scoringConnect, disp.connected);
+  await recordMovement(tx, {
+    userId: input.userId,
+    amount: points,
+    reasonKey: input.dispositionKey,
+    note: `${disp.label}${scoringConnect ? "" : disp.connected ? " (under 20 seconds, no points)" : ""}`,
+    leadId: input.leadId,
+  });
   return {
     recorded: disp.label,
     eventId: inserted?.id,
@@ -489,7 +504,8 @@ export async function advanceStage(
     SELECT stage_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not on your book.");
-  const from = STAGE_KEYS.indexOf(lead.stage_key as (typeof STAGE_KEYS)[number]);
+  const fromKey = lead.stage_key === "qualified" ? "meeting" : lead.stage_key;
+  const from = STAGE_KEYS.indexOf(fromKey as (typeof STAGE_KEYS)[number]);
   const to = STAGE_KEYS.indexOf(input.to as (typeof STAGE_KEYS)[number]);
   if (from < 0 || to < 0) throw new Error("Unknown stage.");
   if (to !== from + 1) {
@@ -544,6 +560,7 @@ export async function sendWhatsApp(
   },
 ) {
   await assertCanLog(tx, input.leadId, input.userId);
+  await requireConsent(tx, input.leadId, "sales_enquiry");
   const [lead] = await tx<{
     customer_name: string;
     phone: string;
@@ -634,7 +651,9 @@ export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {
     FROM due
     RETURNING id
   `;
-  return { raised: inserted.length };
+  const result = { raised: inserted.length };
+  await applyConcealmentPenalties(tx, userId);
+  return result;
 }
 
 export async function countUnread(tx: Tx, userId: string) {

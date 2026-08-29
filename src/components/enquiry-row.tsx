@@ -3,7 +3,8 @@ import { ActionButton } from "@/components/action-button";
 import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
-import { sourceLabel, enquiryNo } from "@/lib/labels";
+import { sourceLabel, enquiryNo, INTAKE_LABEL } from "@/lib/labels";
+import { StageLadder } from "@/components/stage-ladder";
 import type { LeadRow } from "@/services/telecalling";
 
 function eventDate(row: LeadRow) {
@@ -102,6 +103,9 @@ export function EnquiryRow({
           <p className="truncate font-semibold" title={row.customer_name}>
             {row.customer_name}
           </p>
+          <div className="mt-2 lg:col-span-full">
+            <StageLadder current={row.stage_key} />
+          </div>
           <p className="font-data mt-1 truncate text-[12.5px] text-[var(--arth-n60)] lg:mt-0">
             {indianMobile(row.phone)}
           </p>
@@ -131,7 +135,13 @@ export function EnquiryRow({
         <Field
           label="Stage"
           value={row.stage_label ?? "Not recorded"}
-          sub={row.stage_order ? `${row.stage_order} of 9` : null}
+          sub={
+            row.intake_kind
+              ? `${INTAKE_LABEL[row.intake_kind] ?? row.intake_kind}${row.pool_open ? " · In pool" : ""}`
+              : row.stage_order
+                ? `${row.stage_order} of 9`
+                : null
+          }
         />
         <Field label="Last activity" value={eventDate(row)} />
         <Field label="Next" value={next.text} warn={next.overdue} />

@@ -5,7 +5,7 @@ import {
   nextActionDue,
   type DayHours,
 } from "@/domain/clock";
-import { pointsFor } from "@/domain/points";
+import { assignmentMode, listSalesReceivers, routeEnquiry } from "@/services/floor-register";
 
 async function branchHours(tx: Tx, branchId: string): Promise<{
   hours: DayHours[];
@@ -169,92 +169,28 @@ export async function claimOnReach(
 
 export async function handoffToSales(
   tx: Tx,
-  input: { leadId: string; userId: string; note: string },
+  input: { leadId: string; userId: string; note: string; salesUserId?: string },
 ) {
-  const [lead] = await tx<{
-    owner_user_id: string | null;
-    stage_key: string;
-    branch_id: string;
-    customer_name: string;
-    difficulty_band: string | null;
-  }[]>`
-    SELECT
-      l.owner_user_id::text,
-      l.stage_key,
-      l.branch_id::text,
-      c.full_name AS customer_name,
-      l.difficulty_band
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    WHERE l.id = ${input.leadId}::uuid
+  const [lead] = await tx<{ branch_id: string; source_key: string }[]>`
+    SELECT branch_id::text, source_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not in your tenant.");
-  if (lead.owner_user_id !== input.userId) {
-    throw new Error("Only the telecaller who reached this customer can hand it to sales.");
+  const mode = await assignmentMode(tx, lead.branch_id, lead.source_key);
+  let salesUserId = input.salesUserId;
+  if (mode === "direct" && !salesUserId) {
+    const sales = await listSalesReceivers(tx, lead.branch_id);
+    salesUserId = sales[0]?.id;
+    if (!salesUserId) {
+      throw new Error("This branch has no sales consultant to receive the enquiry.");
+    }
   }
-  const order = ["new", "assigned", "contacted", "qualified"];
-  if (order.indexOf(lead.stage_key) < order.indexOf("qualified") && order.indexOf(lead.stage_key) >= 0) {
-    throw new Error("Qualify the enquiry before handing it to sales.");
-  }
-  if (lead.stage_key === "delivered" || lead.stage_key === "booked") {
-    throw new Error("This enquiry is already past a sales handoff.");
-  }
-
-  const [sales] = await tx<{ id: string; full_name: string }[]>`
-    SELECT u.id::text, u.full_name
-    FROM users u
-    JOIN positions p ON p.id = u.position_id
-    WHERE u.role_key = 'sales'
-      AND u.is_active = true
-      AND p.branch_id = ${lead.branch_id}::uuid
-    ORDER BY u.full_name
-    LIMIT 1
-  `;
-  if (!sales) {
-    throw new Error("This branch has no sales consultant to receive the enquiry.");
-  }
-
-  const points = pointsFor({
-    kind: "handoff",
-    difficulty: lead.difficulty_band,
+  return routeEnquiry(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    note: input.note,
+    salesUserId: mode === "direct" ? salesUserId : undefined,
+    department: "sales",
   });
-
-  await tx`
-    UPDATE leads SET owner_user_id = ${sales.id}::uuid
-    WHERE id = ${input.leadId}::uuid
-  `;
-
-  const [inserted] = await tx<{ id: string }[]>`
-    INSERT INTO lead_events (
-      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
-    ) VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${input.leadId}::uuid,
-      'handoff',
-      'USER',
-      ${input.userId}::uuid,
-      ${input.note.trim() || "Qualified. Handed to sales to convert."},
-      ${tx.json({ sales_user_id: sales.id, points })}
-    )
-    RETURNING id::text
-  `;
-
-  await tx`
-    INSERT INTO notifications (tenant_id, user_id, title, why, href)
-    VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${sales.id}::uuid,
-      ${lead.customer_name + " is ready for you"},
-      'Telecalling qualified this enquiry and handed it to sales. Conversion is now your job.',
-      ${"/w/rec?id=" + input.leadId}
-    )
-  `;
-
-  return {
-    recorded: `Handed to ${sales.full_name}. Conversion is now a sales job.`,
-    eventId: inserted?.id,
-    points,
-  };
 }
 
 /** Kept for proofs of the old round-robin path. The floor no longer auto-assigns. */
@@ -421,12 +357,17 @@ export async function createOwnedEnquiry(
       RETURNING id::text
     `;
 
+    const [role] = await tx<{ role_key: string }[]>`
+      SELECT role_key FROM users WHERE id = ${input.userId}::uuid
+    `;
+    const department = role?.role_key === "svctele" ? "service" : "sales";
+
     const [lead] = await tx<{ id: string }[]>`
       INSERT INTO leads (
         tenant_id, branch_id, customer_id, source_key, source_detail,
         model_interest, variant_interest, stage_key, owner_user_id, assigned_at,
         difficulty_band, difficulty_locked_at, expected_value_paise,
-        first_response_due, next_action_at
+        first_response_due, next_action_at, department_key, intake_kind
       ) VALUES (
         current_setting('app.tenant_id')::uuid,
         ${pos.branch_id}::uuid,
@@ -442,9 +383,17 @@ export async function createOwnedEnquiry(
         now(),
         ${input.expectedValuePaise},
         ${due.toISOString()}::timestamptz,
-        ${due.toISOString()}::timestamptz
+        ${due.toISOString()}::timestamptz,
+        ${department},
+        'tele_push'
       )
       RETURNING id::text
+    `;
+
+    await tx`
+      INSERT INTO customer_consents (tenant_id, customer_id, purpose_key, granted)
+      VALUES (current_setting('app.tenant_id')::uuid, ${customer.id}::uuid, 'sales_enquiry', true)
+      ON CONFLICT DO NOTHING
     `;
 
     await tx`

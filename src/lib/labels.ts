@@ -5,11 +5,25 @@ export const SOURCE_LABEL: Record<string, string> = {
   inbound_call: "Inbound call",
 };
 
+export const INTAKE_LABEL: Record<string, string> = {
+  tele_push: "Pushed from telecalling",
+  manager_upload: "Uploaded by manager",
+};
+
+export const DEPARTMENT_LABEL: Record<string, string> = {
+  sales: "Sales",
+  service: "Service",
+  insurance: "Insurance",
+  used: "Used car",
+  accessories: "Accessories",
+};
+
 export const STAGE_LABEL: Record<string, string> = {
   new: "New",
   assigned: "Assigned",
   contacted: "Contacted",
-  qualified: "Qualified",
+  meeting: "Meeting",
+  qualified: "Meeting",
   test_drive: "Test drive",
   quotation: "Quotation",
   negotiation: "Negotiation",

@@ -39,6 +39,17 @@ export default async function DealerControlPage({
     );
   }
 
+  if (seat.roleKey === "adv_onboard") {
+    return (
+      <div className="space-y-6">
+        <RuleHeading>{dealer.name}</RuleHeading>
+        <p className="max-w-[68ch] text-[var(--arth-n60)]">
+          Configuration only. Status {dealer.status}. You cannot see names, phones, or enquiry rows. Entering a dealer book is refused.
+        </p>
+      </div>
+    );
+  }
+
   async function enterDealer() {
     "use server";
     const s = await currentSeat();
