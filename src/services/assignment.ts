@@ -114,7 +114,7 @@ export async function claimOnReach(
   const [pos] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${userId}::uuid
   `;
-  if (pos?.role_key !== "tele") {
+  if (pos?.role_key !== "tele" && pos?.role_key !== "svctele") {
     throw new Error("Only a telecaller can claim a new enquiry.");
   }
 

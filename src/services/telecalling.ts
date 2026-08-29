@@ -6,6 +6,7 @@ import {
 } from "@/domain/clock";
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
+import { claimOnReach, scheduleNextAction } from "@/services/assignment";
 import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
 import { enquiryNo, stageLabel } from "@/lib/labels";
 import {

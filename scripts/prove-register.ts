@@ -26,11 +26,11 @@ async function asUser<T>(tenantId: string, userId: string, fn: (tx: Tx) => Promi
 }
 
 async function main() {
-  const stages = await sql<{ key: string; label: string }[]>`
-    SELECT key, label FROM config_stages
-    WHERE tenant_id = ${WHITEFIELD}::uuid
-    ORDER BY sort_order
-  `;
+  const stages = await asUser(WHITEFIELD, IYER, (tx) =>
+    tx<{ key: string; label: string }[]>`
+      SELECT key, label FROM config_stages ORDER BY sort_order
+    `,
+  );
   if (!stages.some((s) => s.key === "meeting" && s.label === "Meeting")) {
     throw new Error("Stage ladder must use Meeting, not Qualified");
   }
