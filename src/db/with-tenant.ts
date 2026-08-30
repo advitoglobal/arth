@@ -6,10 +6,15 @@ if (!url) {
   throw new Error("DATABASE_URL is not set");
 }
 
+const hosted = /neon\.tech|sslmode=require/i.test(url) || Boolean(process.env.VERCEL);
+const pooled = url.includes("-pooler") || url.includes("pgbouncer");
+
 export const sql = postgres(url, {
-  max: 48,
+  max: process.env.VERCEL ? 1 : 48,
   idle_timeout: 20,
   connect_timeout: 10,
+  ssl: hosted ? "require" : undefined,
+  prepare: !pooled,
 });
 
 export type Tx = postgres.TransactionSql<Record<string, unknown>>;

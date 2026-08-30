@@ -8,7 +8,12 @@ type Jar = {
   ) => void;
 };
 
-const base = { httpOnly: true, sameSite: "lax" as const, path: "/" };
+const base = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  path: "/",
+  secure: Boolean(process.env.VERCEL),
+};
 
 export function applySeatCookies(jar: Jar, seat: Seat) {
   jar.set("arth_seat", seat.username, base);
