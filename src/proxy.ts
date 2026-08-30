@@ -29,7 +29,7 @@ function sendLogin(req: NextRequest) {
   return NextResponse.redirect(login);
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const seatCookie = req.cookies.get("arth_seat")?.value;
   const signedIn = hasDemoSession(seatCookie);

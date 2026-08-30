@@ -970,7 +970,7 @@ Live as Rao on `/w/dayb`: `S. Rao · sales consultant` still in the chrome while
 
 ### 6.3 Seat that lacks permission
 
-`src/middleware.ts`: unsigned `/w/*` (except login/denied) redirects to `/w/login`. Known screen + role not in `canOpen` → rewrite to `/w/denied` with HTTP 403. `/w/denied` renders `Forbidden` with `landing={`/w/${seat.workspaceKey}`}`.
+`src/proxy.ts`: unsigned `/w/*` (except login/denied) redirects to `/w/login`. Known screen + role not in `canOpen` → rewrite to `/w/denied` with HTTP 403. `/w/denied` renders `Forbidden` with `landing={`/w/${seat.workspaceKey}`}`.
 
 Live Rao opening `/w/dayb` body text:
 

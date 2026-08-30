@@ -69,7 +69,7 @@ SCOPE-BRIEF §3 lists seven screens. File enquiry is the eighth surface, require
 
 **Nav:** boxed tiles. Log out top right. Mobile two-column grid. **VERIFIED** (`src/components/floor-nav.tsx`).
 
-**Unsigned `/w/*`:** redirected to `/w/login` except the login page itself. **VERIFIED** (`src/middleware.ts` pattern via seats check in floor layout).
+**Unsigned `/w/*`:** redirected to `/w/login` except the login page itself. **VERIFIED** (`src/proxy.ts` pattern via seats check in floor layout).
 
 **Marketing (not the floor):** `/` homepage, `/trust` how records are kept, `/enter` into login.
 
