@@ -3,10 +3,10 @@
  * Application code must not invent a wider path.
  */
 export const VISIBILITY_ROLES = {
-  dealer: ["owner", "adv", "admin", "ops"],
-  branch: ["mgr"],
+  personal: ["tele", "sales", "svctele", "instele", "svc", "ins", "tdcoord"],
+  dealer: ["owner", "adv", "admin", "ops", "gm"],
+  branch: ["mgr", "salesmgr", "svcmgr"],
   team: ["lead"],
-  personal: ["tele", "sales", "svctele"],
 } as const;
 
 export function isDealerRole(roleKey: string) {

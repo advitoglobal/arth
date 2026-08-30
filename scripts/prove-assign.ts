@@ -5,6 +5,7 @@
 import postgres from "postgres";
 import { armUnownedClocks } from "../src/services/assignment";
 import { listQueue, recordDisposition } from "../src/services/telecalling";
+import { markDial } from "../src/services/conversion";
 import type { Tx } from "../src/db/with-tenant";
 
 const app = postgres(
@@ -80,6 +81,7 @@ async function main() {
       throw new Error("Anita must be on Nair Today while unowned");
     }
 
+    await markDial(tx as unknown as Tx, ANITA, IYER);
     const reached = await recordDisposition(tx as unknown as Tx, {
       leadId: ANITA,
       userId: IYER,

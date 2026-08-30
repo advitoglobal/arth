@@ -4,7 +4,7 @@ import { sendWhatsApp } from "@/services/telecalling";
 import { requireScreen } from "@/lib/http";
 import type { WhatsAppKind } from "@/lib/whatsapp";
 
-const KINDS: WhatsAppKind[] = ["brochure", "quotation", "both"];
+const KINDS: WhatsAppKind[] = ["brochure", "quotation", "both", "service_reminder", "insurance_quote", "offer"];
 
 export async function POST(req: Request) {
   const body = await req.json();

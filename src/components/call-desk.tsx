@@ -7,11 +7,13 @@ import { HandoffButton } from "@/components/handoff-button";
 import { StagePanel } from "@/components/stage-panel";
 import { WhatsAppSend } from "@/components/whatsapp-send";
 import { QuoteButton } from "@/components/register-forms";
+import { ConsentPanel } from "@/components/consent-panel";
 
 export function CallDesk({
   leadId,
   phone,
   stageKey,
+  department,
   nextLeadId,
   nextName,
   autoContinue,
@@ -21,10 +23,12 @@ export function CallDesk({
   mode = "direct",
   priceLine,
   emiLine,
+  consents,
 }: {
   leadId: string;
   phone: string;
   stageKey: string;
+  department?: string | null;
   nextLeadId?: string;
   nextName?: string;
   autoContinue?: boolean;
@@ -40,19 +44,22 @@ export function CallDesk({
   mode?: string;
   priceLine?: string;
   emiLine?: string;
+  consents?: { purpose_key: string; granted: boolean }[];
 }) {
   const [seconds, setSeconds] = useState(0);
   const [note, setNote] = useState("");
   const onSeconds = useCallback((n: number) => setSeconds(n), []);
+  const sales = (department ?? "sales") === "sales";
 
   return (
     <div className="space-y-4">
-      <CallTimer phone={phone} onSeconds={onSeconds} />
-      {priceLine ? (
+      <CallTimer phone={phone} leadId={leadId} onSeconds={onSeconds} />
+      {priceLine && sales ? (
         <p className="text-sm text-[var(--arth-n60)]">{priceLine} This is not a live telephone line and not a DMS feed.</p>
       ) : null}
-      {emiLine ? <p className="text-sm">{emiLine} Rates are a maintained table, never inferred by a model.</p> : null}
-      <WhatsAppSend leadId={leadId} conversation={note} />
+      {emiLine && sales ? <p className="text-sm">{emiLine} Rates are a maintained table, never inferred by a model.</p> : null}
+      <ConsentPanel leadId={leadId} initial={consents ?? []} />
+      <WhatsAppSend leadId={leadId} conversation={note} department={department} />
       <DispositionPanel
         leadId={leadId}
         nextLeadId={nextLeadId}
@@ -68,12 +75,19 @@ export function CallDesk({
           Stage, not a call
         </p>
         <p className="mt-2 mb-3 text-sm text-[var(--arth-n60)]">
-          Recording an outcome and moving a stage are two different acts. This panel is only the stage.           Qualify here before you hand on. Meeting is the floor word for this step.
+          Recording an outcome and moving a stage are two different acts.
+          {sales ? " Qualify here before you hand on. Meeting is the floor word for this step." : " Use this department ladder only."}
         </p>
-        <StagePanel leadId={leadId} stageKey={stageKey} />
+        <StagePanel leadId={leadId} stageKey={stageKey} department={department} />
       </div>
-      <HandoffButton leadId={leadId} stageKey={stageKey} salesPeople={salesPeople} mode={mode} />
-      <QuoteButton leadId={leadId} />
+      <HandoffButton
+        leadId={leadId}
+        stageKey={stageKey}
+        department={department}
+        salesPeople={salesPeople}
+        mode={mode}
+      />
+      {sales ? <QuoteButton leadId={leadId} /> : null}
     </div>
   );
 }

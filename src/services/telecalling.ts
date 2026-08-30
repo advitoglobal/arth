@@ -8,7 +8,9 @@ import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
 import { claimOnReach, scheduleNextAction } from "@/services/assignment";
 import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
-import { enquiryNo, stageLabel } from "@/lib/labels";
+import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
+import { stageLabel, enquiryNo } from "@/lib/labels";
+import { hadRecentDial } from "@/services/conversion";
 import {
   type WhatsAppKind,
   waMeUrl,
@@ -83,6 +85,8 @@ export async function hydrateLeads(tx: Tx, ids: string[]) {
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
+      AND (s.department_key = COALESCE(l.department_key, 'sales')
+        OR (s.department_key = 'sales' AND l.stage_key IN ('new','assigned','contacted','delivered')))
     LEFT JOIN LATERAL (
       SELECT
         CASE
@@ -140,9 +144,8 @@ export async function listPipeline(
   const personal = isPersonalRole(viewer.role_key);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? LIST_LIMIT));
   const stage = opts?.stage?.trim() ?? "";
-  const stageFilter = STAGE_KEYS.includes(stage as (typeof STAGE_KEYS)[number])
-    ? stage
-    : "";
+  const known = new Set<string>([...SALES_STAGES, ...SERVICE_STAGES, ...INSURANCE_STAGES, ...STAGE_KEYS]);
+  const stageFilter = known.has(stage) ? stage : "";
 
   const grouped = await tx<{ stage_key: string; n: string }[]>`
     SELECT stage_key, n::text FROM arth_pipeline_counts(${personal})
@@ -343,17 +346,24 @@ export async function recordDisposition(
     SELECT next_action_at, stage_key, difficulty_band FROM leads WHERE id = ${input.leadId}::uuid
   `;
 
-  const scoringConnect = isScoringConnect(disp.connected, callSeconds);
+  const dialled = await hadRecentDial(tx, input.leadId, input.userId);
+  const scoringConnect = isScoringConnect(disp.connected, callSeconds) && dialled;
+  if (isScoringConnect(disp.connected, callSeconds) && !dialled) {
+    // Timer without Dial is activity theatre. Outcome still writes. Points do not.
+  }
   if (scoringConnect) {
     await claimOnReach(tx, input.leadId, input.userId);
   }
 
-  const points = pointsFor({
-    kind: input.dispositionKey,
-    connected: disp.connected,
-    callSeconds,
-    difficulty: before?.difficulty_band ?? null,
-  });
+  const points = scoringConnect || !disp.connected
+    ? pointsFor({
+        kind: input.dispositionKey,
+        connected: disp.connected,
+        callSeconds,
+        difficulty: before?.difficulty_band ?? null,
+      })
+    : 0;
+  const earnedPoints = disp.connected && !dialled ? 0 : points;
 
   const previous = {
     previous_next_action_at: before?.next_action_at
@@ -362,9 +372,10 @@ export async function recordDisposition(
     previous_stage_key: before?.stage_key ?? null,
     callback_reason: input.callbackReason ?? null,
     lost_fact: input.lostFact ?? null,
-    points,
+    points: earnedPoints,
     scoring_connected: scoringConnect,
     connect_floor_seconds: 20,
+    dialled,
   };
 
   const [inserted] = await tx<{ id: string }[]>`
@@ -392,7 +403,9 @@ export async function recordDisposition(
       UPDATE leads
       SET lost_reason_key = ${input.lostReasonKey ?? null},
           last_disposition_key = ${input.dispositionKey},
-          next_action_at = NULL
+          next_action_at = NULL,
+          escalate_level = 'none',
+          escalate_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
   } else if (revisitAt) {
@@ -404,7 +417,9 @@ export async function recordDisposition(
     await tx`
       UPDATE leads SET
         next_action_at = ${revisit.toISOString()}::timestamptz,
-        last_disposition_key = ${input.dispositionKey}
+        last_disposition_key = ${input.dispositionKey},
+        escalate_level = 'none',
+        escalate_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
   } else {
@@ -416,15 +431,17 @@ export async function recordDisposition(
     await tx`
       UPDATE leads SET
         next_action_at = ${next.toISOString()}::timestamptz,
-        last_disposition_key = ${input.dispositionKey}
+        last_disposition_key = ${input.dispositionKey},
+        escalate_level = 'none',
+        escalate_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
   }
 
-  const earned = pointsLine(points, scoringConnect, disp.connected);
+  const earned = pointsLine(earnedPoints, scoringConnect, disp.connected);
   await recordMovement(tx, {
     userId: input.userId,
-    amount: points,
+    amount: earnedPoints,
     reasonKey: input.dispositionKey,
     note: `${disp.label}${scoringConnect ? "" : disp.connected ? " (under 20 seconds, no points)" : ""}`,
     leadId: input.leadId,
@@ -432,7 +449,7 @@ export async function recordDisposition(
   return {
     recorded: disp.label,
     eventId: inserted?.id,
-    points,
+    points: earnedPoints,
     confirm: `${disp.label}. ${earned} Next action is on the queue.`,
   };
 }
@@ -501,13 +518,14 @@ export async function advanceStage(
   input: { leadId: string; userId: string; to: string },
 ) {
   await assertCanLog(tx, input.leadId, input.userId);
-  const [lead] = await tx<{ stage_key: string }[]>`
-    SELECT stage_key FROM leads WHERE id = ${input.leadId}::uuid
+  const [lead] = await tx<{ stage_key: string; department_key: string }[]>`
+    SELECT stage_key, department_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not on your book.");
+  const ladder = stagesFor(lead.department_key);
   const fromKey = lead.stage_key === "qualified" ? "meeting" : lead.stage_key;
-  const from = STAGE_KEYS.indexOf(fromKey as (typeof STAGE_KEYS)[number]);
-  const to = STAGE_KEYS.indexOf(input.to as (typeof STAGE_KEYS)[number]);
+  const from = ladder.indexOf(fromKey);
+  const to = ladder.indexOf(input.to);
   if (from < 0 || to < 0) throw new Error("Unknown stage.");
   if (to !== from + 1) {
     throw new Error("Stage moves one step forward. It is not edited.");
@@ -561,7 +579,15 @@ export async function sendWhatsApp(
   },
 ) {
   await assertCanLog(tx, input.leadId, input.userId);
-  await requireConsent(tx, input.leadId, "sales_enquiry");
+  const purpose =
+    input.kind === "service_reminder"
+      ? "service_reminders"
+      : input.kind === "insurance_quote"
+        ? "insurance_renewal"
+        : input.kind === "offer"
+          ? "offers"
+          : "sales_enquiry";
+  await requireConsent(tx, input.leadId, purpose);
   const [lead] = await tx<{
     customer_name: string;
     phone: string;

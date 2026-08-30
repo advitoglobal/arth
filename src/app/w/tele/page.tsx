@@ -1,7 +1,9 @@
 import { asSeat, canOpen } from "@/db/session";
 import { getLead, listQueue } from "@/services/telecalling";
 import { StageLadder } from "@/components/stage-ladder";
-import { assignmentMode, listSalesReceivers, listPrices, listRates, emiPaise } from "@/services/floor-register";
+import { assignmentMode, listReceivers, listPrices, listRates, emiPaise } from "@/services/floor-register";
+import { listConsents } from "@/services/conversion";
+import { departmentOfRole } from "@/domain/ladders";
 import { CallDesk } from "@/components/call-desk";
 import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, indianMobile } from "@/lib/format";
@@ -22,9 +24,6 @@ export default async function TelePage({
     const queue = await listQueue(tx, seat.userId);
     const leadId = id ?? queue[0]?.id;
     const autoContinue = auto === "1";
-    const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean; connected: boolean }[]>`
-      SELECT key, label, requires_revisit, requires_lost_reason, connected FROM config_dispositions ORDER BY sort_order
-    `;
     const lostReasons = await tx<{ key: string; label: string; requires_fact: string }[]>`
       SELECT key, label, requires_fact FROM config_lost_reasons
     `;
@@ -46,12 +45,20 @@ export default async function TelePage({
       );
     }
 
+    const dept = String(lead.department_key ?? "sales");
+    const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean; connected: boolean }[]>`
+      SELECT key, label, requires_revisit, requires_lost_reason, connected
+      FROM config_dispositions
+      WHERE department_key = ${dept}
+      ORDER BY sort_order
+    `;
+    const consents = await listConsents(tx, leadId);
     const ownerId = String(lead.owner_user_id ?? "");
     const canWork = !ownerId || ownerId === seat.userId;
     const remaining = queue.filter((r) => r.id !== leadId);
     const nextUp = remaining[0];
     const handedToSales = Boolean(ownerId) && ownerId !== seat.userId && String(lead.owner_name ?? "").length > 0;
-    const salesPeople = await listSalesReceivers(tx, String(lead.branch_id));
+    const salesPeople = await listReceivers(tx, String(lead.branch_id), dept);
     const mode = await assignmentMode(tx, String(lead.branch_id), String(lead.source_key));
     const prices = await listPrices(tx);
     const rates = await listRates(tx);
@@ -83,7 +90,7 @@ export default async function TelePage({
               {`Enquiry ${enquiryNo(String(lead.id))}`}
             </p>
             <div className="mt-4">
-              <StageLadder current={String(lead.stage_key)} />
+              <StageLadder current={String(lead.stage_key)} department={dept} />
             </div>
             {lead.intake_kind ? (
               <p className="mt-2 text-sm text-[var(--arth-n60)]">
@@ -135,6 +142,7 @@ export default async function TelePage({
               leadId={leadId}
               phone={String(lead.phone)}
               stageKey={String(lead.stage_key)}
+              department={dept}
               nextLeadId={nextUp?.id}
               nextName={nextUp?.customer_name}
               autoContinue={autoContinue}
@@ -142,6 +150,7 @@ export default async function TelePage({
               lostReasons={lostReasons}
               salesPeople={salesPeople}
               mode={mode}
+              consents={consents}
               priceLine={
                 price
                   ? `On-road about ₹${Math.round(onRoad / 100).toLocaleString("en-IN")}. Ex-showroom confirmed ${price.confirmed_at}. Approximate days if booked today: 21 to 35, an estimate until sales allocation.`

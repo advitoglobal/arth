@@ -5,7 +5,7 @@ import {
   nextActionDue,
   type DayHours,
 } from "@/domain/clock";
-import { assignmentMode, listSalesReceivers, routeEnquiry } from "@/services/floor-register";
+import { assignmentMode, listReceivers, routeEnquiry } from "@/services/floor-register";
 
 async function branchHours(tx: Tx, branchId: string): Promise<{
   hours: DayHours[];
@@ -114,7 +114,7 @@ export async function claimOnReach(
   const [pos] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${userId}::uuid
   `;
-  if (pos?.role_key !== "tele" && pos?.role_key !== "svctele") {
+  if (pos?.role_key !== "tele" && pos?.role_key !== "svctele" && pos?.role_key !== "instele") {
     throw new Error("Only a telecaller can claim a new enquiry.");
   }
 
@@ -171,17 +171,18 @@ export async function handoffToSales(
   tx: Tx,
   input: { leadId: string; userId: string; note: string; salesUserId?: string },
 ) {
-  const [lead] = await tx<{ branch_id: string; source_key: string }[]>`
-    SELECT branch_id::text, source_key FROM leads WHERE id = ${input.leadId}::uuid
+  const [lead] = await tx<{ branch_id: string; source_key: string; department_key: string }[]>`
+    SELECT branch_id::text, source_key, department_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not in your tenant.");
+  const dept = lead.department_key || "sales";
   const mode = await assignmentMode(tx, lead.branch_id, lead.source_key);
   let salesUserId = input.salesUserId;
   if (mode === "direct" && !salesUserId) {
-    const sales = await listSalesReceivers(tx, lead.branch_id);
+    const sales = await listReceivers(tx, lead.branch_id, dept);
     salesUserId = sales[0]?.id;
     if (!salesUserId) {
-      throw new Error("This branch has no sales consultant to receive the enquiry.");
+      throw new Error("This branch has no executive in that department to receive the enquiry.");
     }
   }
   return routeEnquiry(tx, {
@@ -189,7 +190,7 @@ export async function handoffToSales(
     userId: input.userId,
     note: input.note,
     salesUserId: mode === "direct" ? salesUserId : undefined,
-    department: "sales",
+    department: dept,
   });
 }
 
@@ -360,7 +361,18 @@ export async function createOwnedEnquiry(
     const [role] = await tx<{ role_key: string }[]>`
       SELECT role_key FROM users WHERE id = ${input.userId}::uuid
     `;
-    const department = role?.role_key === "svctele" ? "service" : "sales";
+    const department =
+      role?.role_key === "svctele"
+        ? "service"
+        : role?.role_key === "instele"
+          ? "insurance"
+          : "sales";
+    const consentPurpose =
+      department === "service"
+        ? "service_reminders"
+        : department === "insurance"
+          ? "insurance_renewal"
+          : "sales_enquiry";
 
     const [lead] = await tx<{ id: string }[]>`
       INSERT INTO leads (
@@ -392,7 +404,7 @@ export async function createOwnedEnquiry(
 
     await tx`
       INSERT INTO customer_consents (tenant_id, customer_id, purpose_key, granted)
-      VALUES (current_setting('app.tenant_id')::uuid, ${customer.id}::uuid, 'sales_enquiry', true)
+      VALUES (current_setting('app.tenant_id')::uuid, ${customer.id}::uuid, ${consentPurpose}, true)
       ON CONFLICT DO NOTHING
     `;
 

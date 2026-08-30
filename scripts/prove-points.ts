@@ -3,6 +3,7 @@
  */
 import postgres from "postgres";
 import { recordDisposition } from "../src/services/telecalling";
+import { markDial } from "../src/services/conversion";
 import type { Tx } from "../src/db/with-tenant";
 
 const app = postgres(
@@ -31,6 +32,7 @@ async function main() {
       throw new Error(`10 second connect must score 0, got ${short.points}`);
     }
 
+    await markDial(tx as unknown as Tx, RAMESH, IYER);
     const long = await recordDisposition(tx as unknown as Tx, {
       leadId: RAMESH,
       userId: IYER,

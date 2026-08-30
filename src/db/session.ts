@@ -5,7 +5,7 @@ import {
   withPlatformDealer,
   type Tx,
 } from "@/db/with-tenant";
-import { canOpen, canSeeValue, canPlaceEnquiry } from "@/lib/access";
+import { canOpen, canSeeValue, canPlaceEnquiry, canSeeMargin } from "@/lib/access";
 import {
   DEMO_USERS,
   hasDemoSession,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/seats";
 import { sql } from "@/db/with-tenant";
 
-export { canOpen, canSeeValue, canPlaceEnquiry, DEMO_USERS, landingPath };
+export { canOpen, canSeeValue, canPlaceEnquiry, canSeeMargin, DEMO_USERS, landingPath };
 export type { Seat, SeatKey };
 
 async function seatFromUsername(username: string): Promise<Seat | null> {

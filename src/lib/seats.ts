@@ -16,9 +16,16 @@ export type Seat = {
 export const ROLE_LABEL: Record<string, string> = {
   tele: "telecaller",
   svctele: "service telecaller",
+  instele: "insurance telecaller",
   sales: "sales consultant",
+  salesmgr: "sales manager",
+  svc: "service advisor",
+  svcmgr: "service manager",
+  ins: "insurance executive",
+  tdcoord: "test drive coordinator",
   lead: "team leader",
   mgr: "digital desk manager",
+  gm: "general manager",
   owner: "dealer principal",
   admin: "dealer admin",
   acct: "accounts",
@@ -43,6 +50,10 @@ export function landingPath(seat: Pick<Seat, "kind" | "workspaceKey" | "roleKey"
   if (seat.workspaceKey === "tele") return "/w/tele";
   if (seat.workspaceKey === "admin") return "/w/admin";
   if (seat.workspaceKey === "books") return "/w/books";
+  if (seat.workspaceKey === "gm") return "/w/gm";
+  if (seat.workspaceKey === "svc") return "/w/svc";
+  if (seat.workspaceKey === "ins") return "/w/ins";
+  if (seat.workspaceKey === "drive") return "/w/drive";
   return "/w/pipe";
 }
 
@@ -239,6 +250,90 @@ const DEMO_HASH_SEATS = {
     tenantName: "Advito",
     username: "onboard",
   },
+  kumar: {
+    seatKey: "kumar",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd51",
+    name: "V. Kumar",
+    roleKey: "gm",
+    roleLabel: "general manager",
+    workspaceKey: "gm",
+    tenantName: "Whitefield Motors",
+    username: "kumar",
+  },
+  lal: {
+    seatKey: "lal",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd52",
+    name: "R. Lal",
+    roleKey: "salesmgr",
+    roleLabel: "sales manager",
+    workspaceKey: "pipe",
+    tenantName: "Whitefield Motors",
+    username: "lal",
+  },
+  irfan: {
+    seatKey: "irfan",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd53",
+    name: "H. Irfan",
+    roleKey: "svc",
+    roleLabel: "service advisor",
+    workspaceKey: "svc",
+    tenantName: "Whitefield Motors",
+    username: "irfan",
+  },
+  mehta: {
+    seatKey: "mehta",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd54",
+    name: "A. Mehta",
+    roleKey: "svcmgr",
+    roleLabel: "service manager",
+    workspaceKey: "svc",
+    tenantName: "Whitefield Motors",
+    username: "mehta",
+  },
+  iqbal: {
+    seatKey: "iqbal",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd55",
+    name: "F. Iqbal",
+    roleKey: "instele",
+    roleLabel: "insurance telecaller",
+    workspaceKey: "dayb",
+    tenantName: "Whitefield Motors",
+    username: "iqbal",
+  },
+  nanda: {
+    seatKey: "nanda",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd56",
+    name: "P. Nanda",
+    roleKey: "ins",
+    roleLabel: "insurance executive",
+    workspaceKey: "ins",
+    tenantName: "Whitefield Motors",
+    username: "nanda",
+  },
+  ravi: {
+    seatKey: "ravi",
+    kind: "dealer" as const,
+    tenantId: "11111111-1111-1111-1111-111111111111",
+    userId: "dddddddd-dddd-dddd-dddd-dddddddddd57",
+    name: "S. Ravi",
+    roleKey: "tdcoord",
+    roleLabel: "test drive coordinator",
+    workspaceKey: "drive",
+    tenantName: "Whitefield Motors",
+    username: "ravi",
+  },
 } satisfies Record<string, Seat>;
 
 export const DEMO_USERS = DEMO_HASH_SEATS;
@@ -270,6 +365,12 @@ export function screenFromPath(pathname: string): string | null {
     "/w/perf": "perf",
     "/w/admin": "admin",
     "/w/books": "books",
+    "/w/gm": "gm",
+    "/w/svc": "svc",
+    "/w/ins": "ins",
+    "/w/stock": "stock",
+    "/w/drive": "drive",
+    "/w/bot": "bot",
   };
   return map[pathname] ?? null;
 }

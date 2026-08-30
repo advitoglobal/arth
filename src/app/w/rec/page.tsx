@@ -12,6 +12,10 @@ import { ClaimButton } from "@/components/claim-button";
 import { FigureSource } from "@/components/figure-source";
 import { QuoteButton, ReassignForm } from "@/components/register-forms";
 import { listBranchPeople } from "@/services/floor-register";
+import { listStock, listDiscounts, listConsents } from "@/services/conversion";
+import { SalesConversion } from "@/components/sales-conversion";
+import { ConsentPanel } from "@/components/consent-panel";
+import { canApproveDiscount } from "@/lib/access";
 
 export default async function RecPage({
   searchParams,
@@ -43,10 +47,14 @@ export default async function RecPage({
       !lead.first_responded_at &&
       new Date(String(lead.first_response_due)).getTime() < Date.now();
     const settled = lead.stage_key === "delivered";
-    const canReassign = ["lead", "mgr", "owner", "admin", "ops"].includes(seat.roleKey);
+    const canReassign = ["lead", "mgr", "owner", "admin", "ops", "gm", "salesmgr", "svcmgr"].includes(seat.roleKey);
     const people = canReassign
       ? await listBranchPeople(tx, String(lead.branch_id))
       : [];
+    const dept = String(lead.department_key ?? "sales");
+    const stock = dept === "sales" ? await listStock(tx) : [];
+    const discounts = canApproveDiscount(seat.roleKey) ? await listDiscounts(tx) : [];
+    const consents = await listConsents(tx, id);
 
     return (
       <div className="space-y-6">
@@ -66,7 +74,7 @@ export default async function RecPage({
             {`Enquiry ${enquiryNo(String(lead.id))}`}
           </p>
           <div className="mt-4">
-            <StageLadder current={String(lead.stage_key)} />
+            <StageLadder current={String(lead.stage_key)} department={String(lead.department_key ?? "sales")} />
           </div>
           <p className="mt-3 text-sm text-[var(--arth-n60)]">
             {String(lead.intake_kind) === "manager_upload"
@@ -130,21 +138,40 @@ export default async function RecPage({
               </ActionButton>
             </div>
           ) : null}
-          {seat.roleKey === "sales" && lead.pool_open ? (
+          {["sales", "svc", "ins"].includes(seat.roleKey) && lead.pool_open ? (
             <div className="mt-6">
               <ClaimButton leadId={String(lead.id)} />
             </div>
           ) : null}
           {String(lead.owner_user_id ?? "") === seat.userId ||
-          ["sales", "lead", "mgr", "owner", "admin"].includes(seat.roleKey) ? (
+          ["sales", "svc", "ins", "lead", "mgr", "owner", "admin", "gm", "salesmgr", "svcmgr"].includes(seat.roleKey) ? (
             <div className="mt-6 space-y-4">
-              <StagePanel leadId={String(lead.id)} stageKey={String(lead.stage_key)} />
-              <QuoteButton leadId={String(lead.id)} />
+              <StagePanel
+                leadId={String(lead.id)}
+                stageKey={String(lead.stage_key)}
+                department={String(lead.department_key ?? "sales")}
+              />
+              {String(lead.department_key) === "sales" ? <QuoteButton leadId={String(lead.id)} /> : null}
             </div>
           ) : null}
           {canReassign ? (
             <div className="mt-6">
               <ReassignForm leadId={String(lead.id)} people={people} />
+            </div>
+          ) : null}
+          <div className="mt-6">
+            <ConsentPanel leadId={String(lead.id)} initial={consents} />
+          </div>
+          {dept === "sales" &&
+          ["sales", "salesmgr", "lead", "owner", "gm", "admin", "tdcoord"].includes(seat.roleKey) ? (
+            <div className="mt-6">
+              <SalesConversion
+                leadId={String(lead.id)}
+                stock={stock}
+                discounts={discounts.filter((d) => d.lead_id === String(lead.id))}
+                canRelease={["salesmgr", "owner", "gm", "admin"].includes(seat.roleKey)}
+                canApprove={canApproveDiscount(seat.roleKey)}
+              />
             </div>
           ) : null}
         </div>

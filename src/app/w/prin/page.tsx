@@ -8,6 +8,8 @@ import { FigureSource } from "@/components/figure-source";
 import { Forbidden } from "@/components/forbidden";
 import { ActionButton } from "@/components/action-button";
 import { roleLabel } from "@/lib/seats";
+import { costPerBooking, departmentCounts, listEscalations } from "@/services/conversion";
+import { inr } from "@/lib/format";
 
 export default async function PrincipalPage() {
   return asSeat(async (tx, seat) => {
@@ -15,6 +17,9 @@ export default async function PrincipalPage() {
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);
     const perf = await loadPerformance(tx);
+    const costs = await costPerBooking(tx);
+    const depts = await departmentCounts(tx);
+    const escalations = await listEscalations(tx);
 
     return (
       <div className="space-y-8">
@@ -22,9 +27,9 @@ export default async function PrincipalPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
             Dealer principal · {seat.tenantName}
           </p>
-          <RuleHeading className="mt-3">Telecalling at this dealer</RuleHeading>
+          <RuleHeading className="mt-3">Every department at this dealer</RuleHeading>
           <p className="mt-3 max-w-[68ch] text-[var(--arth-n60)]">
-            This dealer only. The digital desk runs the floor. You see the book, who is late, and who sits in telecalling. Other dealers never appear. Other departments are not on this screen yet.
+            Enquiries are the business: sales, service, insurance, and the rest. Service is often the larger revenue. This dealer only. Cost per booking is spend this month divided by bookings from that source.
           </p>
         </div>
         <FigureSource source="this dealer book" period="open enquiries, now" />
@@ -43,6 +48,56 @@ export default async function PrincipalPage() {
             </div>
           ))}
         </dl>
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">By department</h2>
+          {depts.length === 0 ? (
+            <p>No open enquiries.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--arth-n10)] border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+              {depts.map((d) => (
+                <li key={d.department_key} className="flex justify-between px-4 py-3">
+                  <span className="capitalize">{d.department_key}</span>
+                  <span className="font-data text-sm">{d.n} open · {d.late} late</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">Cost per booking this month</h2>
+          {costs.length === 0 ? (
+            <p>No source spend is on the table for this month.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--arth-n10)] border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+              {costs.map((c) => (
+                <li key={c.source_key} className="flex flex-wrap justify-between gap-2 px-4 py-3">
+                  <span className="capitalize">{c.source_key.replaceAll("_", " ")}</span>
+                  <span className="font-data text-sm">
+                    Spend {inr(Number(c.spend_paise) / 100)} · {c.bookings} bookings · cost {inr(Number(c.cost_paise) / 100)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">Escalations</h2>
+          <p className="text-sm text-[var(--arth-n60)]">
+            Clocks move names up. Reassign is your decision. The product does not steal an enquiry.
+          </p>
+          {escalations.length === 0 ? (
+            <p>Nothing is escalated.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--arth-n10)] border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+              {escalations.map((e) => (
+                <li key={e.id} className="flex flex-wrap justify-between gap-2 px-4 py-3">
+                  <a className="hover:underline" href={`/w/rec?id=${e.id}`}>{e.customer_name}</a>
+                  <span className="text-sm text-[var(--arth-n60)]">{e.department_key} · {e.escalate_level}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
         <section className="space-y-3">
           <h2 className="font-display text-[20px] font-semibold">People</h2>
           {snap.people.length === 0 ? (

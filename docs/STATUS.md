@@ -1,48 +1,43 @@
 # Status
 
-**Date:** 29 Aug 2026
-**What you get this cycle:** the telecalling front door plus receiving sales, dealer admin, accounts export, and Advito onboarding. Four visibility walls stay in force. Not a live telephone exchange, not a recording file, not the Exception Cockpit, not full HR or payroll.
+**Date:** 30 Aug 2026
+**What you get this cycle:** conversion ops across sales, service, and insurance. Enquiries are the business. Role walls stay in force. Points stay live and require Dial for connected scores. Escalation notifies; it does not steal. Arthbot reports this dealer only. Not a live telephone exchange.
 
-**Governing pack:** 00-START-HERE, VISIBILITY-WALLS, ARTH-ARCHITECTURE, Brand System v2.9, `docs/books/REQUIREMENTS-REGISTER-29-AUG.md`, `docs/books/ARTH-PRODUCT-TREE.html`.
+**Governing pack:** 00-START-HERE, VISIBILITY-WALLS, ARTH-ARCHITECTURE, Brand System v2.9, `docs/books/REQUIREMENTS-REGISTER-29-AUG.md`.
 
 ## What is built (this cycle)
 
-- Step 0 isolation: Postgres 16, forced RLS, `withTenant`. Four walls. `npm run prove` must print `PROVE_OK` including `WALLS_OK`, `ISOLATION_OK`, and `REGISTER_OK`.
-- Nine stages: New · Assigned · Contacted · **Meeting** · Test drive · Quotation · Negotiation · Booked · Delivered. The ladder is on the list and the record.
-- Add enquiry: four-field capture first, then qualify on the same screen. The enquiry exists and has an owner from the first save.
-- Telecalling is the front door. Sales telecaller and service telecaller are different seats. Intake is labelled **Pushed from telecalling** or **Uploaded by manager**.
-- Assignment: Direct (telecaller names the executive) or Pool (first to claim owns it). Reassign always needs a reason on the ledger.
-- WhatsApp brochure / quotation is consent-gated. A withdrawn customer refuses the button.
-- Price master and bank rates are dated dealer tables. EMI is calculated from those rates. A model does not invent a rate. A quotation freezes the versions it used.
-- Score wallet shows each movement, never a jumping total. Penalties are concealment only: lapsed first response, missed commitment, no outcome. Lost, short call, and conversion are not penalised.
-- Daily welcome on Today, once a day, dismissible, not a popup. It does not invent a good day.
-- Dealer admin (`padma`): assignment mode, service upload, price master, audit log.
-- Accounts (`books`): incentive export only. Zero enquiry and customer rows.
-- Advito onboarding (`onboard`): provisions a dealer. Cannot enter a dealer book.
-- Forgot password tells the manager. They never hold a live password.
-- Working hours, shared new book, auto caller, points on disposition with a 20-second floor, Performance charts, 20 lakh Capacity dealer: unchanged and still in force.
+- Every department's enquiries on one product. Two intakes: digital desk / platforms, and manager Excel upload. Principal and GM see all departments. Service is often the larger revenue.
+- Role-based access: tele, service tele, insurance tele, sales, sales manager, service advisor, service manager, insurance executive, test drive coordinator, GM, principal, admin, accounts.
+- Service ladder: appointment through ready. No test drive on a service seat. Coordinator owns demo-car cleanliness.
+- Insurance: full catalogue. Top three suggested by dealer benefit that still holds up for the customer. Margin hidden from the floor, visible to principal, admin, GM.
+- Add enquiry on Today. Duplicate check while the number is typed.
+- Escalation clocks: unclaimed or overdue work moves TL → managers → GM → principal. Reassign is a superior's act.
+- After meeting (sales): test drive slot, stock book, discount request, delivery. Only a sales manager releases a booked car.
+- Cost per booking this month by source.
+- Login: username and password, or mobile OTP (demonstration code on screen; no SMS vendor).
+- Purpose-based WhatsApp consent: sales enquiry, service reminders, insurance renewal, offers.
+- Inbound DID mapped per department. Ringing queue until a telephony vendor is connected.
+- Arthbot for principal, GM, dealer admin. Allowlisted reports, CSV and PDF. Anthropic only picks the report kind. Fail closed. Telecalling cannot open it.
+- Connected points require Dial in the last 15 minutes. Timer theatre does not score.
 
 ## How to run
 
 ```bash
 cp .env.example .env.local
 npm install
-npx tsx scripts/migrate.ts 0027
-npx tsx scripts/migrate.ts 0028
-npx tsx scripts/migrate.ts 0029
-npx tsx scripts/migrate.ts 0030
+npx tsx scripts/migrate.ts 0031
+npx tsx scripts/migrate.ts 0033
 npm run prove
 npm run dev
 ```
 
-Open http://127.0.0.1:43127 then Open the product. Sign in on `/w/login`. Demonstration password: `arth-demo`.
+Open http://127.0.0.1:43127 then Open the product. Sign in on `/w/login`. Demonstration password: `arth-demo`. Iyer mobile for OTP: `9845011111`.
 
 ## Named, not built this cycle
 
-**Live autodialer, recording, downstream listen (R9).** No provider. The product is honest: this is not a live telephone exchange.
+**Live PSTN, recording, AI score from transcripts.** Vendor at launch. Inbound routing is modelled.
 
-**AI lead score (R23).** Needs transcription after telephony. A number with no reasons will never ship.
+**Native mobile app.** Next phase.
 
-**Full delivery chain, workshop bays, insurance ranking, used-car evaluator, Exception Cockpit, native app, DMS, payroll.** Out of this cycle.
-
-**Full HR.** Employment and handover stay later. Accounts does not pay from Arth.
+**Exception Cockpit, full HR / payroll, used-car evaluator, workshop bays.** Later.

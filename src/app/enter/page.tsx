@@ -13,7 +13,7 @@ export default function EnterPage() {
       <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-8 py-16">
         <RuleHeading>The telecalling floor</RuleHeading>
         <p className="mt-4 max-w-[68ch] text-[var(--arth-n60)]">
-          What you are testing: telecalling qualifies, then hands to sales. New names are shared until a telecaller reaches the customer. Username and password on the next screen.
+          Username and password, or the seat mobile number with a one-time code. Two tenants. Switch to prove one dealer cannot see the other.
         </p>
         <div className="mt-10 max-w-md border border-[var(--arth-n10)] p-6">
           <span className="arth-rule" />

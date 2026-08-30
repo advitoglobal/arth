@@ -28,6 +28,17 @@ assert(canOpen("acct", "books"), "accounts opens Accounts");
 assert(!canOpen("acct", "rec"), "accounts cannot open an enquiry record");
 assert(!canOpen("acct", "search"), "accounts cannot search the book");
 assert(canOpen("adv_onboard", "aonboard"), "Advito onboarding can provision");
-assert(!canOpen("adv_onboard", "desk"), "onboarding cannot open a floor desk");
+assert(canOpen("instele", "dayb"), "insurance telecaller opens Today");
+assert(canOpen("gm", "gm"), "GM opens all departments");
+assert(canOpen("owner", "gm"), "principal opens all departments");
+assert(canOpen("svc", "svc"), "service advisor opens Service");
+assert(!canOpen("svc", "dayb"), "service advisor is 403 on Today");
+assert(!canOpen("svc", "drive"), "service advisor is 403 on test drives");
+assert(canOpen("ins", "ins"), "insurance executive opens Insurance");
+assert(canOpen("owner", "bot"), "principal opens Arthbot");
+assert(!canOpen("tele", "bot"), "telecaller is 403 on Arthbot");
+assert(canOpen("salesmgr", "stock"), "sales manager opens stock");
+assert(canOpen("tdcoord", "drive"), "coordinator opens test drives");
+assert(!canOpen("svctele", "ins"), "service telecaller is 403 on Insurance");
 
 console.log("ACCESS_OK sales is 403 on Today; desk, principal, and Advito seats are split");

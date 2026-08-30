@@ -4,22 +4,40 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
+function ready(stageKey: string, department?: string | null) {
+  if (department === "service") {
+    return ["appointment", "arrived", "in_work", "waiting_parts", "ready"].includes(stageKey);
+  }
+  if (department === "insurance") {
+    return ["quoted", "recommended", "issued"].includes(stageKey);
+  }
+  return ["meeting", "qualified", "test_drive", "quotation", "negotiation"].includes(stageKey);
+}
+
 export function HandoffButton({
   leadId,
   stageKey,
+  department,
   salesPeople,
   mode,
 }: {
   leadId: string;
   stageKey: string;
+  department?: string | null;
   salesPeople: { id: string; full_name: string }[];
   mode: string;
 }) {
   const router = useRouter();
-  const ready = ["meeting", "qualified", "test_drive", "quotation", "negotiation"].includes(stageKey);
+  const can = ready(stageKey, department);
   const [salesUserId, setSalesUserId] = useState(salesPeople[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
+  const label =
+    department === "service"
+      ? "service advisor"
+      : department === "insurance"
+        ? "insurance executive"
+        : "sales consultant";
 
   async function send() {
     setError(null);
@@ -28,7 +46,7 @@ export function HandoffButton({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         leadId,
-        note: "Meeting done. Handed on for conversion.",
+        note: "Ready. Handed on for conversion.",
         salesUserId: mode === "direct" ? salesUserId : undefined,
       }),
     });
@@ -48,12 +66,12 @@ export function HandoffButton({
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
         A telecaller job ends at assignment. {mode === "pool"
-          ? "This branch is on pool. First sales consultant to claim owns it."
-          : "Direct mode. Name the receiving executive."}
+          ? `This branch is on pool. First ${label} to claim owns it.`
+          : `Direct mode. Name the receiving ${label}.`}
       </p>
       {mode === "direct" && salesPeople.length > 0 ? (
         <label className="mt-3 block text-sm">
-          Sales consultant
+          {label}
           <select
             className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
             value={salesUserId}
@@ -69,12 +87,12 @@ export function HandoffButton({
       ) : null}
       {confirm ? <p className="mt-3 font-medium">{confirm}</p> : null}
       {error ? <p className="mt-3 text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-      <Button className="mt-3" type="button" disabled={!ready || Boolean(confirm)} onClick={send}>
-        {mode === "pool" ? "Send to pool" : "Hand to sales"}
+      <Button className="mt-3" type="button" disabled={!can || Boolean(confirm)} onClick={send}>
+        {mode === "pool" ? "Send to pool" : `Hand to ${label}`}
       </Button>
-      {!ready ? (
+      {!can ? (
         <p className="mt-2 text-sm text-[var(--arth-n60)]">
-          Stage is not Meeting yet. Use the stage panel.
+          Stage is not ready to hand on. Use the stage panel.
         </p>
       ) : null}
     </div>

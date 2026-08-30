@@ -16,7 +16,7 @@ export default function HomePage() {
             Other systems tell you your telecaller made forty calls. Arth tells you which of those calls came from a source costing ₹9,200 a booking.
           </RuleHeading>
           <p className="mt-6 max-w-[68ch] text-base leading-relaxed text-[var(--arth-n60)]">
-            This preview is the telecalling floor for Indian dealer groups. Not the full 80-screen product. You can hold a person to an enquiry: owner, clock, disposition, ledger. Walk it, then send what should change.
+            This preview is the conversion floor for Indian dealer groups: sales, service, and insurance on one book. You can hold a person to an enquiry: owner, clock, disposition, ledger. Walk it, then send what should change.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button

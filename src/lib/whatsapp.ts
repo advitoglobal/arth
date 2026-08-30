@@ -1,4 +1,4 @@
-export type WhatsAppKind = "brochure" | "quotation" | "both";
+export type WhatsAppKind = "brochure" | "quotation" | "both" | "service_reminder" | "insurance_quote" | "offer";
 
 export function waDigits(phone: string) {
   const d = phone.replace(/\D/g, "");
@@ -34,6 +34,15 @@ export function whatsappMessage(input: {
   if (input.kind === "quotation") {
     return `Namaste ${name}. Sharing a quotation for ${vehicle}.${talked} Reply here with any change you want on the numbers. ${sign}`;
   }
+  if (input.kind === "service_reminder") {
+    return `Namaste ${name}. Reminder from ${input.dealer} service: your ${vehicle} is due. Reply here to book a slot. ${sign}`;
+  }
+  if (input.kind === "insurance_quote") {
+    return `Namaste ${name}. Sharing insurance options for ${vehicle}.${talked} All products stay on the list. Reply here with what you want explained. ${sign}`;
+  }
+  if (input.kind === "offer") {
+    return `Namaste ${name}. A current offer from ${input.dealer} on ${vehicle}.${talked} Reply STOP if you do not want offers. ${sign}`;
+  }
   return `Namaste ${name}. Sharing the brochure and a quotation for ${vehicle}.${talked} Open the files on this chat and tell me if you want a test drive. ${sign}`;
 }
 
@@ -44,5 +53,8 @@ export function waMeUrl(phone: string, text: string) {
 export function whatsappKindLabel(kind: WhatsAppKind) {
   if (kind === "brochure") return "Brochure";
   if (kind === "quotation") return "Quotation";
+  if (kind === "service_reminder") return "Service reminder";
+  if (kind === "insurance_quote") return "Insurance quote";
+  if (kind === "offer") return "Offer";
   return "Brochure and quotation";
 }

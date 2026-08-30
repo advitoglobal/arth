@@ -6,6 +6,7 @@ import { PerformancePanel } from "@/components/performance-panel";
 import { EnquiryList } from "@/components/enquiry-row";
 import { RuleHeading } from "@/components/brand/type";
 import { STAGE_KEYS } from "@/domain/clock";
+import { INSURANCE_STAGES, SERVICE_STAGES, stagesFor, departmentOfRole } from "@/domain/ladders";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { FigureSource } from "@/components/figure-source";
@@ -19,9 +20,12 @@ export default async function PipePage({
   const { stage } = await searchParams;
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "pipe")) return <Forbidden />;
-    const active = STAGE_KEYS.includes(stage as (typeof STAGE_KEYS)[number])
-      ? stage
-      : undefined;
+    const dept = departmentOfRole(seat.roleKey);
+    const ladder =
+      dept === "all"
+        ? Array.from(new Set([...STAGE_KEYS, ...SERVICE_STAGES, ...INSURANCE_STAGES.filter((s) => s !== "lost")]))
+        : [...stagesFor(dept)].filter((s) => s !== "lost");
+    const active = ladder.includes(stage ?? "") ? stage : undefined;
     const page = await listPipeline(tx, seat.userId, { stage: active });
     const canCall = canOpen(seat.roleKey, "tele");
     const showPerf = ["sales", "lead"].includes(seat.roleKey);
@@ -56,7 +60,7 @@ export default async function PipePage({
           >
             All · {page.total}
           </Link>
-          {STAGE_KEYS.map((key) => {
+          {ladder.map((key) => {
             const n = page.counts[key] ?? 0;
             return (
               <Link

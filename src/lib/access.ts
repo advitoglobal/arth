@@ -1,30 +1,61 @@
 export function canOpen(roleKey: string, screen: string): boolean {
   const access: Record<string, string[]> = {
-    dayb: ["tele", "svctele"],
-    tele: ["tele", "mgr", "svctele", "ops"],
-    pipe: ["tele", "svctele", "lead", "mgr", "sales", "owner", "ops", "admin"],
-    rec: ["tele", "svctele", "lead", "mgr", "sales", "owner", "ops", "admin"],
-    search: ["tele", "svctele", "sales", "adv", "lead", "mgr", "owner", "ops", "admin"],
-    new: ["tele", "svctele"],
-    notif: ["tele", "svctele", "sales", "svc", "lead", "mgr", "owner", "admin"],
-    profile: ["tele", "svctele", "sales", "lead", "mgr", "owner", "admin", "acct", "adv_admin", "adv_support", "adv_onboard"],
-    perf: ["tele", "svctele", "sales", "lead", "mgr", "owner", "ops", "admin"],
+    dayb: ["tele", "svctele", "instele"],
+    tele: ["tele", "mgr", "svctele", "instele", "ops"],
+    pipe: [
+      "tele", "svctele", "instele", "lead", "mgr", "sales", "salesmgr", "svc", "svcmgr",
+      "ins", "owner", "gm", "ops", "admin", "tdcoord",
+    ],
+    rec: [
+      "tele", "svctele", "instele", "lead", "mgr", "sales", "salesmgr", "svc", "svcmgr",
+      "ins", "owner", "gm", "ops", "admin", "tdcoord",
+    ],
+    search: [
+      "tele", "svctele", "instele", "sales", "salesmgr", "svc", "svcmgr", "ins", "adv",
+      "lead", "mgr", "owner", "gm", "ops", "admin", "tdcoord",
+    ],
+    new: ["tele", "svctele", "instele"],
+    notif: [
+      "tele", "svctele", "instele", "sales", "svc", "ins", "lead", "mgr", "owner", "gm",
+      "admin", "salesmgr", "svcmgr", "tdcoord",
+    ],
+    profile: [
+      "tele", "svctele", "instele", "sales", "svc", "ins", "lead", "mgr", "owner", "gm",
+      "admin", "acct", "salesmgr", "svcmgr", "tdcoord", "adv_admin", "adv_support", "adv_onboard",
+    ],
+    perf: [
+      "tele", "svctele", "instele", "sales", "svc", "ins", "lead", "mgr", "owner", "gm",
+      "ops", "admin", "salesmgr", "svcmgr", "tdcoord",
+    ],
     desk: ["mgr", "ops"],
     prin: ["owner"],
+    gm: ["gm", "owner"],
     admin: ["admin", "owner"],
-    books: ["acct", "owner", "admin"],
-    upload: ["mgr", "owner", "admin"],
+    books: ["acct", "owner", "admin", "gm"],
+    upload: ["mgr", "owner", "admin", "svcmgr", "salesmgr"],
+    svc: ["svc", "svcmgr", "svctele", "owner", "gm"],
+    ins: ["ins", "instele", "owner", "gm"],
+    stock: ["sales", "salesmgr", "tdcoord", "owner", "gm", "admin"],
+    drive: ["tdcoord", "sales", "salesmgr", "owner", "gm"],
+    bot: ["owner", "gm", "admin"],
     adealers: ["adv_admin", "adv_support", "adv_onboard"],
     aonboard: ["adv_admin", "adv_onboard"],
   };
   return (access[screen] ?? []).includes(roleKey);
 }
 
-/** Expected value is for digital desk and the dealer principal, not the floor. */
 export function canSeeValue(roleKey: string) {
-  return roleKey === "mgr" || roleKey === "owner" || roleKey === "adv" || roleKey === "ops";
+  return ["mgr", "owner", "adv", "ops", "gm", "salesmgr"].includes(roleKey);
+}
+
+export function canSeeMargin(roleKey: string) {
+  return ["owner", "admin", "gm"].includes(roleKey);
 }
 
 export function canPlaceEnquiry(roleKey: string) {
-  return roleKey === "mgr" || roleKey === "owner" || roleKey === "ops";
+  return ["mgr", "owner", "ops", "svcmgr", "salesmgr"].includes(roleKey);
+}
+
+export function canApproveDiscount(roleKey: string) {
+  return ["salesmgr", "lead", "owner", "gm"].includes(roleKey);
 }

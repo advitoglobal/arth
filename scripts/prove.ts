@@ -16,6 +16,7 @@ const checks: [string, string][] = [
   ["db:platform", "PLATFORM_OK"],
   ["db:perf", "PERF_OK"],
   ["db:register", "REGISTER_OK"],
+  ["db:conversion", "CONVERSION_OK"],
 ];
 
 let failed = 0;

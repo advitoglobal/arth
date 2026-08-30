@@ -1,6 +1,6 @@
 import type { Tx } from "@/db/with-tenant";
 import { pointsFor } from "@/domain/points";
-import { STAGE_KEYS } from "@/domain/clock";
+import { stagesFor } from "@/domain/ladders";
 
 export function emiPaise(principalPaise: number, rateBps: number, tenureMonths: number) {
   const r = rateBps / 10000 / 12;
@@ -109,14 +109,20 @@ export async function saveEnquiryDepth(
   return { recorded: "Qualification saved. The enquiry was already on the book." };
 }
 
-export async function listSalesReceivers(tx: Tx, branchId: string) {
+export async function listReceivers(tx: Tx, branchId: string, department: string) {
+  const role =
+    department === "service" ? "svc" : department === "insurance" ? "ins" : "sales";
   return tx<{ id: string; full_name: string }[]>`
     SELECT u.id::text, u.full_name
     FROM users u
     JOIN positions p ON p.id = u.position_id
-    WHERE u.role_key = 'sales' AND u.is_active AND p.branch_id = ${branchId}::uuid
+    WHERE u.role_key = ${role} AND u.is_active AND p.branch_id = ${branchId}::uuid
     ORDER BY u.full_name
   `;
+}
+
+export async function listSalesReceivers(tx: Tx, branchId: string) {
+  return listReceivers(tx, branchId, "sales");
 }
 
 export async function routeEnquiry(
@@ -136,6 +142,7 @@ export async function routeEnquiry(
     customer_name: string;
     difficulty_band: string | null;
     source_key: string;
+    department_key: string;
   }[]>`
     SELECT
       l.owner_user_id::text,
@@ -143,7 +150,8 @@ export async function routeEnquiry(
       l.branch_id::text,
       c.full_name AS customer_name,
       l.difficulty_band,
-      l.source_key
+      l.source_key,
+      l.department_key
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     WHERE l.id = ${input.leadId}::uuid
@@ -152,12 +160,20 @@ export async function routeEnquiry(
   if (lead.owner_user_id !== input.userId) {
     throw new Error("Only the telecaller who reached this customer can route it.");
   }
-  const meetingAt = STAGE_KEYS.indexOf("meeting");
-  const at = STAGE_KEYS.indexOf(lead.stage_key as (typeof STAGE_KEYS)[number]);
-  if (at >= 0 && at < meetingAt) {
-    throw new Error("Move the stage to Meeting before handing it on.");
+  const dept = input.department || lead.department_key || "sales";
+  const ladder = stagesFor(dept);
+  const readyKey = dept === "service" ? "appointment" : dept === "insurance" ? "quoted" : "meeting";
+  const meetingAt = ladder.indexOf(readyKey);
+  const at = ladder.indexOf(lead.stage_key === "qualified" ? "meeting" : lead.stage_key);
+  if (meetingAt >= 0 && (at < 0 || at < meetingAt)) {
+    throw new Error(
+      dept === "service"
+        ? "Move the stage to Appointment before handing it on."
+        : dept === "insurance"
+          ? "Move the stage to Quoted before handing it on."
+          : "Move the stage to Meeting before handing it on.",
+    );
   }
-  const dept = input.department || "sales";
   const mode = await assignmentMode(tx, lead.branch_id, lead.source_key);
   const points = pointsFor({ kind: "handoff", difficulty: lead.difficulty_band });
 
@@ -189,20 +205,20 @@ export async function routeEnquiry(
       note: "Handed to the branch pool",
       leadId: input.leadId,
     });
-    const team = await listSalesReceivers(tx, lead.branch_id);
+    const team = await listReceivers(tx, lead.branch_id, dept);
     for (const person of team) {
       await tx`
         INSERT INTO notifications (tenant_id, user_id, title, why, href)
         VALUES (
           current_setting('app.tenant_id')::uuid,
           ${person.id}::uuid,
-          ${lead.customer_name + " is in the sales pool"},
-          'First to claim owns it. Unclaimed names escalate after the first-response window.',
+          ${lead.customer_name + " is in the " + dept + " pool"},
+          'First to claim owns it. Unclaimed names escalate. Reassign is a superior decision.',
           ${"/w/rec?id=" + input.leadId}
         )
       `;
     }
-    return { recorded: "In the branch pool. First sales consultant to claim owns it.", points, mode: "pool" };
+    return { recorded: `In the ${dept} pool. First consultant to claim owns it.`, points, mode: "pool" };
   }
 
   await tx`
@@ -237,19 +253,25 @@ export async function routeEnquiry(
       current_setting('app.tenant_id')::uuid,
       ${input.salesUserId}::uuid,
       ${lead.customer_name + " is ready for you"},
-      'Telecalling finished the meeting and handed this enquiry to you. Conversion is now your job.',
+      'Telecalling finished their job and handed this enquiry to you.',
       ${"/w/rec?id=" + input.leadId}
     )
   `;
-  return { recorded: "Handed to the named sales consultant. Conversion is now a sales job.", points, mode: "direct" };
+  return { recorded: "Handed to the named executive. Conversion is now their job.", points, mode: "direct" };
 }
 
 export async function claimPool(tx: Tx, leadId: string, userId: string) {
   const [role] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${userId}::uuid
   `;
-  if (role?.role_key !== "sales") {
-    throw new Error("Only a sales consultant can claim a pooled sales enquiry.");
+  const dept =
+    role?.role_key === "svc"
+      ? "service"
+      : role?.role_key === "ins"
+        ? "insurance"
+        : "sales";
+  if (!role || !["sales", "svc", "ins"].includes(role.role_key)) {
+    throw new Error("Only the receiving executive in that department can claim a pooled enquiry.");
   }
   const [row] = await tx<{ id: string }[]>`
     UPDATE leads SET
@@ -259,7 +281,7 @@ export async function claimPool(tx: Tx, leadId: string, userId: string) {
     WHERE id = ${leadId}::uuid
       AND pool_open
       AND owner_user_id IS NULL
-      AND department_key = 'sales'
+      AND department_key = ${dept}
     RETURNING id::text
   `;
   if (!row) throw new Error("This name is already claimed, or it is not in the pool.");

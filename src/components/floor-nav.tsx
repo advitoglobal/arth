@@ -6,12 +6,19 @@ import { LeaveFloor } from "@/components/leave-floor";
 
 const items = [
   { href: "/w/dayb", screen: "dayb", label: "Today" },
+  { href: "/w/new", screen: "new", label: "Add enquiry" },
   { href: "/w/desk", screen: "desk", label: "The floor" },
+  { href: "/w/gm", screen: "gm", label: "All departments" },
   { href: "/w/prin", screen: "prin", label: "This dealer" },
   { href: "/w/perf", screen: "perf", label: "Performance" },
   { href: "/w/tele", screen: "tele", label: "Log a call" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
+  { href: "/w/svc", screen: "svc", label: "Service" },
+  { href: "/w/ins", screen: "ins", label: "Insurance" },
+  { href: "/w/stock", screen: "stock", label: "Stock" },
+  { href: "/w/drive", screen: "drive", label: "Test drives" },
   { href: "/w/search", screen: "search", label: "Search" },
+  { href: "/w/bot", screen: "bot", label: "Arthbot" },
   { href: "/w/notif", screen: "notif", label: "Notifications" },
   { href: "/w/admin", screen: "admin", label: "Dealer setup" },
   { href: "/w/books", screen: "books", label: "Accounts" },
@@ -56,6 +63,20 @@ export function FloorNav({
                       ? "Accounts"
                       : seat.roleKey === "svctele"
                         ? "Service telecalling"
+                  : seat.roleKey === "gm"
+                    ? "General manager"
+                    : seat.roleKey === "salesmgr"
+                      ? "Sales manager"
+                      : seat.roleKey === "svc"
+                        ? "Service"
+                        : seat.roleKey === "svcmgr"
+                          ? "Service manager"
+                          : seat.roleKey === "instele"
+                            ? "Insurance telecalling"
+                            : seat.roleKey === "ins"
+                              ? "Insurance"
+                              : seat.roleKey === "tdcoord"
+                                ? "Test drives"
                   : "Management"}
         </p>
         <p className="mb-6 mt-1 text-sm">{seat.tenantName}</p>

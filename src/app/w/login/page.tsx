@@ -6,6 +6,7 @@ import { applySeatCookies } from "@/lib/session-cookies";
 import { RuleHeading } from "@/components/brand/type";
 import { Button } from "@/components/ui/button";
 import { ForgotPassword } from "@/components/register-forms";
+import { PhoneLogin } from "@/components/phone-login";
 
 async function enter(formData: FormData) {
   "use server";
@@ -30,7 +31,7 @@ export default async function LoginPage({
     <div className="mx-auto max-w-xl space-y-8 py-8">
       <RuleHeading>Sign in to Arth</RuleHeading>
       <p className="text-[var(--arth-n60)]">
-        Telecalling qualifies the enquiry and hands it to sales. The digital desk runs that team. The dealer principal sees this dealer only. Advito admin onboards dealers. Advito support enters one dealer at a time to fix a problem.
+        Telecalling qualifies the enquiry and hands it to the executive in the same department. Digital desk and manager uploads feed the book. The dealer principal and GM see every department because enquiries are the business, and service is often the larger revenue.
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--arth-n60)]">
         <li>iyer · Whitefield telecaller. Password is the demonstration password.</li>
@@ -47,7 +48,13 @@ export default async function LoginPage({
         <li>advito · Advito admin. Onboard dealers. Enter one dealer at a time.</li>
         <li>support · Advito support. Enter one dealer at a time. Cannot onboard.</li>
         <li>captele · Capacity Motors. A twenty lakh enquiry book for load checks. Not the Whitefield walk-through.</li>
-        <li>Every dealer seat has Performance: what is holding, what is late, and what to do next from the live book.</li>
+        <li>kumar · Whitefield GM. All departments, cost per booking, escalations.</li>
+        <li>lal · Whitefield sales manager. Releases booked stock. Approves discount.</li>
+        <li>irfan · Whitefield service advisor. Service ladder only. No test drive.</li>
+        <li>mehta · Whitefield service manager.</li>
+        <li>iqbal · Whitefield insurance telecaller. Full catalogue, top three suggested.</li>
+        <li>nanda · Whitefield insurance executive.</li>
+        <li>ravi · Whitefield test drive coordinator.</li>
       </ul>
       <p className="text-sm text-[var(--arth-n60)]">
         Demonstration password for every seat: <span className="font-data">arth-demo</span>. Production uses a server session and SSO.
@@ -77,6 +84,7 @@ export default async function LoginPage({
           Sign in
         </Button>
       </form>
+      <PhoneLogin />
       <ForgotPassword />
     </div>
   );

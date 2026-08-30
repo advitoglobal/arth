@@ -1,11 +1,18 @@
-import { STAGE_KEYS } from "@/domain/clock";
+import { stagesFor } from "@/domain/ladders";
 import { STAGE_LABEL } from "@/lib/labels";
 
-export function StageLadder({ current }: { current: string }) {
+export function StageLadder({
+  current,
+  department,
+}: {
+  current: string;
+  department?: string | null;
+}) {
   const key = current === "qualified" ? "meeting" : current;
+  const ladder = stagesFor(department);
   return (
     <ol className="flex flex-wrap gap-1" aria-label="Stage ladder">
-      {STAGE_KEYS.map((stage) => {
+      {ladder.filter((stage) => stage !== "lost").map((stage) => {
         const on = stage === key;
         return (
           <li

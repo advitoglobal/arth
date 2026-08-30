@@ -41,7 +41,11 @@ export default async function FloorLayout({
   try {
     unread = canOpen(seat.roleKey, "notif")
       ? await asSeat(async (tx, s) => {
-          if (s.roleKey === "tele" || s.roleKey === "svctele") await raiseFirstResponseBreaches(tx, s.userId);
+          if (s.roleKey === "tele" || s.roleKey === "svctele" || s.roleKey === "instele") {
+            await raiseFirstResponseBreaches(tx, s.userId);
+          }
+          const { runEscalations } = await import("@/services/conversion");
+          await runEscalations(tx);
           return countUnread(tx, s.userId);
         })
       : 0;

@@ -23,7 +23,13 @@ export default async function NewEnquiryPage({
         <p className="text-sm text-[var(--arth-n60)]">
           Capture four fields first so the enquiry exists. Qualify on the same screen as you go. You become the owner from the first save.
         </p>
-        <AddEnquiryForm presetPhone={phone} rateLine={rateLine} />
+        <AddEnquiryForm
+          presetPhone={phone}
+          rateLine={rateLine}
+          department={
+            seat.roleKey === "svctele" ? "service" : seat.roleKey === "instele" ? "insurance" : "sales"
+          }
+        />
       </div>
     );
   });

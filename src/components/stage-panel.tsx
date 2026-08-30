@@ -3,19 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { STAGE_KEYS } from "@/domain/clock";
+import { stagesFor } from "@/domain/ladders";
 import { stageLabel } from "@/lib/labels";
 
 export function StagePanel({
   leadId,
   stageKey,
+  department,
 }: {
   leadId: string;
   stageKey: string;
+  department?: string | null;
 }) {
   const router = useRouter();
-  const from = STAGE_KEYS.indexOf(stageKey as (typeof STAGE_KEYS)[number]);
-  const next = from >= 0 && from < STAGE_KEYS.length - 1 ? STAGE_KEYS[from + 1] : null;
+  const ladder = stagesFor(department);
+  const fromKey = stageKey === "qualified" ? "meeting" : stageKey;
+  const from = ladder.indexOf(fromKey);
+  const next = from >= 0 && from < ladder.length - 1 ? ladder[from + 1] : null;
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +34,7 @@ export function StagePanel({
     return () => window.clearTimeout(t);
   }, [confirm, eventId, router]);
 
-  if (!next) {
+  if (!next || next === "lost") {
     return (
       <p className="text-sm text-[var(--arth-n60)]">
         This enquiry is at the last stage. Nothing further to move.

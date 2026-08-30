@@ -12,6 +12,9 @@ import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
 import type { LeadRow } from "@/services/telecalling";
 import { DailyWelcome } from "@/components/daily-welcome";
 import { loadWelcome } from "@/services/floor-register";
+import { InboundRing } from "@/components/inbound-ring";
+import { ringingCalls } from "@/services/conversion";
+import { departmentOfRole } from "@/domain/ladders";
 
 function listNames(rows: LeadRow[]) {
   const names = rows.map((r) => r.customer_name);
@@ -98,6 +101,8 @@ export default async function DayPanelPage() {
     const next = rows[0];
     const perf = await loadPerformance(tx);
     const welcome = await loadWelcome(tx, seat.userId);
+    const dept = departmentOfRole(seat.roleKey);
+    const ringing = dept === "all" ? [] : await ringingCalls(tx, dept);
 
     return (
       <div className="space-y-8">
@@ -122,20 +127,30 @@ export default async function DayPanelPage() {
             {todayBrief(breaching, promised, pool)}
           </p>
           {next ? (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               <ActionButton href={`/w/tele?id=${next.id}&auto=1`} variant="default">
                 Start next call · {next.customer_name}
               </ActionButton>
-              <p className="mt-2 text-sm text-[var(--arth-n60)]">
-                Lines up late names first, then the rest of Today, until the list is finished.
+              <ActionButton href="/w/new" variant="outline">
+                Add enquiry
+              </ActionButton>
+              <p className="mt-2 w-full text-sm text-[var(--arth-n60)]">
+                Lines up late names first, then the rest of Today, until the list is finished. Add enquiry stays on this screen so names are not written on paper.
               </p>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-4">
+              <ActionButton href="/w/new" variant="default">
+                Add enquiry
+              </ActionButton>
+            </div>
+          )}
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Your list for today: late calls first, then what you still promised to do today. New names are on this list for every telecaller at the branch until someone reaches the customer. After that they stay with that seat. Qualify, then hand to sales. The rest of your book is in My enquiries. Today loads at most 200 due names so a dumped old book cannot stall this screen.
+          Your list for today in this department. Late first, then what you promised. New names stay shared until someone reaches the customer. Qualify, then hand to the executive in the same department. Service never books a test drive. Insurance never hides a product.
         </p>
+        <InboundRing department={dept === "all" ? "sales" : dept} calls={ringing} />
         <FigureSource
           source="your queue"
           period="today in India Standard Time, late first"
