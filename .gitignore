@@ -45,3 +45,4 @@ next-env.d.ts
 # local agent scratch
 /agent-tools
 /.cursor
+/docs/directors-review/node_modules

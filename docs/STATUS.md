@@ -1,5 +1,8 @@
 # Status
 
+**Date:** 31 Aug 2026
+**Director pack:** `docs/directors-review/` — live screenshots, HTML brief, full source atlas.
+
 **Date:** 30 Aug 2026
 **What you get this cycle:** conversion ops across sales, service, and insurance. Enquiries are the business. Role walls stay in force. Points stay live and require Dial for connected scores. Escalation notifies; it does not steal. Arthbot reports this dealer only. Not a live telephone exchange.
 

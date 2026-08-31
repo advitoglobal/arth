@@ -70,6 +70,10 @@ Demonstration password for every seat: `arth-demo`. Or use mobile OTP (Iyer: `98
 
 `npm run prove` must print `PROVE_OK`. A twenty lakh book is Capacity Motors. See `docs/CAPACITY.md`.
 
+## Director review pack
+
+Share `docs/directors-review/` with Product and IT. Open `ARTH-DIRECTOR-REVIEW.html` for screenshots and the built record. Open `CODE-ATLAS.md` for the full source in one file.
+
 ## Team test on Vercel
 
 The cloud agent can publish a claimable Vercel preview for floor testing. That preview talks to a Neon Postgres copy of Whitefield Motors and Coastal Cars only (not the 20 lakh Capacity book).

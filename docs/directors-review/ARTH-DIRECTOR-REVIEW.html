@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arth — director review pack · 31 Aug 2026</title>
+  <style>
+    :root {
+      --ink: #0F2A33;
+      --ink-deep: #08191F;
+      --brass: #B07F2C;
+      --n00: #ffffff;
+      --n05: #f1f4f4;
+      --n10: #e3e9e9;
+      --n60: #5a6c71;
+      --overdue: #b23b2e;
+      --settled: #27735a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--n05);
+      font: 16px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+    }
+    header.cover {
+      background: var(--ink);
+      color: var(--n00);
+      padding: 48px 32px 40px;
+    }
+    header.cover .rule {
+      width: 72px; height: 2px; background: var(--brass); margin-bottom: 20px;
+    }
+    header.cover h1 {
+      font-family: "Anek Latin", Georgia, serif;
+      font-weight: 600;
+      font-size: 40px;
+      margin: 0 0 12px;
+    }
+    header.cover p { max-width: 68ch; color: #c9d3d4; }
+    nav.toc {
+      background: var(--n00);
+      border-bottom: 1px solid var(--n10);
+      padding: 16px 32px;
+      position: sticky; top: 0; z-index: 2;
+    }
+    nav.toc a { color: var(--ink); margin-right: 16px; font-size: 13px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+    h2 {
+      font-family: "Anek Latin", Georgia, serif;
+      font-size: 28px;
+      border-top: 2px solid var(--brass);
+      padding-top: 24px;
+      margin-top: 48px;
+    }
+    h3 { font-size: 18px; }
+    table { border-collapse: collapse; width: 100%; background: var(--n00); font-size: 14px; }
+    th, td { border: 1px solid var(--n10); padding: 8px 10px; vertical-align: top; text-align: left; }
+    th { background: var(--ink); color: var(--n00); font-weight: 600; }
+    code, pre { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px; }
+    pre {
+      background: var(--ink-deep);
+      color: #e3e9e9;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    .note {
+      border-left: 3px solid var(--brass);
+      padding: 8px 12px;
+      background: #f3e7ce;
+    }
+    .warn {
+      border-left: 3px solid var(--overdue);
+      padding: 8px 12px;
+      background: #f6e3e0;
+    }
+    .ok {
+      border-left: 3px solid var(--settled);
+      padding: 8px 12px;
+      background: #deede7;
+    }
+    figure.shot {
+      background: var(--n00);
+      border: 1px solid var(--n10);
+      margin: 24px 0;
+      padding: 16px;
+    }
+    figure.shot img {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--n10);
+      display: block;
+    }
+    figure.shot .route {
+      display: inline-block;
+      margin-left: 8px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: var(--n60);
+    }
+    ul.tight li { margin: 4px 0; }
+    .swatch { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; border: 1px solid var(--n10); }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <div class="rule"></div>
+    <p style="letter-spacing:0.16em;text-transform:uppercase;font-size:11px;color:#d0a155;">Advito · Arth · director review pack</p>
+    <h1>What is built, how it looks, and the code that enforces it</h1>
+    <p>Prepared 31 August 2026 for the Product Director and IT Director. Screenshots are live captures from the running product at 127.0.0.1:43127. Source in this folder is the application as of this date. Nothing in this pack is a mock. Demonstration password is on the login screen; it is not repeated here as a production secret.</p>
+  </header>
+  <nav class="toc">
+    <a href="#product">Product</a>
+    <a href="#built">Built</a>
+    <a href="#design">Design</a>
+    <a href="#screens">Screens</a>
+    <a href="#access">Access</a>
+    <a href="#stack">Stack</a>
+    <a href="#code">Code</a>
+    <a href="#prove">Proof</a>
+    <a href="#out">Not built</a>
+    <a href="#share">How to share</a>
+  </nav>
+  <main>
+    <h2 id="product">1. What Arth is</h2>
+    <p><strong>Enquiry accountability for Indian automobile dealer groups. Not a CRM.</strong> A CRM stores contacts. Arth holds a person to an enquiry: owner, clock, disposition, ledger. Every department’s enquiries are the business: sales, service, insurance. Service is often the larger revenue. Two intakes: digital desk and platforms, and manager Excel upload.</p>
+    <p>The line the product is built to: other systems tell you your telecaller made forty calls. Arth tells you which of those calls came from a source costing a stated rupee amount per booking.</p>
+    <div class="note">Vocabulary in the product: enquiry (not “lead”, except “lead source”), branch, owner, telecaller, Settled, Overdue. No em dashes in what a user reads.</div>
+
+    <h3>Who this pack is for</h3>
+    <table>
+      <tr><th>Reader</th><th>What to read first</th></tr>
+      <tr><td>Product Director</td><td>Sections 1–4 (product, built list, design, screenshots). Then “Not built”.</td></tr>
+      <tr><td>IT Director</td><td>Sections 5–8 (access, stack, isolation, APIs, proof suite) and <code>CODE-ATLAS.md</code>.</td></tr>
+    </table>
+
+    <h2 id="built">2. Complete record of what is built</h2>
+    <p>This is a working Next.js application with Postgres 16, forced row-level security, and a branded floor. Demonstration dealers: Whitefield Motors and Coastal Cars.</p>
+    <h3>Floor behaviour that exists</h3>
+    <ul class="tight">
+      <li>Username/password login and mobile OTP (demonstration code on screen; no SMS vendor).</li>
+      <li>Role walls in the proxy (<code>src/proxy.ts</code>) and again on every page.</li>
+      <li>Today for telecalling seats: late first, add enquiry, inbound DID ring (modelled, not a live exchange).</li>
+      <li>Shared new book until a connected Dial of 20 seconds or more.</li>
+      <li>Log a call: Dial, purpose-based WhatsApp consent, disposition, department stage, hand on.</li>
+      <li>Department ladders. Sales still uses Meeting. Service uses Appointment. Insurance uses Quoted. Service never books a test drive.</li>
+      <li>Duplicate check while the phone number is typed.</li>
+      <li>Escalation: TL → managers → GM → principal/admin. Notify only. Reassign is a superior’s decision.</li>
+      <li>After sales meeting: test drive slot, stock book, discount, delivery. Only a sales manager (or GM/principal/admin) releases a booked VIN.</li>
+      <li>Insurance: full catalogue. Top three suggested by dealer benefit. Margin hidden on the floor; visible to principal, admin, GM.</li>
+      <li>GM and principal: all departments, cost per booking this month by source.</li>
+      <li>Arthbot for principal, GM, dealer admin. Allowlisted reports. Anthropic only picks the report kind. CSV and PDF. Fail closed. Telecalling cannot open it.</li>
+      <li>Accounts: incentive export only. No enquiry content.</li>
+      <li>Advito platform: onboard a dealer; support enters one dealer at a time; onboarding never sees a dealer book.</li>
+      <li>Points stay live. Connected scores require Dial in the last 15 minutes. Timer theatre does not score.</li>
+      <li>Working hours gate clocks. Money is integer paise.</li>
+      <li>Tenant isolation forced in Postgres. Four walls inside a dealer: dealer, branch, team, owner.</li>
+    </ul>
+    <h3>Screens in this build (routes)</h3>
+    <table>
+      <tr><th>Route</th><th>Job</th><th>Typical seats</th></tr>
+      <tr><td><code>/</code></td><td>Public home</td><td>Unsigned</td></tr>
+      <tr><td><code>/trust</code></td><td>How records are kept</td><td>Unsigned</td></tr>
+      <tr><td><code>/w/login</code></td><td>Sign in</td><td>All</td></tr>
+      <tr><td><code>/w/dayb</code></td><td>Today</td><td>tele, svctele, instele</td></tr>
+      <tr><td><code>/w/new</code></td><td>Add enquiry</td><td>telecalling seats</td></tr>
+      <tr><td><code>/w/tele</code></td><td>Log a call</td><td>telecalling + desk + ops</td></tr>
+      <tr><td><code>/w/pipe</code></td><td>My enquiries / department book</td><td>Most dealer seats</td></tr>
+      <tr><td><code>/w/svc</code></td><td>Service book</td><td>svc, svcmgr, svctele, owner, gm</td></tr>
+      <tr><td><code>/w/ins</code></td><td>Insurance book</td><td>ins, instele, owner, gm</td></tr>
+      <tr><td><code>/w/stock</code></td><td>Booked units</td><td>sales, salesmgr, tdcoord, owner, gm, admin</td></tr>
+      <tr><td><code>/w/drive</code></td><td>Test drive slots</td><td>tdcoord, sales, salesmgr, owner, gm</td></tr>
+      <tr><td><code>/w/search</code></td><td>Search inside walls</td><td>Most dealer seats</td></tr>
+      <tr><td><code>/w/notif</code></td><td>Notifications</td><td>Dealer seats except accounts</td></tr>
+      <tr><td><code>/w/perf</code></td><td>Performance</td><td>Most dealer seats</td></tr>
+      <tr><td><code>/w/desk</code></td><td>Digital desk</td><td>mgr, ops</td></tr>
+      <tr><td><code>/w/prin</code></td><td>This dealer</td><td>owner</td></tr>
+      <tr><td><code>/w/gm</code></td><td>All departments</td><td>gm, owner</td></tr>
+      <tr><td><code>/w/bot</code></td><td>Arthbot</td><td>owner, gm, admin</td></tr>
+      <tr><td><code>/w/admin</code></td><td>Dealer setup</td><td>admin, owner</td></tr>
+      <tr><td><code>/w/books</code></td><td>Accounts export</td><td>acct, owner, admin, gm</td></tr>
+      <tr><td><code>/w/profile</code></td><td>My profile</td><td>Signed-in seats</td></tr>
+      <tr><td><code>/w/denied</code></td><td>Forbidden</td><td>Wrong seat</td></tr>
+      <tr><td><code>/a/dealers</code></td><td>Advito dealer list</td><td>platform</td></tr>
+      <tr><td><code>/a/onboard</code></td><td>Provision a dealer</td><td>adv_admin, adv_onboard</td></tr>
+      <tr><td><code>/api/health</code> and <code>/api/v1/*</code></td><td>JSON APIs</td><td>Session</td></tr>
+    </table>
+
+    <h3>Demonstration seats (password is on the login screen)</h3>
+    <table>
+      <tr><th>Username</th><th>Seat</th></tr>
+      <tr><td>iyer / nair</td><td>Whitefield telecaller</td></tr>
+      <tr><td>rao</td><td>Whitefield sales</td></tr>
+      <tr><td>lal</td><td>Whitefield sales manager</td></tr>
+      <tr><td>kumar</td><td>Whitefield GM</td></tr>
+      <tr><td>shah</td><td>Whitefield dealer principal</td></tr>
+      <tr><td>padma</td><td>Whitefield dealer admin</td></tr>
+      <tr><td>books</td><td>Whitefield accounts</td></tr>
+      <tr><td>devi / irfan / mehta</td><td>Service tele / advisor / manager</td></tr>
+      <tr><td>iqbal / nanda</td><td>Insurance tele / executive</td></tr>
+      <tr><td>ravi</td><td>Test drive coordinator</td></tr>
+      <tr><td>gupta</td><td>Digital desk</td></tr>
+      <tr><td>pinto / fernandes / kamath</td><td>Coastal Cars</td></tr>
+      <tr><td>advito / support / onboard</td><td>Advito platform</td></tr>
+    </table>
+
+    <h2 id="design">3. Front-end design system</h2>
+    <p>Canonical brand: THE ARTH BRAND SYSTEM v2.9. Tokens in <code>src/styles/arth-tokens.css</code>. No raw hex in components. Five button variants, none green. Semantic colour is Overdue and Settled only. Brass means money is at stake, never body text.</p>
+    <p>
+      <span class="swatch" style="background:#0F2A33"></span> Ink #0F2A33
+      <span class="swatch" style="background:#B07F2C"></span> Brass #B07F2C
+      <span class="swatch" style="background:#2e5c68"></span> Slate
+      <span class="swatch" style="background:#b23b2e"></span> Overdue
+      <span class="swatch" style="background:#27735a"></span> Settled
+      <span class="swatch" style="background:#f1f4f4"></span> Paper
+    </p>
+    <ul class="tight">
+      <li>Mark: lowercase arth hanging from a 2px Brass shirorekha.</li>
+      <li>Type: Anek Latin (display), IBM Plex Sans (UI), IBM Plex Mono (ledger).</li>
+      <li>Shell: Ink sidebar 240px on large screens; stacked Ink header on small screens.</li>
+      <li>Primitives: shadcn/ui restyled to Arth tokens. Radius 3px / 5px.</li>
+      <li>Confirmation in place, not a toast. Figures named with source and period.</li>
+    </ul>
+    <pre>/* THE ARTH BRAND SYSTEM v2.9 — Part 9.1 tokens. Do not add colours here. */
+:root {
+  --arth-ink: #0f2a33;
+  --arth-ink-deep: #08191f;
+  --arth-slate: #2e5c68;
+  --arth-brass: #b07f2c;
+  --arth-brass-deep: #8f6620;
+  --arth-brass-lift: #d0a155;
+  --arth-brass-wash: #f3e7ce;
+  --arth-brass-pill: #7a5716;
+
+  --arth-n00: #ffffff;
+  --arth-n05: #f1f4f4;
+  --arth-n10: #e3e9e9;
+  --arth-n20: #c9d3d4;
+  --arth-n40: #9fadb0;
+  --arth-n50: #748689;
+  --arth-n60: #5a6c71;
+  --arth-n80: #47585d;
+  --arth-n90: #263d45;
+
+  --arth-overdue: #b23b2e;
+  --arth-overdue-wash: #f6e3e0;
+  --arth-settled: #27735a;
+  --arth-settled-wash: #deede7;
+
+  --arth-display: var(--font-anek), &quot;Anek Latin&quot;, sans-serif;
+  --arth-body: var(--font-plex), &quot;IBM Plex Sans&quot;, system-ui, sans-serif;
+  --arth-data: var(--font-plex-mono), &quot;IBM Plex Mono&quot;, ui-monospace, monospace;
+
+  --arth-rule: 2px;
+  --arth-r-sm: 3px;
+  --arth-r-md: 5px;
+  --arth-border: 1px solid var(--arth-n10);
+
+  --arth-s1: 4px;
+  --arth-s2: 8px;
+  --arth-s3: 12px;
+  --arth-s4: 16px;
+  --arth-s5: 24px;
+  --arth-s6: 32px;
+  --arth-s7: 48px;
+  --arth-s8: 64px;
+}
+
+
+/* … 18 more lines in CODE-ATLAS.md under src/styles/arth-tokens.css … */</pre>
+
+    <h2 id="screens">4. Front-end screenshots (live product)</h2>
+    <p>Captured 31 August 2026 from Chrome against the local server. Desktop 1440×900 unless noted. Full-page captures are used where the screen is taller than the viewport. These are the real UI, not generated mockups.</p>
+    
+        <figure class="shot">
+          <figcaption>
+            <strong>Public home</strong>
+            <span class="route">/</span>
+            <p>Unsigned. Brand line and entry to the floor.</p>
+          </figcaption>
+          <img src="screens/00-home.png" alt="Public home" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Sign in (desktop)</strong>
+            <span class="route">/w/login</span>
+            <p>Username/password, mobile OTP, forgot password. Seat list for testers.</p>
+          </figcaption>
+          <img src="screens/01-login.png" alt="Sign in (desktop)" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Sign in (mobile 390px)</strong>
+            <span class="route">/w/login</span>
+            <p>Same login stacked for a phone.</p>
+          </figcaption>
+          <img src="screens/01-login-mobile.png" alt="Sign in (mobile 390px)" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>How records are kept</strong>
+            <span class="route">/trust</span>
+            <p>Public explanation of ledgers and isolation, no login.</p>
+          </figcaption>
+          <img src="screens/02-trust.png" alt="How records are kept" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Open the product</strong>
+            <span class="route">/enter</span>
+            <p>Bridge into login.</p>
+          </figcaption>
+          <img src="screens/03-enter.png" alt="Open the product" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Today · Iyer (telecaller)</strong>
+            <span class="route">/w/dayb</span>
+            <p>Late first. Add enquiry. Inbound ring. Shared new book until a connected Dial.</p>
+          </figcaption>
+          <img src="screens/10-iyer-today.png" alt="Today · Iyer (telecaller)" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Today · Iyer on a phone</strong>
+            <span class="route">/w/dayb</span>
+            <p>Ink header and two-column floor links instead of the 240px sidebar.</p>
+          </figcaption>
+          <img src="screens/10-iyer-today-mobile.png" alt="Today · Iyer on a phone" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Log a call · Iyer</strong>
+            <span class="route">/w/tele</span>
+            <p>Dial, consent, disposition, department stage, hand on.</p>
+          </figcaption>
+          <img src="screens/11-iyer-log-call.png" alt="Log a call · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>My enquiries · Iyer</strong>
+            <span class="route">/w/pipe</span>
+            <p>Department ladder for this seat.</p>
+          </figcaption>
+          <img src="screens/12-iyer-my-enquiries.png" alt="My enquiries · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Search · Iyer</strong>
+            <span class="route">/w/search</span>
+            <p>Search obeys walls. Another telecaller&#x27;s owned row does not appear.</p>
+          </figcaption>
+          <img src="screens/13-iyer-search.png" alt="Search · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Add enquiry · Iyer</strong>
+            <span class="route">/w/new</span>
+            <p>Duplicate check while the number is typed.</p>
+          </figcaption>
+          <img src="screens/14-iyer-add-enquiry.png" alt="Add enquiry · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Notifications · Iyer</strong>
+            <span class="route">/w/notif</span>
+            <p>Escalation notifies. It does not steal the enquiry.</p>
+          </figcaption>
+          <img src="screens/15-iyer-notifications.png" alt="Notifications · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Performance · Iyer</strong>
+            <span class="route">/w/perf</span>
+            <p>Connected scores need Dial in the last 15 minutes.</p>
+          </figcaption>
+          <img src="screens/16-iyer-performance.png" alt="Performance · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>My profile · Iyer</strong>
+            <span class="route">/w/profile</span>
+            <p>Seat identity. Leave the floor.</p>
+          </figcaption>
+          <img src="screens/17-iyer-profile.png" alt="My profile · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Arthbot refused · Iyer</strong>
+            <span class="route">/w/bot</span>
+            <p>Telecalling cannot open Arthbot. Proxy + page both fail closed.</p>
+          </figcaption>
+          <img src="screens/18-iyer-arthbot-denied.png" alt="Arthbot refused · Iyer" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Sales pipeline · Rao</strong>
+            <span class="route">/w/pipe</span>
+            <p>Sales consultant. Today is refused. Conversion after handoff.</p>
+          </figcaption>
+          <img src="screens/20-rao-sales-pipeline.png" alt="Sales pipeline · Rao" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Today refused · Rao</strong>
+            <span class="route">/w/dayb</span>
+            <p>Copy: You cannot open this screen.</p>
+          </figcaption>
+          <img src="screens/21-rao-today-refused.png" alt="Today refused · Rao" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Stock · Rao</strong>
+            <span class="route">/w/stock</span>
+            <p>Sales can book a VIN. Release is a sales manager act.</p>
+          </figcaption>
+          <img src="screens/22-rao-stock.png" alt="Stock · Rao" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>The floor · Gupta</strong>
+            <span class="route">/w/desk</span>
+            <p>Digital desk: place enquiries, team at this branch.</p>
+          </figcaption>
+          <img src="screens/30-gupta-digital-desk.png" alt="The floor · Gupta" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>This dealer · Shah</strong>
+            <span class="route">/w/prin</span>
+            <p>Every department. Cost per booking. This dealer only.</p>
+          </figcaption>
+          <img src="screens/40-shah-principal.png" alt="This dealer · Shah" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Arthbot · Shah</strong>
+            <span class="route">/w/bot</span>
+            <p>Allowlisted reports. Anthropic only picks the kind. CSV / PDF.</p>
+          </figcaption>
+          <img src="screens/41-shah-arthbot.png" alt="Arthbot · Shah" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>All departments · Shah</strong>
+            <span class="route">/w/gm</span>
+            <p>Principal may open the GM operations view.</p>
+          </figcaption>
+          <img src="screens/42-shah-all-departments.png" alt="All departments · Shah" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>All departments · Kumar</strong>
+            <span class="route">/w/gm</span>
+            <p>GM: late work, escalations, cost per booking. Reassign stays a decision.</p>
+          </figcaption>
+          <img src="screens/50-kumar-gm.png" alt="All departments · Kumar" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Stock · Lal</strong>
+            <span class="route">/w/stock</span>
+            <p>Sales manager can release a booked unit.</p>
+          </figcaption>
+          <img src="screens/60-lal-stock-release.png" alt="Stock · Lal" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Pipeline · Lal</strong>
+            <span class="route">/w/pipe</span>
+            <p>Sales manager ladder plus discount approval.</p>
+          </figcaption>
+          <img src="screens/61-lal-sales-manager.png" alt="Pipeline · Lal" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Service · Irfan</strong>
+            <span class="route">/w/svc</span>
+            <p>Service advisor. Appointment through ready. No test drive.</p>
+          </figcaption>
+          <img src="screens/70-irfan-service.png" alt="Service · Irfan" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Insurance · Nanda</strong>
+            <span class="route">/w/ins</span>
+            <p>Full catalogue. Top three suggested. Margin hidden on this seat.</p>
+          </figcaption>
+          <img src="screens/80-nanda-insurance.png" alt="Insurance · Nanda" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Test drives · Ravi</strong>
+            <span class="route">/w/drive</span>
+            <p>Coordinator slots and demo-car cleanliness.</p>
+          </figcaption>
+          <img src="screens/90-ravi-test-drives.png" alt="Test drives · Ravi" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Dealer setup · Padma</strong>
+            <span class="route">/w/admin</span>
+            <p>Price master, assignment mode, audit.</p>
+          </figcaption>
+          <img src="screens/a0-padma-dealer-setup.png" alt="Dealer setup · Padma" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Accounts · Books</strong>
+            <span class="route">/w/books</span>
+            <p>Incentive export only. No enquiry content.</p>
+          </figcaption>
+          <img src="screens/a1-books-accounts.png" alt="Accounts · Books" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Today · Pinto (Coastal)</strong>
+            <span class="route">/w/dayb</span>
+            <p>Same product, other tenant. Whitefield rows must not appear.</p>
+          </figcaption>
+          <img src="screens/b0-pinto-coastal-today.png" alt="Today · Pinto (Coastal)" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Advito dealers · advito</strong>
+            <span class="route">/a/dealers</span>
+            <p>Platform admin. Enter one dealer at a time.</p>
+          </figcaption>
+          <img src="screens/c0-advito-dealers.png" alt="Advito dealers · advito" />
+        </figure>
+        <figure class="shot">
+          <figcaption>
+            <strong>Onboard a dealer · onboard</strong>
+            <span class="route">/a/onboard</span>
+            <p>Provisions a dealer. Cannot enter a dealer book.</p>
+          </figcaption>
+          <img src="screens/c1-onboard-provision.png" alt="Onboard a dealer · onboard" />
+        </figure>
+
+    <h2 id="access">5. Access law (UI and database)</h2>
+    <p>A seat that cannot open a screen is stopped twice: <code>src/proxy.ts</code> (Node.js request proxy) and <code>canOpen</code> on the page. Database RLS still applies even if a page is wrong.</p>
+    <h3>src/lib/access.ts</h3>
+    <pre>export function canOpen(roleKey: string, screen: string): boolean {
+  const access: Record&lt;string, string[]&gt; = {
+    dayb: [&quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;],
+    tele: [&quot;tele&quot;, &quot;mgr&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;ops&quot;],
+    pipe: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;lead&quot;, &quot;mgr&quot;, &quot;sales&quot;, &quot;salesmgr&quot;, &quot;svc&quot;, &quot;svcmgr&quot;,
+      &quot;ins&quot;, &quot;owner&quot;, &quot;gm&quot;, &quot;ops&quot;, &quot;admin&quot;, &quot;tdcoord&quot;,
+    ],
+    rec: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;lead&quot;, &quot;mgr&quot;, &quot;sales&quot;, &quot;salesmgr&quot;, &quot;svc&quot;, &quot;svcmgr&quot;,
+      &quot;ins&quot;, &quot;owner&quot;, &quot;gm&quot;, &quot;ops&quot;, &quot;admin&quot;, &quot;tdcoord&quot;,
+    ],
+    search: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;sales&quot;, &quot;salesmgr&quot;, &quot;svc&quot;, &quot;svcmgr&quot;, &quot;ins&quot;, &quot;adv&quot;,
+      &quot;lead&quot;, &quot;mgr&quot;, &quot;owner&quot;, &quot;gm&quot;, &quot;ops&quot;, &quot;admin&quot;, &quot;tdcoord&quot;,
+    ],
+    new: [&quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;],
+    notif: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;sales&quot;, &quot;svc&quot;, &quot;ins&quot;, &quot;lead&quot;, &quot;mgr&quot;, &quot;owner&quot;, &quot;gm&quot;,
+      &quot;admin&quot;, &quot;salesmgr&quot;, &quot;svcmgr&quot;, &quot;tdcoord&quot;,
+    ],
+    profile: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;sales&quot;, &quot;svc&quot;, &quot;ins&quot;, &quot;lead&quot;, &quot;mgr&quot;, &quot;owner&quot;, &quot;gm&quot;,
+      &quot;admin&quot;, &quot;acct&quot;, &quot;salesmgr&quot;, &quot;svcmgr&quot;, &quot;tdcoord&quot;, &quot;adv_admin&quot;, &quot;adv_support&quot;, &quot;adv_onboard&quot;,
+    ],
+    perf: [
+      &quot;tele&quot;, &quot;svctele&quot;, &quot;instele&quot;, &quot;sales&quot;, &quot;svc&quot;, &quot;ins&quot;, &quot;lead&quot;, &quot;mgr&quot;, &quot;owner&quot;, &quot;gm&quot;,
+      &quot;ops&quot;, &quot;admin&quot;, &quot;salesmgr&quot;, &quot;svcmgr&quot;, &quot;tdcoord&quot;,
+    ],
+    desk: [&quot;mgr&quot;, &quot;ops&quot;],
+    prin: [&quot;owner&quot;],
+    gm: [&quot;gm&quot;, &quot;owner&quot;],
+    admin: [&quot;admin&quot;, &quot;owner&quot;],
+    books: [&quot;acct&quot;, &quot;owner&quot;, &quot;admin&quot;, &quot;gm&quot;],
+    upload: [&quot;mgr&quot;, &quot;owner&quot;, &quot;admin&quot;, &quot;svcmgr&quot;, &quot;salesmgr&quot;],
+    svc: [&quot;svc&quot;, &quot;svcmgr&quot;, &quot;svctele&quot;, &quot;owner&quot;, &quot;gm&quot;],
+    ins: [&quot;ins&quot;, &quot;instele&quot;, &quot;owner&quot;, &quot;gm&quot;],
+    stock: [&quot;sales&quot;, &quot;salesmgr&quot;, &quot;tdcoord&quot;, &quot;owner&quot;, &quot;gm&quot;, &quot;admin&quot;],
+    drive: [&quot;tdcoord&quot;, &quot;sales&quot;, &quot;salesmgr&quot;, &quot;owner&quot;, &quot;gm&quot;],
+    bot: [&quot;owner&quot;, &quot;gm&quot;, &quot;admin&quot;],
+    adealers: [&quot;adv_admin&quot;, &quot;adv_support&quot;, &quot;adv_onboard&quot;],
+    aonboard: [&quot;adv_admin&quot;, &quot;adv_onboard&quot;],
+  };
+  return (access[screen] ?? []).includes(roleKey);
+}
+
+export function canSeeValue(roleKey: string) {
+  return [&quot;mgr&quot;, &quot;owner&quot;, &quot;adv&quot;, &quot;ops&quot;, &quot;gm&quot;, &quot;salesmgr&quot;].includes(roleKey);
+}
+
+export function canSeeMargin(roleKey: string) {
+  return [&quot;owner&quot;, &quot;admin&quot;, &quot;gm&quot;].includes(roleKey);
+}
+
+export function canPlaceEnquiry(roleKey: string) {
+  return [&quot;mgr&quot;, &quot;owner&quot;, &quot;ops&quot;, &quot;svcmgr&quot;, &quot;salesmgr&quot;].includes(roleKey);
+}
+
+export function canApproveDiscount(roleKey: string) {
+  return [&quot;salesmgr&quot;, &quot;lead&quot;, &quot;owner&quot;, &quot;gm&quot;].includes(roleKey);
+}</pre>
+    <h3>src/proxy.ts (start)</h3>
+    <pre>import { NextResponse } from &quot;next/server&quot;;
+import type { NextRequest } from &quot;next/server&quot;;
+import { canOpen } from &quot;@/lib/access&quot;;
+import {
+  DEMO_USERS,
+  hasDemoSession,
+  isPlatformRole,
+  resolveSeatKey,
+  screenFromPath,
+} from &quot;@/lib/seats&quot;;
+
+function passPath(req: NextRequest) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(&quot;x-arth-path&quot;, req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
+function roleOf(req: NextRequest) {
+  const fromCookie = req.cookies.get(&quot;arth_role&quot;)?.value?.trim();
+  if (fromCookie) return fromCookie;
+  const key = resolveSeatKey(req.cookies.get(&quot;arth_seat&quot;)?.value);
+  return key ? DEMO_USERS[key].roleKey : null;
+}
+
+function sendLogin(req: NextRequest) {
+  const login = req.nextUrl.clone();
+  login.pathname = &quot;/w/login&quot;;
+  login.search = &quot;&quot;;
+  return NextResponse.redirect(login);
+}
+
+export function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  const seatCookie = req.cookies.get(&quot;arth_seat&quot;)?.value;
+  const signedIn = hasDemoSession(seatCookie);
+  const role = roleOf(req);
+
+  if (path === &quot;/w/login&quot;) return passPath(req);
+  if (path === &quot;/w/denied&quot;) return passPath(req);
+
+  if (path.startsWith(&quot;/a/&quot;)) {
+    if (!signedIn || !role || !isPlatformRole(role)) {
+      const denied = req.nextUrl.clone();
+      denied.pathname = signedIn ? &quot;/w/denied&quot; : &quot;/w/login&quot;;
+      denied.search = &quot;&quot;;
+      if (!signedIn) return NextResponse.redirect(denied);
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set(&quot;x-arth-path&quot;, &quot;/w/denied&quot;);
+      return NextResponse.rewrite(denied, {
+        status: 403,
+
+/* … 45 more lines in CODE-ATLAS.md under src/proxy.ts … */</pre>
+
+    <h2 id="stack">6. Stack, isolation, APIs</h2>
+    <table>
+      <tr><th>Layer</th><th>Choice</th></tr>
+      <tr><td>UI</td><td>Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui</td></tr>
+      <tr><td>Host</td><td>Node.js on Vercel (anonymous preview used Node proxy, not Edge middleware)</td></tr>
+      <tr><td>Data</td><td>Postgres 16. App role has no BYPASSRLS. Session vars set inside a transaction.</td></tr>
+      <tr><td>Driver</td><td><code>postgres</code> (postgres.js). SSL on Neon. max 1 connection on Vercel.</td></tr>
+      <tr><td>Money</td><td>Integer paise. Never float for currency.</td></tr>
+      <tr><td>AI</td><td>Optional Anthropic. Picks an allowlisted Arthbot report kind only. No model-generated SQL.</td></tr>
+    </table>
+    <h3>Session + tenant wall</h3>
+    <pre>import postgres from &quot;postgres&quot;;
+
+const url = process.env.DATABASE_URL;
+
+if (!url) {
+  throw new Error(&quot;DATABASE_URL is not set&quot;);
+}
+
+const hosted = /neon\.tech|sslmode=require/i.test(url) || Boolean(process.env.VERCEL);
+const pooled = url.includes(&quot;-pooler&quot;) || url.includes(&quot;pgbouncer&quot;);
+
+export const sql = postgres(url, {
+  max: process.env.VERCEL ? 1 : 48,
+  idle_timeout: 20,
+  connect_timeout: 10,
+  ssl: hosted ? &quot;require&quot; : undefined,
+  prepare: !pooled,
+});
+
+export type Tx = postgres.TransactionSql&lt;Record&lt;string, unknown&gt;&gt;;
+
+export function isSessionGuardError(err: unknown) {
+  const message = err instanceof Error ? err.message : &quot;&quot;;
+  return (
+    message.includes(&quot;Session is incomplete&quot;) ||
+    message.includes(&quot;does not belong to this dealer&quot;) ||
+    message.includes(&quot;not an Advito operator&quot;) ||
+    message.includes(&quot;No signed-in seat&quot;) ||
+    message.includes(&quot;never a dealer book&quot;)
+  );
+}
+
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function requireSessionId(value: string) {
+  const id = value.trim();
+  if (!id || !UUID.test(id)) {
+    throw new Error(&quot;Session is incomplete. Sign in again.&quot;);
+  }
+  return id;
+}
+
+export async function withTenant&lt;T&gt;(
+  ctx: { tenantId: string; userId: string },
+  fn: (tx: Tx) =&gt; Promise&lt;T&gt;,
+): Promise&lt;T&gt; {
+  const tenantId = requireSessionId(ctx.tenantId ?? &quot;&quot;);
+  const userId = requireSessionId(ctx.userId ?? &quot;&quot;);
+
+  return sql.begin(async (tx) =&gt; {
+    await tx`SELECT set_config(&#x27;statement_timeout&#x27;, &#x27;8000&#x27;, true)`;
+    await tx`SELECT set_config(&#x27;app.tenant_id&#x27;, ${tenantId}, true)`;
+    await tx`SELECT set_config(&#x27;app.user_id&#x27;, ${userId}, true)`;
+    await tx`SELECT set_config(&#x27;app.platform_user_id&#x27;, &#x27;&#x27;, true)`;
+    const [seat] = await tx&lt;{
+      id: string;
+      role_key: string;
+      branch_id: string | null;
+      position_id: string | null;
+    }[]&gt;`
+      SELECT
+        u.id::text,
+        u.role_key,
+        p.branch_id::text,
+        u.position_id::text
+      FROM users u
+      LEFT JOIN positions p ON p.id = u.position_id
+      WHERE u.id = ${userId}::uuid
+        AND u.tenant_id = ${tenantId}::uuid
+        AND u.is_active
+    `;
+    if (!seat) {
+      throw new Error(&quot;This seat does not belong to this dealer.&quot;);
+    }
+    await tx`SELECT set_config(&#x27;app.role_key&#x27;, ${seat.role_key}, true)`;
+    await tx`SELECT set_config(&#x27;app.branch_id&#x27;, ${seat.branch_id ?? &quot;&quot;}, true)`;
+    await tx`SELECT set_config(&#x27;app.position_id&#x27;, ${seat.position_id ?? &quot;&quot;}, true)`;
+    return fn(tx);
+  }) as Promise&lt;T&gt;;
+
+/* … 70 more lines in CODE-ATLAS.md under src/db/with-tenant.ts … */</pre>
+    <h3>Visibility walls (SQL)</h3>
+    <pre>-- Visibility walls: dealer, branch, team, then owner. Fail closed if app.user_id is missing.
+
+CREATE OR REPLACE FUNCTION arth_lead_visible(p_lead_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid;
+  u_role text;
+  u_tenant uuid;
+  u_branch uuid;
+  u_position uuid;
+  l_tenant uuid;
+  l_branch uuid;
+  l_owner uuid;
+  l_responded timestamptz;
+BEGIN
+  BEGIN
+    uid := NULLIF(current_setting(&#x27;app.user_id&#x27;, true), &#x27;&#x27;)::uuid;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN false;
+  END;
+  IF uid IS NULL THEN
+    RETURN false;
+  END IF;
+
+  SELECT u.role_key, u.tenant_id, p.branch_id, u.position_id
+    INTO u_role, u_tenant, u_branch, u_position
+  FROM users u
+  LEFT JOIN positions p ON p.id = u.position_id
+  WHERE u.id = uid AND u.is_active;
+  IF u_role IS NULL THEN
+    RETURN false;
+  END IF;
+
+  SELECT tenant_id, branch_id, owner_user_id, first_responded_at
+    INTO l_tenant, l_branch, l_owner, l_responded
+  FROM leads WHERE id = p_lead_id;
+  IF NOT FOUND THEN
+    RETURN false;
+  END IF;
+  IF l_tenant IS DISTINCT FROM u_tenant THEN
+    RETURN false;
+  END IF;
+
+  IF u_role IN (&#x27;owner&#x27;, &#x27;adv&#x27;, &#x27;admin&#x27;) THEN
+    RETURN true;
+  END IF;
+
+  IF u_role = &#x27;mgr&#x27; THEN
+    RETURN u_branch IS NOT NULL AND l_branch = u_branch;
+  END IF;
+
+  IF u_role = &#x27;lead&#x27; THEN
+    IF l_owner = uid THEN
+      RETURN true;
+    END IF;
+    IF u_branch IS NOT NULL AND l_branch = u_branch AND l_owner IS NULL AND l_responded IS NULL THEN
+      RETURN true;
+    END IF;
+    RETURN EXISTS (
+      SELECT 1
+      FROM users ru
+      JOIN positions rp ON rp.id = ru.position_id
+      WHERE ru.id = l_owner AND rp.reports_to = u_position
+    );
+  END IF;
+
+/* … 88 more lines in CODE-ATLAS.md under src/db/migrations/0012_visibility_walls.sql … */</pre>
+    <h3>HTTP APIs</h3>
+    <table>
+      <tr><th>Method</th><th>Path</th><th>Job</th></tr>
+      <tr><td>GET</td><td>/api/health</td><td>Process + database</td></tr>
+      <tr><td>POST</td><td>/api/v1/auth/otp</td><td>Issue demonstration OTP</td></tr>
+      <tr><td>POST</td><td>/api/v1/auth/phone</td><td>Sign in with OTP</td></tr>
+      <tr><td>GET/POST</td><td>/api/v1/leads</td><td>Duplicate search / create enquiry</td></tr>
+      <tr><td>GET</td><td>/api/v1/leads/[id]</td><td>One enquiry</td></tr>
+      <tr><td>POST</td><td>/api/v1/dial</td><td>Connected Dial (anti-game for points)</td></tr>
+      <tr><td>POST</td><td>/api/v1/qualify</td><td>Qualify / disposition</td></tr>
+      <tr><td>POST</td><td>/api/v1/handoff</td><td>Hand on inside the department</td></tr>
+      <tr><td>POST</td><td>/api/v1/claim</td><td>Claim from shared book</td></tr>
+      <tr><td>POST</td><td>/api/v1/stage</td><td>Move stage on the department ladder</td></tr>
+      <tr><td>POST</td><td>/api/v1/dispositions</td><td>Lost / callback / revisit</td></tr>
+      <tr><td>POST</td><td>/api/v1/assign</td><td>Superior reassign</td></tr>
+      <tr><td>POST</td><td>/api/v1/undo</td><td>Correcting entry, not delete</td></tr>
+      <tr><td>GET</td><td>/api/v1/search</td><td>Search inside walls</td></tr>
+      <tr><td>GET</td><td>/api/v1/pipeline</td><td>Pipeline ids</td></tr>
+      <tr><td>GET</td><td>/api/v1/queue, /queue/next</td><td>Today / next due</td></tr>
+      <tr><td>GET/POST</td><td>/api/v1/notifications</td><td>List / mark read</td></tr>
+      <tr><td>GET</td><td>/api/v1/hours</td><td>Working hours</td></tr>
+      <tr><td>POST</td><td>/api/v1/floor</td><td>Digital desk / Excel place</td></tr>
+      <tr><td>POST</td><td>/api/v1/welcome</td><td>Daily welcome ack</td></tr>
+      <tr><td>POST</td><td>/api/v1/whatsapp</td><td>Consented WhatsApp send (modelled)</td></tr>
+      <tr><td>POST</td><td>/api/v1/ops</td><td>Stock, discount, delivery, escalation tick</td></tr>
+      <tr><td>GET/POST</td><td>/api/v1/bot</td><td>Arthbot report pick / download</td></tr>
+    </table>
+    <h3>Conversion and escalation (application)</h3>
+    <pre>import type { Tx } from &quot;@/db/with-tenant&quot;;
+import { stagesFor } from &quot;@/domain/ladders&quot;;
+import { writeAudit, recordMovement } from &quot;@/services/floor-register&quot;;
+
+export async function findByPhone(tx: Tx, phone: string) {
+  const digits = phone.replace(/\D/g, &quot;&quot;);
+  if (digits.length &lt; 4) return [];
+  return tx&lt;{ id: string; customer_name: string; department_key: string }[]&gt;`
+    SELECT l.id::text, c.full_name AS customer_name, l.department_key
+    FROM customers c
+    JOIN leads l ON l.customer_id = c.id
+    WHERE c.phone LIKE ${&quot;%&quot; + digits}
+    ORDER BY l.created_at DESC
+    LIMIT 5
+  `;
+}
+
+export async function runEscalations(tx: Tx) {
+  const pool = await tx&lt;{ id: string; customer_name: string; department_key: string; branch_id: string }[]&gt;`
+    SELECT l.id::text, c.full_name AS customer_name, l.department_key, l.branch_id::text
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE l.pool_open AND l.owner_user_id IS NULL
+      AND l.first_response_due IS NOT NULL AND l.first_response_due &lt; now()
+      AND l.escalate_level = &#x27;none&#x27;
+      AND l.lost_reason_key IS NULL
+    LIMIT 40
+  `;
+  let n = 0;
+  for (const row of pool) {
+    await tx`
+      UPDATE leads SET escalate_level = &#x27;lead&#x27;, escalate_at = now()
+      WHERE id = ${row.id}::uuid
+    `;
+    await notifyRoles(tx, row.branch_id, [&quot;lead&quot;], `${row.customer_name} is unclaimed`, row.id);
+    n += 1;
+  }
+
+  const rungs: { from: string; to: string; wait: string; roles: string[] }[] = [
+    { from: &quot;lead&quot;, to: &quot;mgr&quot;, wait: &quot;4 hours&quot;, roles: [&quot;mgr&quot;, &quot;salesmgr&quot;, &quot;svcmgr&quot;] },
+    { from: &quot;mgr&quot;, to: &quot;gm&quot;, wait: &quot;1 day&quot;, roles: [&quot;gm&quot;] },
+    { from: &quot;gm&quot;, to: &quot;owner&quot;, wait: &quot;1 day&quot;, roles: [&quot;owner&quot;, &quot;admin&quot;] },
+  ];
+  for (const rung of rungs) {
+    const due = await tx&lt;{ id: string; customer_name: string; branch_id: string }[]&gt;`
+      SELECT l.id::text, c.full_name AS customer_name, l.branch_id::text
+      FROM leads l JOIN customers c ON c.id = l.customer_id
+      WHERE l.escalate_level = ${rung.from}
+        AND l.escalate_at IS NOT NULL
+        AND l.escalate_at &lt; now() - CASE ${rung.to}
+          WHEN &#x27;mgr&#x27; THEN interval &#x27;4 hours&#x27;
+          ELSE interval &#x27;1 day&#x27;
+        END
+        AND (l.pool_open OR l.next_action_at &lt; now())
+        AND l.lost_reason_key IS NULL
+      LIMIT 40
+    `;
+    for (const row of due) {
+      await tx`
+        UPDATE leads SET escalate_level = ${rung.to}, escalate_at = now()
+        WHERE id = ${row.id}::uuid
+      `;
+      await notifyRoles(
+        tx,
+        row.branch_id,
+        rung.roles,
+        `${row.customer_name} still has no owner. Decide whether to reassign.`,
+        row.id,
+      );
+      n += 1;
+    }
+  }
+  const owned = await tx&lt;{ id: string; customer_name: string; branch_id: string }[]&gt;`
+    SELECT l.id::text, c.full_name AS customer_name, l.branch_id::text
+    FROM leads l JOIN customers c ON c.id = l.customer_id
+    WHERE l.owner_user_id IS NOT NULL
+      AND l.next_action_at IS NOT NULL AND l.next_action_at &lt; now()
+      AND l.escalate_level = &#x27;none&#x27;
+      AND l.lost_reason_key IS NULL
+    LIMIT 40
+  `;
+  for (const row of owned) {
+    await tx`
+      UPDATE leads SET escalate_level = &#x27;lead&#x27;, escalate_at = now()
+      WHERE id = ${row.id}::uuid
+    `;
+    await notifyRoles(
+      tx,
+      row.branch_id,
+      [&quot;lead&quot;],
+
+/* … 435 more lines in CODE-ATLAS.md under src/services/conversion.ts … */</pre>
+    <h3>Arthbot (fail closed)</h3>
+    <pre>import type { Tx } from &quot;@/db/with-tenant&quot;;
+import { reportRows } from &quot;@/services/conversion&quot;;
+
+export const REPORT_KINDS = [&quot;late&quot;, &quot;cost&quot;, &quot;departments&quot;, &quot;stock&quot;, &quot;escalations&quot;] as const;
+export type ReportKind = (typeof REPORT_KINDS)[number];
+
+const INJECTION =
+  /ignore (previous|all)|other dealer|other tenant|dump all|select \*|drop table|union select|system prompt/i;
+
+export function pickReportKind(question: string): ReportKind | null {
+  if (INJECTION.test(question)) return null;
+  const q = question.toLowerCase();
+  if (q.includes(&quot;cost&quot;) || q.includes(&quot;booking&quot;) || q.includes(&quot;spend&quot;) || q.includes(&quot;google&quot;) || q.includes(&quot;meta&quot;)) {
+    return &quot;cost&quot;;
+  }
+  if (q.includes(&quot;stock&quot;) || q.includes(&quot;vin&quot;) || q.includes(&quot;inventory&quot;) || q.includes(&quot;car&quot;)) {
+    return &quot;stock&quot;;
+  }
+  if (q.includes(&quot;escalat&quot;) || q.includes(&quot;unclaimed&quot;) || q.includes(&quot;ignored&quot;)) {
+    return &quot;escalations&quot;;
+  }
+  if (q.includes(&quot;department&quot;) || q.includes(&quot;service&quot;) || q.includes(&quot;insurance&quot;) || q.includes(&quot;all books&quot;)) {
+    return &quot;departments&quot;;
+  }
+  if (q.includes(&quot;late&quot;) || q.includes(&quot;overdue&quot;) || q.includes(&quot;report&quot;)) {
+    return &quot;late&quot;;
+  }
+  return &quot;late&quot;;
+}
+
+export async function runArthbot(
+  tx: Tx,
+  question: string,
+  forcedKind?: string,
+): Promise&lt;{ kind: ReportKind; rows: unknown[]; note: string }&gt; {
+  if (INJECTION.test(question)) {
+    throw new Error(&quot;Arthbot will only report this dealer, for this seat. That question is refused.&quot;);
+  }
+  const kind = (REPORT_KINDS as readonly string[]).includes(forcedKind ?? &quot;&quot;)
+    ? (forcedKind as ReportKind)
+    : pickReportKind(question);
+  if (!kind) {
+    throw new Error(&quot;Arthbot will only report this dealer, for this seat. That question is refused.&quot;);
+  }
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  let chosen = kind;
+  if (apiKey &amp;&amp; !forcedKind) {
+    chosen = await chooseWithAnthropic(apiKey, question) ?? kind;
+  }
+  const rows = await reportRows(tx, chosen);
+  return {
+    kind: chosen,
+    rows,
+    note: apiKey
+      ? &quot;Arthbot picked an allowlisted report for this dealer only. No SQL is generated.&quot;
+      : &quot;Arthbot used the allowlisted report for this dealer. Set ANTHROPIC_API_KEY to let the model pick the report kind. It still cannot leave this dealer.&quot;,
+  };
+}
+
+async function chooseWithAnthropic(apiKey: string, question: string): Promise&lt;ReportKind | null&gt; {
+  try {
+    const res = await fetch(&quot;https://api.anthropic.com/v1/messages&quot;, {
+      method: &quot;POST&quot;,
+      headers: {
+        &quot;content-type&quot;: &quot;application/json&quot;,
+        &quot;x-api-key&quot;: apiKey,
+        &quot;anthropic-version&quot;: &quot;2023-06-01&quot;,
+      },
+      body: JSON.stringify({
+        model: &quot;claude-sonnet-4-5&quot;,
+        max_tokens: 40,
+        system:
+          &quot;You pick one report kind for a car dealer principal. Reply with exactly one word: late, cost, departments, stock, or escalations. Never invent SQL. Never name another dealer. If the user asks for anything else, reply late.&quot;,
+        messages: [{ role: &quot;user&quot;, content: question.slice(0, 500) }],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { content?: { text?: string }[] };
+    const text = (data.content?.[0]?.text ?? &quot;&quot;).trim().toLowerCase();
+    const word = text.split(/\s+/)[0]?.replace(/[^a-z]/g, &quot;&quot;) ?? &quot;&quot;;
+
+/* … 50 more lines in CODE-ATLAS.md under src/services/arthbot.ts … */</pre>
+
+    <h2 id="code">7. Where the rest of the code lives in this pack</h2>
+    <p class="ok">Open <strong>CODE-ATLAS.md</strong> in this folder. It contains every TypeScript, SQL, CSS, and config file from <code>src/</code>, <code>scripts/</code>, and root config, inlined. Directors do not need a separate checkout to read the implementation.</p>
+    <p>Also see <strong>FILE-MANIFEST.md</strong> for the path and byte size of each file.</p>
+    <h3>Application map</h3>
+    <table>
+      <tr><th>Path</th><th>Owns</th></tr>
+      <tr><td>src/app</td><td>Routes and Route Handlers</td></tr>
+      <tr><td>src/components</td><td>Floor UI and shadcn primitives</td></tr>
+      <tr><td>src/services</td><td>Telecalling, conversion, assignment, performance, Arthbot, platform</td></tr>
+      <tr><td>src/domain</td><td>Ladders, clocks, walls, points</td></tr>
+      <tr><td>src/db</td><td>postgres.js, withTenant, 33 migrations</td></tr>
+      <tr><td>src/lib</td><td>Seats, access, cookies, format, auth</td></tr>
+      <tr><td>src/proxy.ts</td><td>Request gate on Node.js</td></tr>
+      <tr><td>scripts/prove*.ts</td><td>Isolation, walls, access, conversion proofs</td></tr>
+    </table>
+    <h3>Migrations (order)</h3>
+    <p>0001 core schema through 0033 visible shared book. Conversion ops are 0031. RLS fallback 0032. Shared-book visibility 0033.</p>
+
+    <h2 id="prove">8. What IT can prove</h2>
+    <p><code>npm run prove</code> must print <code>PROVE_OK</code>. Checks: isolation, working hours, assignment, access, scope, search, ledger, disposition, queue, points, walls, desk, platform, performance, 29 Aug register, conversion.</p>
+    <pre>import { spawnSync } from &quot;node:child_process&quot;;
+
+const checks: [string, string][] = [
+  [&quot;db:isolate&quot;, &quot;ISOLATION_OK&quot;],
+  [&quot;db:clock&quot;, &quot;CLOCK_OK&quot;],
+  [&quot;db:assign&quot;, &quot;ASSIGN_OK&quot;],
+  [&quot;db:access&quot;, &quot;ACCESS_OK&quot;],
+  [&quot;db:scope&quot;, &quot;SCOPE_OK&quot;],
+  [&quot;db:search&quot;, &quot;SEARCH_OK&quot;],
+  [&quot;db:ledger&quot;, &quot;LEDGER_OK&quot;],
+  [&quot;db:disposition&quot;, &quot;DISPOSITION_OK&quot;],
+  [&quot;db:queue&quot;, &quot;QUEUE_OK&quot;],
+  [&quot;db:points&quot;, &quot;POINTS_OK&quot;],
+  [&quot;db:walls&quot;, &quot;WALLS_OK&quot;],
+  [&quot;db:desk&quot;, &quot;DESK_OK&quot;],
+  [&quot;db:platform&quot;, &quot;PLATFORM_OK&quot;],
+  [&quot;db:perf&quot;, &quot;PERF_OK&quot;],
+  [&quot;db:register&quot;, &quot;REGISTER_OK&quot;],
+  [&quot;db:conversion&quot;, &quot;CONVERSION_OK&quot;],
+];
+
+let failed = 0;
+for (const [script, token] of checks) {
+  const r = spawnSync(&quot;npm&quot;, [&quot;run&quot;, script], { encoding: &quot;utf8&quot; });
+  const out = `${r.stdout ?? &quot;&quot;}\n${r.stderr ?? &quot;&quot;}`;
+  process.stdout.write(out);
+  if (r.status !== 0 || !out.includes(token)) {
+    console.error(`FAIL ${script} (want ${token})`);
+    failed = 1;
+  } else {
+    console.log(`PASS ${script}`);
+  }
+}
+
+if (failed) {
+  process.exit(1);
+}
+console.log(&quot;PROVE_OK&quot;);</pre>
+    <div class="note">A twenty lakh book exists locally as Capacity Motors for load proofs. It is not copied to the small hosted database used for team URL testing.</div>
+
+    <h2 id="out">9. Named, not built</h2>
+    <ul class="tight">
+      <li>Live PSTN, call recording, AI score from transcripts. Vendor at launch. Inbound DID is modelled.</li>
+      <li>Native mobile app. Next phase.</li>
+      <li>Exception Cockpit, full HR/payroll, used-car evaluator, workshop bays.</li>
+      <li>Production SSO. Demonstration uses password <code>arth-demo</code> on every seat (stated on the login screenshot).</li>
+    </ul>
+    <div class="warn">The 80-screen HTML prototype in the original books is the long-range visual reference. This pack shows the <em>running</em> conversion floor, which is a complete slice, not all 80 screens.</div>
+
+    <h2 id="share">10. How to share this pack</h2>
+    <ol>
+      <li>Zip the folder <code>docs/directors-review/</code> (HTML + screens + CODE-ATLAS.md + FILE-MANIFEST.md).</li>
+      <li>Send the zip. Recipients open <code>ARTH-DIRECTOR-REVIEW.html</code> in a browser. Images load from <code>screens/</code> next to the HTML. Keep that relative folder.</li>
+      <li>IT reads <code>CODE-ATLAS.md</code> in any text editor or GitHub.</li>
+      <li>Do not put database URLs, Neon passwords, or Vercel tokens in this pack. None are included.</li>
+    </ol>
+    <p>To regenerate screenshots: run the app on port 43127, then <code>node capture-screens.mjs</code> from this folder with playwright-core and Chrome.</p>
+    <p>Governing product law outside this zip still lives in the repo: <code>00-START-HERE.md</code>, <code>docs/books/VISIBILITY-WALLS.md</code>, Brand System v2.9. Those files are also inlined at the top of CODE-ATLAS where they are markdown in the listed roots; the full books folder remains in <code>docs/books/</code> in the repository.</p>
+  </main>
+</body>
+</html>
