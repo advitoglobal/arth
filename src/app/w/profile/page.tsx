@@ -6,6 +6,7 @@ import { Forbidden } from "@/components/forbidden";
 import { landingPath } from "@/lib/seats";
 import { ScoreWallet } from "@/components/score-wallet";
 import { ProfileForm } from "@/components/register-forms";
+import { unofficialScoresCopy, pointsAreOfficial } from "@/vendors/status";
 import { walletMovements } from "@/services/floor-register";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -35,6 +36,7 @@ export default async function ProfilePage() {
           <h2 className="font-display text-[20px] font-semibold">Score wallet</h2>
           <p className="text-sm text-[var(--arth-n60)]">
             Each movement names the action. The wallet never shows a total that jumps. Connected under 20 seconds scores nothing. Penalties are for concealment only: a missed first call, a missed commitment, or no outcome logged.
+            {pointsAreOfficial() ? "" : ` ${unofficialScoresCopy()}`}
           </p>
           <ScoreWallet rows={wallet} />
         </div>

@@ -10,6 +10,7 @@ export function canOpen(roleKey: string, screen: string): boolean {
       "tele", "svctele", "instele", "lead", "mgr", "sales", "salesmgr", "svc", "svcmgr",
       "ins", "owner", "gm", "ops", "admin", "tdcoord",
     ],
+    delivery: ["sales", "salesmgr", "tdcoord", "owner", "gm", "admin"],
     search: [
       "tele", "svctele", "instele", "sales", "salesmgr", "svc", "svcmgr", "ins", "adv",
       "lead", "mgr", "owner", "gm", "ops", "admin", "tdcoord",

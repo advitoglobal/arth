@@ -1,7 +1,8 @@
 import { asSeat, canOpen } from "@/db/session";
 import { getLead, listQueue } from "@/services/telecalling";
 import { StageLadder } from "@/components/stage-ladder";
-import { assignmentMode, listReceivers, listPrices, listRates, emiPaise } from "@/services/floor-register";
+import { adviseSnapshot } from "@/services/advise";
+import { assignmentMode, listReceivers } from "@/services/floor-register";
 import { listConsents } from "@/services/conversion";
 import { departmentOfRole } from "@/domain/ladders";
 import { CallDesk } from "@/components/call-desk";
@@ -49,7 +50,7 @@ export default async function TelePage({
     const dispositions = await tx<{ key: string; label: string; requires_revisit: boolean; requires_lost_reason: boolean; connected: boolean }[]>`
       SELECT key, label, requires_revisit, requires_lost_reason, connected
       FROM config_dispositions
-      WHERE department_key = ${dept}
+      WHERE department_key = ${dept} OR key IN ('not_an_enquiry', 'interested_continuing')
       ORDER BY sort_order
     `;
     const consents = await listConsents(tx, leadId);
@@ -60,14 +61,7 @@ export default async function TelePage({
     const handedToSales = Boolean(ownerId) && ownerId !== seat.userId && String(lead.owner_name ?? "").length > 0;
     const salesPeople = await listReceivers(tx, String(lead.branch_id), dept);
     const mode = await assignmentMode(tx, String(lead.branch_id), String(lead.source_key));
-    const prices = await listPrices(tx);
-    const rates = await listRates(tx);
-    const price = prices.find((p) => p.model === String(lead.model_interest ?? "")) ?? prices[0];
-    const rate = rates[0];
-    const onRoad = price
-      ? Number(price.ex_showroom_paise) + Number(price.rto_paise) + Number(price.insurance_paise) + Number(price.accessories_paise)
-      : 0;
-    const emi = price && rate ? emiPaise(onRoad, rate.rate_bps, rate.tenure_months) : 0;
+    const adviseSnap = dept === "sales" ? await adviseSnapshot(tx, leadId) : null;
 
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -151,16 +145,7 @@ export default async function TelePage({
               salesPeople={salesPeople}
               mode={mode}
               consents={consents}
-              priceLine={
-                price
-                  ? `On-road about ₹${Math.round(onRoad / 100).toLocaleString("en-IN")}. Ex-showroom confirmed ${price.confirmed_at}. Approximate days if booked today: 21 to 35, an estimate until sales allocation.`
-                  : "No price on the master for this model yet."
-              }
-              emiLine={
-                rate
-                  ? `EMI example ${rate.bank_key} ${rate.tenure_months} months at ${(rate.rate_bps / 100).toFixed(2)} percent, confirmed ${rate.confirmed_at}: ₹${Math.round(emi / 100).toLocaleString("en-IN")} a month.`
-                  : "No bank rate on the table yet."
-              }
+              adviseSnap={adviseSnap ?? undefined}
             />
           ) : (
             <p>

@@ -34,8 +34,8 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
 
 function cols(showValue: boolean) {
   return showValue
-    ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_5.5rem_auto_minmax(0,0.9fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,0.7fr)_6.5rem]"
-    : "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_5.5rem_auto_minmax(0,0.95fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.15fr)_minmax(0,1.15fr)_6.5rem]";
+    ? "lg:grid-cols-[minmax(9rem,0.9fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(5.5rem,0.55fr)_minmax(11rem,1.35fr)_minmax(10rem,1.2fr)_minmax(0,0.55fr)_6.5rem]"
+    : "lg:grid-cols-[minmax(9rem,0.95fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(5.5rem,0.55fr)_minmax(11rem,1.4fr)_minmax(10rem,1.25fr)_6.5rem]";
 }
 
 function Field({
@@ -43,11 +43,13 @@ function Field({
   value,
   sub,
   warn = false,
+  wrap = false,
 }: {
   label: string;
   value: string;
   sub?: string | null;
   warn?: boolean;
+  wrap?: boolean;
 }) {
   return (
     <div className="min-w-0">
@@ -55,13 +57,16 @@ function Field({
         {label}
       </p>
       <p
-        className={`mt-1 truncate text-sm lg:mt-0 ${warn ? "font-semibold text-[var(--arth-overdue)]" : ""}`}
+        className={`mt-1 text-sm leading-snug lg:mt-0 ${wrap ? "whitespace-normal break-words" : "truncate"} ${warn ? "font-semibold text-[var(--arth-overdue)]" : ""}`}
         title={value}
       >
         {value}
       </p>
       {sub ? (
-        <p className="truncate text-[12.5px] text-[var(--arth-n60)]" title={sub}>
+        <p
+          className={`text-[12.5px] text-[var(--arth-n60)] ${wrap ? "whitespace-normal break-words" : "truncate"}`}
+          title={sub}
+        >
           {sub}
         </p>
       ) : null}
@@ -73,11 +78,13 @@ export function EnquiryRow({
   row,
   canCall,
   showValue = false,
+  hideOverdueStamp = false,
 }: {
   row: LeadRow;
   showBand?: boolean;
   canCall: boolean;
   showValue?: boolean;
+  hideOverdueStamp?: boolean;
 }) {
   const next = nextDue(row);
   const parked = isParked(row);
@@ -104,7 +111,7 @@ export function EnquiryRow({
             {row.customer_name}
           </p>
           <div className="mt-2 lg:col-span-full">
-            <StageLadder current={row.stage_key} />
+            <StageLadder current={row.stage_key} compact />
           </div>
           <p className="font-data mt-1 truncate text-[12.5px] text-[var(--arth-n60)] lg:mt-0">
             {indianMobile(row.phone)}
@@ -115,7 +122,7 @@ export function EnquiryRow({
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-1 lg:justify-start">
           {settled ? <StatusStamp state="settled" /> : null}
-          {!settled && (next.overdue || firstResponseLate) ? (
+          {!settled && !hideOverdueStamp && (next.overdue || firstResponseLate) ? (
             <StatusStamp state="overdue" />
           ) : null}
           {parked ? <StatusStamp state="parked" /> : null}
@@ -143,8 +150,8 @@ export function EnquiryRow({
                 : null
           }
         />
-        <Field label="Last activity" value={eventDate(row)} />
-        <Field label="Next" value={next.text} warn={next.overdue} />
+        <Field label="Last activity" value={eventDate(row)} wrap />
+        <Field label="Next" value={next.text} warn={next.overdue} wrap />
         {showValue ? (
           <Field
             label="Value"
@@ -191,10 +198,12 @@ export function EnquiryList({
   rows,
   canCall,
   showValue = false,
+  hideOverdueStamp = false,
 }: {
   rows: LeadRow[];
   canCall: boolean | ((row: LeadRow) => boolean);
   showValue?: boolean;
+  hideOverdueStamp?: boolean;
 }) {
   return (
     <div className="space-y-3 lg:space-y-0 lg:border lg:border-[var(--arth-n10)] lg:bg-[var(--arth-n00)]">
@@ -205,6 +214,7 @@ export function EnquiryList({
           row={row}
           canCall={typeof canCall === "function" ? canCall(row) : canCall}
           showValue={showValue}
+          hideOverdueStamp={hideOverdueStamp}
         />
       ))}
     </div>

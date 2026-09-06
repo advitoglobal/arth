@@ -16,6 +16,7 @@ const items = [
   { href: "/w/svc", screen: "svc", label: "Service" },
   { href: "/w/ins", screen: "ins", label: "Insurance" },
   { href: "/w/stock", screen: "stock", label: "Stock" },
+  { href: "/w/delivery", screen: "delivery", label: "Delivery" },
   { href: "/w/drive", screen: "drive", label: "Test drives" },
   { href: "/w/search", screen: "search", label: "Search" },
   { href: "/w/bot", screen: "bot", label: "Arthbot" },

@@ -11,8 +11,8 @@ Governed by `00-START-HERE.md`, `docs/books/VISIBILITY-WALLS.md`, and THE ARTH B
 ```bash
 cp .env.example .env.local
 npm install
-npx tsx scripts/migrate.ts 0031
-npx tsx scripts/migrate.ts 0033
+npx tsx scripts/migrate.ts 0034
+npx tsx scripts/migrate.ts 0035
 npm run prove
 npm run dev              # 127.0.0.1:43127
 ```
@@ -46,7 +46,7 @@ Demonstration password for every seat: `arth-demo`. Or use mobile OTP (Iyer: `98
 
 - **Shared new book** per department until a connected Dial of 20 seconds or more.
 - **Department ladders.** Sales still uses Meeting. Service uses Appointment. Insurance uses Quoted. Service never books a test drive.
-- **Escalation notifies.** Reassign is a superior's decision.
+- **Escalation notifies.** Recent unclaimed names (last seven days) auto-assign after the first-response window. Older demonstration names stay shared until someone reaches the customer.
 - **Stock.** Sales books a VIN. Only a sales manager releases it.
 - **Insurance.** All products listed. Top three suggested. Nothing hidden on the call.
 - **Consent** is per purpose, not one box.
@@ -63,7 +63,8 @@ Demonstration password for every seat: `arth-demo`. Or use mobile OTP (Iyer: `98
 | Service | `/w/svc` | Workshop book, no test drive |
 | Insurance | `/w/ins` | Full catalogue, top three suggested |
 | Stock | `/w/stock` | Booked units |
-| Test drives | `/w/drive` | Coordinator slots |
+| Delivery | `/w/delivery` | Twelve-step chain and promise ledger |
+| Customer track | `/t/[token]` | No login. Expires 30 days after delivery |
 | All departments | `/w/gm` | GM: cost per booking, escalations |
 | This dealer | `/w/prin` | Principal: all departments plus people |
 | Arthbot | `/w/bot` | Allowlisted reports, CSV / PDF |

@@ -1,6 +1,7 @@
 import type { Tx } from "@/db/with-tenant";
 import { stagesFor } from "@/domain/ladders";
 import { writeAudit, recordMovement } from "@/services/floor-register";
+import { autoAssignLapsedRecent } from "@/services/assignment";
 
 export async function findByPhone(tx: Tx, phone: string) {
   const digits = phone.replace(/\D/g, "");
@@ -24,6 +25,7 @@ export async function runEscalations(tx: Tx) {
       AND l.first_response_due IS NOT NULL AND l.first_response_due < now()
       AND l.escalate_level = 'none'
       AND l.lost_reason_key IS NULL
+      AND COALESCE(l.is_not_enquiry, false) = false
     LIMIT 40
   `;
   let n = 0;
@@ -35,6 +37,7 @@ export async function runEscalations(tx: Tx) {
     await notifyRoles(tx, row.branch_id, ["lead"], `${row.customer_name} is unclaimed`, row.id);
     n += 1;
   }
+  n += await autoAssignLapsedRecent(tx);
 
   const rungs: { from: string; to: string; wait: string; roles: string[] }[] = [
     { from: "lead", to: "mgr", wait: "4 hours", roles: ["mgr", "salesmgr", "svcmgr"] },
@@ -129,6 +132,7 @@ export async function listEscalations(tx: Tx) {
     SELECT l.id::text, c.full_name AS customer_name, l.department_key, l.escalate_level, l.escalate_at
     FROM leads l JOIN customers c ON c.id = l.customer_id
     WHERE l.escalate_level <> 'none' AND l.lost_reason_key IS NULL
+      AND COALESCE(l.is_not_enquiry, false) = false
     ORDER BY l.escalate_at ASC NULLS LAST
     LIMIT 80
   `;
@@ -146,6 +150,7 @@ export async function costPerBooking(tx: Tx) {
       END AS cost_paise
     FROM source_costs s
     LEFT JOIN leads l ON l.tenant_id = s.tenant_id AND l.source_key = s.source_key
+      AND COALESCE(l.is_not_enquiry, false) = false
       AND date_trunc('month', timezone('Asia/Kolkata', l.created_at)) = s.month
     WHERE s.month = date_trunc('month', timezone('Asia/Kolkata', now()))::date
     GROUP BY s.source_key, s.spend_paise
@@ -163,7 +168,9 @@ export async function departmentCounts(tx: Tx) {
            OR (first_response_due IS NOT NULL AND first_responded_at IS NULL AND first_response_due < now())
       )::text AS late
     FROM leads
-    WHERE lost_reason_key IS NULL AND stage_key NOT IN ('delivered','renewed')
+    WHERE lost_reason_key IS NULL
+      AND COALESCE(is_not_enquiry, false) = false
+      AND stage_key NOT IN ('delivered','renewed')
     GROUP BY department_key
     ORDER BY department_key
   `;
@@ -473,6 +480,7 @@ export async function reportRows(
         OR (l.first_response_due IS NOT NULL AND l.first_responded_at IS NULL AND l.first_response_due < now())
       )
       AND l.lost_reason_key IS NULL
+      AND COALESCE(l.is_not_enquiry, false) = false
       ORDER BY l.next_action_at ASC NULLS LAST
       LIMIT 200
     `;

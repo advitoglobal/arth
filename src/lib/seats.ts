@@ -356,6 +356,7 @@ export function screenFromPath(pathname: string): string | null {
     "/w/tele": "tele",
     "/w/pipe": "pipe",
     "/w/rec": "rec",
+    "/w/delivery": "delivery",
     "/w/search": "search",
     "/w/new": "new",
     "/w/notif": "notif",

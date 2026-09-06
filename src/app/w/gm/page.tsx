@@ -7,6 +7,8 @@ import { Forbidden } from "@/components/forbidden";
 import { ActionButton } from "@/components/action-button";
 import { costPerBooking, departmentCounts, listEscalations } from "@/services/conversion";
 import { inr } from "@/lib/format";
+import { seatFigures } from "@/services/figures";
+import { FiguresStrip } from "@/components/figures-strip";
 
 export default async function GmPage() {
   return asSeat(async (tx, seat) => {
@@ -16,6 +18,7 @@ export default async function GmPage() {
     const costs = await costPerBooking(tx);
     const depts = await departmentCounts(tx);
     const escalations = await listEscalations(tx);
+    const figures = await seatFigures(tx, seat.roleKey, seat.userId);
 
     return (
       <div className="space-y-8">
@@ -78,6 +81,7 @@ export default async function GmPage() {
             </ul>
           )}
         </section>
+        <FiguresStrip figures={figures} />
         <ActionButton href="/w/pipe">Open the full book</ActionButton>
         <PerformancePanel view={perf} />
       </div>

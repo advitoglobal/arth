@@ -53,10 +53,12 @@ function Block({
   title,
   note,
   rows,
+  hideOverdueStamp = false,
 }: {
   title: string;
   note: string;
   rows: LeadRow[];
+  hideOverdueStamp?: boolean;
 }) {
   const remaining =
     rows.length === 1 ? "1 remaining" : `${rows.length} remaining`;
@@ -73,7 +75,7 @@ function Block({
         <p>None in this list.</p>
       ) : (
         <div className="lg:border-0">
-          <EnquiryList rows={rows} canCall />
+          <EnquiryList rows={rows} canCall hideOverdueStamp={hideOverdueStamp} />
         </div>
       )}
     </section>
@@ -161,8 +163,9 @@ export default async function DayPanelPage() {
           <>
             <Block
               title="Late"
-              note="First call missed, or a follow-up already late. Start here."
+              note="First call missed, or a follow-up already late. Start here. The section title is the stamp; rows do not repeat OVERDUE."
               rows={breaching}
+              hideOverdueStamp
             />
             <Block
               title="Due later today"

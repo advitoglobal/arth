@@ -25,6 +25,13 @@
     "db:perf": "npx tsx scripts/prove-performance.ts",
     "db:register": "npx tsx scripts/prove-register.ts",
     "db:conversion": "npx tsx scripts/prove-conversion.ts",
+    "db:auth": "npx tsx scripts/prove-auth.ts",
+    "db:junk": "npx tsx scripts/prove-junk.ts",
+    "db:catalogue": "npx tsx scripts/prove-catalogue.ts",
+    "db:promise": "npx tsx scripts/prove-promise.ts",
+    "db:advise": "npx tsx scripts/prove-advise.ts",
+    "db:handover": "npx tsx scripts/prove-handover.ts",
+    "db:figures": "npx tsx scripts/prove-figures.ts",
     "db:capacity": "npx tsx scripts/prove-capacity.ts",
     "db:load-capacity": "npx tsx scripts/load-capacity.ts",
     "prove": "npx tsx scripts/prove.ts"

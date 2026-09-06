@@ -19,6 +19,9 @@ export async function POST(req: Request) {
         callbackReason: body.callbackReason,
         lostFact: body.lostFact,
         callSeconds: body.callSeconds,
+        notEnquiryReason: body.notEnquiryReason,
+        mergeLeadId: body.mergeLeadId,
+        routeDepartment: body.routeDepartment,
       });
       return NextResponse.json(result);
     });

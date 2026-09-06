@@ -2,6 +2,7 @@ import { sql } from "@/db/with-tenant";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { roleLabel, type Seat, type SeatKind } from "@/lib/seats";
 import { randomInt } from "node:crypto";
+import { sendOtp } from "@/vendors/sms";
 
 const fails = new Map<string, { n: number; until: number }>();
 
@@ -17,6 +18,7 @@ function bumpFail(key: string) {
   const gate = fails.get(key);
   const n = (gate?.n ?? 0) + 1;
   fails.set(key, { n, until: n >= 8 ? Date.now() + 60_000 : 0 });
+  void sql`INSERT INTO auth_attempts (key) VALUES (${key})`.catch(() => undefined);
 }
 
 export async function authenticateSeat(
@@ -103,7 +105,8 @@ export async function issueLoginOtp(phone: string): Promise<{ ok: true; demoCode
   if (!found) {
     return { ok: true, demoCode: "" };
   }
-  return { ok: true, demoCode: code };
+  const sent = await sendOtp(digits, code);
+  return { ok: true, demoCode: sent.demoCode };
 }
 
 export async function authenticatePhone(

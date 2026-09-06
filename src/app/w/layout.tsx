@@ -8,6 +8,8 @@ import { ArthWordmark } from "@/components/brand/logo";
 import { hasDemoSession } from "@/lib/seats";
 import { isSessionGuardError } from "@/db/with-tenant";
 import { countUnread, raiseFirstResponseBreaches } from "@/services/telecalling";
+import { WalletChip } from "@/components/wallet-chip";
+import { walletMovements } from "@/services/floor-register";
 import type { ReactNode } from "react";
 
 function isPublicFloorPath(path: string) {
@@ -38,17 +40,18 @@ export default async function FloorLayout({
 
   const seat = await currentSeat();
   let unread = 0;
+  let monthPoints = 0;
   try {
-    unread = canOpen(seat.roleKey, "notif")
-      ? await asSeat(async (tx, s) => {
-          if (s.roleKey === "tele" || s.roleKey === "svctele" || s.roleKey === "instele") {
-            await raiseFirstResponseBreaches(tx, s.userId);
-          }
-          const { runEscalations } = await import("@/services/conversion");
-          await runEscalations(tx);
-          return countUnread(tx, s.userId);
-        })
-      : 0;
+    await asSeat(async (tx, s) => {
+      if (s.roleKey === "tele" || s.roleKey === "svctele" || s.roleKey === "instele") {
+        await raiseFirstResponseBreaches(tx, s.userId);
+      }
+      const { runEscalations } = await import("@/services/conversion");
+      await runEscalations(tx);
+      const wallet = await walletMovements(tx, s.userId);
+      monthPoints = wallet.reduce((sum, row) => sum + row.amount, 0);
+      unread = canOpen(s.roleKey, "notif") ? await countUnread(tx, s.userId) : 0;
+    });
   } catch (err) {
     if (isSessionGuardError(err)) {
       redirect("/w/login");
@@ -61,6 +64,9 @@ export default async function FloorLayout({
       <FloorNav seat={seat} unread={unread} />
       <div className="min-w-0 flex-1">
         <OfflineBar />
+        <div className="flex justify-end px-4 pt-4 lg:px-8">
+          <WalletChip monthPoints={monthPoints} />
+        </div>
         <div className="px-4 py-6 lg:px-8 lg:py-8">{children}</div>
       </div>
     </div>

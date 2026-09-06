@@ -17,6 +17,13 @@ const checks: [string, string][] = [
   ["db:perf", "PERF_OK"],
   ["db:register", "REGISTER_OK"],
   ["db:conversion", "CONVERSION_OK"],
+  ["db:auth", "AUTH_OK"],
+  ["db:junk", "JUNK_OK"],
+  ["db:catalogue", "CATALOGUE_OK"],
+  ["db:promise", "PROMISE_OK"],
+  ["db:advise", "ADVISE_OK"],
+  ["db:handover", "HANDOVER_OK"],
+  ["db:figures", "FIGURES_OK"],
 ];
 
 let failed = 0;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { JUNK_REASONS } from "@/domain/junk";
 import { needsCallbackReason } from "@/domain/clock";
 
 export function DispositionPanel({
@@ -14,6 +15,7 @@ export function DispositionPanel({
   onNote,
   dispositions,
   lostReasons,
+  proposal,
 }: {
   leadId: string;
   nextLeadId?: string;
@@ -29,6 +31,7 @@ export function DispositionPanel({
     connected: boolean;
   }[];
   lostReasons: { key: string; label: string; requires_fact: string }[];
+  proposal?: { dispositionKey: string; revisitAt?: string; reason: string; stageKey?: string } | null;
 }) {
   const router = useRouter();
   const [key, setKey] = useState("");
@@ -37,12 +40,16 @@ export function DispositionPanel({
   const [note, setNote] = useState("");
   const [callbackReason, setCallbackReason] = useState("");
   const [lostFact, setLostFact] = useState("");
+  const [junkReason, setJunkReason] = useState("");
+  const [mergeLeadId, setMergeLeadId] = useState("");
+  const [routeDepartment, setRouteDepartment] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const farCallback = needsCallbackReason(revisit || null);
   const selected = dispositions.find((d) => d.key === key);
   const selectedLost = lostReasons.find((r) => r.key === lost);
+  const junk = JUNK_REASONS.find((r) => r.key === junkReason);
   const showLostFact =
     Boolean(selected?.requires_lost_reason) &&
     Boolean(selectedLost) &&
@@ -59,6 +66,7 @@ export function DispositionPanel({
     lost !== "" ||
     callbackReason !== "" ||
     lostFact !== "" ||
+    junkReason !== "" ||
     key !== "";
   const canSave = Boolean(
     key &&
@@ -66,7 +74,11 @@ export function DispositionPanel({
       (!selected?.requires_lost_reason || lost) &&
       (!showLostFact || lostFact.trim()) &&
       (!farCallback || callbackReason.trim()) &&
-      (!selected?.connected || note.trim()),
+      (!selected?.connected || note.trim()) &&
+      (selected?.key !== "not_an_enquiry" ||
+        (junkReason &&
+          (junk?.key !== "duplicate" || mergeLeadId.trim()) &&
+          (junk?.key !== "route_other_dept" || routeDepartment))),
   );
 
   useEffect(() => {
@@ -102,6 +114,9 @@ export function DispositionPanel({
         callbackReason: callbackReason || undefined,
         lostFact: lostFact || undefined,
         callSeconds,
+        notEnquiryReason: junkReason || undefined,
+        mergeLeadId: mergeLeadId || undefined,
+        routeDepartment: routeDepartment || undefined,
       }),
     });
     const data = await res.json();
@@ -185,10 +200,17 @@ export function DispositionPanel({
               ))}
             </optgroup>
             <optgroup label="Not connected">
-              {dispositions.filter((d) => !d.connected).map((d) => (
+              {dispositions.filter((d) => !d.connected && d.key !== "not_an_enquiry").map((d) => (
                 <option key={d.key} value={d.key}>{d.label}</option>
               ))}
             </optgroup>
+            {dispositions.some((d) => d.key === "not_an_enquiry") ? (
+              <optgroup label="Neither">
+                {dispositions.filter((d) => d.key === "not_an_enquiry").map((d) => (
+                  <option key={d.key} value={d.key}>{d.label}</option>
+                ))}
+              </optgroup>
+            ) : null}
           </select>
       </label>
       {showRevisit ? (
@@ -251,6 +273,59 @@ export function DispositionPanel({
           placeholder="Example: asked for a Saturday test drive and the Zxi brochure"
         />
       </label>
+      {selected?.key === "not_an_enquiry" ? (
+        <>
+          <label className="block text-sm">
+            Why this is not an enquiry
+            <select
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={junkReason}
+              onChange={(e) => setJunkReason(e.target.value)}
+            >
+              <option value="">Select</option>
+              {JUNK_REASONS.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {junk?.key === "duplicate" ? (
+            <label className="block text-sm">
+              Existing enquiry id to merge into. A person decides. Nothing auto-merges.
+              <input
+                className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+                value={mergeLeadId}
+                onChange={(e) => setMergeLeadId(e.target.value)}
+              />
+            </label>
+          ) : null}
+          {junk?.key === "route_other_dept" ? (
+            <label className="block text-sm">
+              Route to
+              <select
+                className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+                value={routeDepartment}
+                onChange={(e) => setRouteDepartment(e.target.value)}
+              >
+                <option value="">Select</option>
+                <option value="sales">Sales</option>
+                <option value="service">Service</option>
+                <option value="insurance">Insurance</option>
+              </select>
+            </label>
+          ) : null}
+        </>
+      ) : null}
+      {proposal ? (
+        <p className="bg-[var(--arth-n05)] px-3 py-2 text-sm">
+          This looks like {proposal.dispositionKey.replaceAll("_", " ")}
+          {proposal.revisitAt ? ` on ${proposal.revisitAt}` : ""}, {proposal.reason}. Correct? Nothing is selected until you choose an outcome.
+          {proposal.stageKey
+            ? ` After you record, you can confirm a move to ${proposal.stageKey}. Recording an outcome and moving a stage stay two acts.`
+            : ""}
+        </p>
+      ) : null}
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
       <div className="flex gap-2">
         <Button onClick={save} disabled={!canSave}>

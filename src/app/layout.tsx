@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Anek_Latin, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     "Other systems tell you your telecaller made forty calls. Arth tells you which of those calls came from a source costing ₹9,200 a booking.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en-IN"

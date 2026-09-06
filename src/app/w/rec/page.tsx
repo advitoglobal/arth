@@ -15,6 +15,8 @@ import { listBranchPeople } from "@/services/floor-register";
 import { listStock, listDiscounts, listConsents } from "@/services/conversion";
 import { SalesConversion } from "@/components/sales-conversion";
 import { ConsentPanel } from "@/components/consent-panel";
+import { handoverCard } from "@/services/handover";
+import { HandoverCard } from "@/components/handover-card";
 import { canApproveDiscount } from "@/lib/access";
 
 export default async function RecPage({
@@ -55,6 +57,7 @@ export default async function RecPage({
     const stock = dept === "sales" ? await listStock(tx) : [];
     const discounts = canApproveDiscount(seat.roleKey) ? await listDiscounts(tx) : [];
     const consents = await listConsents(tx, id);
+    const card = await handoverCard(tx, id);
 
     return (
       <div className="space-y-6">
@@ -130,6 +133,16 @@ export default async function RecPage({
               <dd>{lead.lost_reason_label ?? (lead.lost_reason_key ? String(lead.lost_reason_key) : "Open")}</dd>
             </div>
           </dl>
+          <div className="mt-6">
+            <HandoverCard card={card} />
+          </div>
+          {dept === "sales" && String(lead.stage_key) === "booked" ? (
+            <div className="mt-4">
+              <ActionButton href={`/w/delivery?id=${lead.id}`} variant="outline">
+                Open delivery chain
+              </ActionButton>
+            </div>
+          ) : null}
           {canOpen(seat.roleKey, "tele") &&
           (!lead.owner_user_id || String(lead.owner_user_id) === seat.userId) ? (
             <div className="mt-6">

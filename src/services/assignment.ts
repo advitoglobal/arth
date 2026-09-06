@@ -300,6 +300,76 @@ export async function assignUnowned(tx: Tx, actorUserId: string) {
   return { assigned: assigned.length, actorUserId };
 }
 
+/** Master §1.3: after the first-response window, load-weighted RR. Only recent arrivals so the demonstration shared book stays. */
+export async function autoAssignLapsedRecent(tx: Tx) {
+  const due = await tx<{ id: string; branch_id: string; department_key: string }[]>`
+    SELECT id::text, branch_id::text, department_key
+    FROM leads
+    WHERE owner_user_id IS NULL
+      AND first_responded_at IS NULL
+      AND first_response_due IS NOT NULL
+      AND first_response_due < now()
+      AND created_at > now() - interval '7 days'
+      AND escalate_level <> 'none'
+      AND escalate_at IS NOT NULL
+      AND escalate_at < now() - interval '30 minutes'
+      AND lost_reason_key IS NULL
+      AND COALESCE(is_not_enquiry, false) = false
+    ORDER BY first_response_due ASC
+    LIMIT 20
+  `;
+  let n = 0;
+  for (const lead of due) {
+    const role =
+      lead.department_key === "service"
+        ? "svctele"
+        : lead.department_key === "insurance"
+          ? "instele"
+          : "tele";
+    const [owner] = await tx<{ id: string }[]>`
+      SELECT u.id
+      FROM users u
+      WHERE u.role_key = ${role}
+        AND u.is_active = true
+        AND u.position_id IN (
+          SELECT id FROM positions WHERE branch_id = ${lead.branch_id}::uuid
+        )
+      ORDER BY (
+        SELECT count(*) FROM leads l
+        WHERE l.owner_user_id = u.id
+          AND l.lost_reason_key IS NULL
+          AND COALESCE(l.is_not_enquiry, false) = false
+          AND l.stage_key <> 'delivered'
+      ) ASC, u.full_name ASC
+      LIMIT 1
+    `;
+    if (!owner) continue;
+    await tx`
+      UPDATE leads SET
+        owner_user_id = ${owner.id}::uuid,
+        assigned_at = now(),
+        pool_open = false,
+        stage_key = CASE WHEN stage_key = 'new' THEN 'assigned' ELSE stage_key END
+      WHERE id = ${lead.id}::uuid AND owner_user_id IS NULL
+    `;
+    await tx`
+      INSERT INTO lead_events (
+        tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+      ) VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${lead.id}::uuid,
+        'assigned',
+        'SYSTEM',
+        NULL,
+        'Auto-assigned after the first-response window. Load-weighted round robin. The team leader was told.',
+        ${tx.json({ owner_user_id: owner.id, rule: "first_response_lapse" })}
+      )
+    `;
+    n += 1;
+  }
+  return n;
+}
+
 export async function createOwnedEnquiry(
   tx: Tx,
   input: {

@@ -10,6 +10,7 @@ import { claimOnReach, scheduleNextAction } from "@/services/assignment";
 import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
 import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
 import { stageLabel, enquiryNo } from "@/lib/labels";
+import { junkReason } from "@/domain/junk";
 import { hadRecentDial } from "@/services/conversion";
 import {
   type WhatsAppKind,
@@ -297,6 +298,9 @@ export async function recordDisposition(
     callbackReason?: string;
     lostFact?: string;
     callSeconds?: number;
+    notEnquiryReason?: string;
+    mergeLeadId?: string;
+    routeDepartment?: string;
   },
 ) {
   if (!input.dispositionKey?.trim()) {
@@ -337,6 +341,24 @@ export async function recordDisposition(
   if (needsCallbackReason(revisitAt ?? null) && !input.callbackReason?.trim()) {
     throw new Error("A reason is required when the callback is more than 14 days away.");
   }
+  if (input.dispositionKey === "not_an_enquiry") {
+    const reason = junkReason(input.notEnquiryReason ?? "");
+    if (!reason) throw new Error("Pick why this is not an enquiry.");
+    const [attempts] = await tx<{ n: string }[]>`
+      SELECT count(*)::text AS n FROM lead_events
+      WHERE lead_id = ${input.leadId}::uuid
+        AND event_type IN ('disposition', 'call_attempt')
+    `;
+    if (Number(attempts?.n ?? 0) < 2) {
+      throw new Error("Two attempts are required before this can be marked not an enquiry.");
+    }
+    if (reason.key === "duplicate" && !input.mergeLeadId) {
+      throw new Error("Name the existing enquiry this duplicates. Arth will not merge two households by itself.");
+    }
+    if (reason.key === "route_other_dept" && !["sales", "service", "insurance"].includes(input.routeDepartment ?? "")) {
+      throw new Error("Name the department this customer belongs in.");
+    }
+  }
 
   const [before] = await tx<{
     next_action_at: Date | null;
@@ -376,6 +398,9 @@ export async function recordDisposition(
     scoring_connected: scoringConnect,
     connect_floor_seconds: 20,
     dialled,
+    not_enquiry_reason: input.notEnquiryReason ?? null,
+    merge_lead_id: input.mergeLeadId ?? null,
+    route_department: input.routeDepartment ?? null,
   };
 
   const [inserted] = await tx<{ id: string }[]>`
@@ -436,6 +461,35 @@ export async function recordDisposition(
         escalate_at = NULL
       WHERE id = ${input.leadId}::uuid
     `;
+  }
+
+  if (input.dispositionKey === "not_an_enquiry") {
+    const reason = junkReason(input.notEnquiryReason ?? "");
+    if (reason?.closes) {
+      await tx`
+        UPDATE leads SET
+          is_not_enquiry = true,
+          not_enquiry_reason = ${reason.key},
+          next_action_at = NULL,
+          escalate_level = 'none',
+          escalate_at = NULL
+        WHERE id = ${input.leadId}::uuid
+      `;
+    } else if (reason?.key === "route_other_dept") {
+      await tx`
+        UPDATE leads SET
+          department_key = ${input.routeDepartment ?? "sales"},
+          not_enquiry_reason = 'route_other_dept'
+        WHERE id = ${input.leadId}::uuid
+      `;
+    } else if (reason?.key === "duplicate") {
+      await tx`
+        UPDATE leads SET
+          not_enquiry_reason = 'duplicate',
+          next_action_at = NULL
+        WHERE id = ${input.leadId}::uuid
+      `;
+    }
   }
 
   const earned = pointsLine(earnedPoints, scoringConnect, disp.connected);

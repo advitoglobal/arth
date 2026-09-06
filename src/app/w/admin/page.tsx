@@ -9,6 +9,8 @@ import {
   listAudit,
 } from "@/services/floor-register";
 import { AssignmentModeForm, UploadBatchForm } from "@/components/register-forms";
+import { listCatalogue } from "@/services/catalogue";
+import { OffboardButton } from "@/components/offboard-button";
 import { istDateTime } from "@/lib/format";
 
 export default async function AdminPage() {
@@ -23,6 +25,7 @@ export default async function AdminPage() {
     const prices = await listPrices(tx);
     const rates = await listRates(tx);
     const audit = await listAudit(tx);
+    const catalogue = await listCatalogue(tx);
     return (
       <div className="space-y-8">
         <RuleHeading>Dealer setup</RuleHeading>
@@ -80,6 +83,27 @@ export default async function AdminPage() {
               ))}
             </ul>
           )}
+        </section>
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">Maruti catalogue</h2>
+          <p className="text-sm text-[var(--arth-n60)]">
+            OEM master maintained by Advito. This dealer&apos;s price master overrides the rupees. On-road is computed, never stored.
+          </p>
+          {catalogue.length === 0 ? (
+            <p>No OEM variants loaded.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--arth-n10)] border border-[var(--arth-n10)] bg-[var(--arth-n00)]">
+              {catalogue.map((c) => (
+                <li key={`${c.model}-${c.variant}`} className="px-4 py-3 text-sm">
+                  {c.oem_key} · {c.model} {c.variant} · {c.vehicle_type}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="space-y-3">
+          <h2 className="font-display text-[20px] font-semibold">Offboarding</h2>
+          <OffboardButton />
         </section>
       </div>
     );

@@ -11,6 +11,8 @@ import { ActionButton } from "@/components/action-button";
 import { enquiryNo } from "@/lib/labels";
 import { assignmentMode, whyWeLose } from "@/services/floor-register";
 import { AssignmentModeForm, UploadBatchForm } from "@/components/register-forms";
+import { seatFigures } from "@/services/figures";
+import { FiguresStrip } from "@/components/figures-strip";
 
 export default async function DeskPage() {
   return asSeat(async (tx, seat) => {
@@ -24,6 +26,7 @@ export default async function DeskPage() {
     const showValue = canSeeValue(seat.roleKey);
     const perf = await loadPerformance(tx);
     const lose = await whyWeLose(tx);
+    const figures = await seatFigures(tx, seat.roleKey, seat.userId);
     const [pos] = await tx<{ branch_id: string | null }[]>`
       SELECT p.branch_id::text FROM users u
       LEFT JOIN positions p ON p.id = u.position_id
@@ -125,6 +128,7 @@ export default async function DeskPage() {
             </>
           )}
         </section>
+        <FiguresStrip figures={figures} />
         <ActionButton href="/w/pipe">Open the full book</ActionButton>
         <AssignmentModeForm current={mode} />
         <UploadBatchForm />
