@@ -46,3 +46,4 @@ next-env.d.ts
 /agent-tools
 /.cursor
 /docs/directors-review/node_modules
+/docs/directors-review/*.zip
