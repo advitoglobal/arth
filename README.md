@@ -14,10 +14,10 @@ npm install
 npx tsx scripts/migrate.ts 0034
 npx tsx scripts/migrate.ts 0035
 npm run prove
-npm run dev              # 127.0.0.1:43127
+npm run dev              # 0.0.0.0:43127
 ```
 
-Open [http://127.0.0.1:43127](http://127.0.0.1:43127) then Open the product. Sign in on `/w/login`.
+On this machine, open [http://127.0.0.1:43127/w/login](http://127.0.0.1:43127/w/login). Cursor Desktop Preview of `127.0.0.1` opens on your laptop, not this host, so it cannot reach the app. Use the public tunnel URL from the agent when you are not on the same machine.
 
 Demonstration password for every seat: `arth-demo`. Or use mobile OTP (Iyer: `9845011111`). Optional `ANTHROPIC_API_KEY` lets Arthbot pick the report kind. It still cannot leave this dealer.
 

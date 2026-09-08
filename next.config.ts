@@ -3,8 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
+  allowedDevOrigins: [
+    "127.0.0.1",
+    "localhost",
+    "*.trycloudflare.com",
+    "*.loca.lt",
+    "cursor.com",
+    "*.cursor.com",
+    "*.cursor.sh",
+  ],
   experimental: {
     authInterrupts: true,
+  },
+  async redirects() {
+    return [{ source: "/signin", destination: "/w/login", permanent: false }];
   },
   async headers() {
     return [
@@ -12,12 +24,6 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
           {
             key: "Content-Security-Policy",
             value: [
@@ -26,8 +32,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data:",
               "font-src 'self'",
-              "connect-src 'self'",
-              "frame-ancestors 'none'",
+              "connect-src 'self' ws: wss:",
+              "frame-ancestors 'self' https://cursor.com https://*.cursor.com https://*.cursor.sh",
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),
