@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: arth-pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: arth
+    volumes:
+      - arth-pg-data:/var/lib/postgresql/data
+      - ./scripts/docker/init-arth-app.sql:/docker-entrypoint-initdb.d/01-arth-app.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d arth"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  arth-pg-data:
