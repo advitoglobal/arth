@@ -1,14 +1,12 @@
-import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import path from "node:path";
+import { applySqlFile } from "./apply-sql";
 
-const file = path.join(process.cwd(), "src/db/migrations/0002_seed.sql");
-const r = spawnSync("sudo", ["-u", "postgres", "psql", "-d", "arth", "-v", "ON_ERROR_STOP=1"], {
-  input: readFileSync(file, "utf8"),
-  encoding: "utf8",
-});
-if (r.status !== 0) {
-  console.error(r.stderr || r.stdout);
-  process.exit(r.status ?? 1);
+async function main() {
+  await applySqlFile(path.join(process.cwd(), "src/db/migrations/0002_seed.sql"));
+  console.log("seed applied");
 }
-console.log("seed applied");
+
+main().catch((err) => {
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+});

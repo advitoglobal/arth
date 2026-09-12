@@ -84,3 +84,38 @@ The cloud agent can publish a claimable Vercel preview for floor testing. That p
 3. Claim the Neon database within 72 hours, or the book disappears.
 
 Arthbot reports need `ANTHROPIC_API_KEY` on the Vercel project after you claim it. Dial and inbound are still desk simulation, not a live exchange.
+
+## Free public demo (Vercel Hobby + Neon Free)
+
+A shareable `https://….vercel.app/w/login` link. Not production. Hobby is for personal, non-commercial use.
+
+### 1. Neon (database)
+
+1. Sign up at [neon.tech](https://neon.tech) on the Free plan. No card.
+2. New project. Region: Singapore if listed, otherwise the default.
+3. Open **Dashboard → Connection details**. Copy the **direct** URI (host has no `-pooler`).
+4. On your laptop, from this repo:
+
+```bash
+export DATABASE_URL='paste-the-direct-uri-here'
+export ARTH_APP_PASSWORD='at-least-16-random-characters'
+npm install
+npm run db:hosted
+```
+
+5. In Neon, copy the **pooled** URI. Change the username to `arth_app` and the password to `ARTH_APP_PASSWORD`. That string is Vercel `DATABASE_URL`. Never commit it.
+
+Do not run `npm run db:load-capacity`. The free 0.5 GB cap will not hold the 20 lakh book.
+
+### 2. Vercel (app)
+
+1. Sign up at [vercel.com](https://vercel.com) on Hobby.
+2. **Add New → Project → Import** `advitoglobal/arth` (or your fork).
+3. Framework: Next.js. Root: `.`
+4. **Environment variables** → `DATABASE_URL` = the pooled `arth_app` URI from step 5.
+5. Deploy. Share `https://<project>.vercel.app/w/login`.
+6. First open after five idle minutes can be slow: Neon was asleep.
+
+Sign in: `iyer` / `arth-demo`. Also `rao`, `gupta`, `shah`.
+
+If the build fails on `DATABASE_URL`, the env var is missing on Production. If login fails, you used the Neon owner URI on Vercel (bypasses RLS) or the pooler URI during `db:hosted`.
