@@ -7,7 +7,7 @@ import {
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
 import { claimOnReach, scheduleNextAction } from "@/services/assignment";
-import { recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
+import { recordMovement, applyConcealmentPenalties, escalateHandoverContact } from "@/services/floor-register";
 import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
 import { stageLabel, enquiryNo } from "@/lib/labels";
 import { junkReason } from "@/domain/junk";
@@ -122,6 +122,7 @@ export async function hydrateLeads(tx: Tx, ids: string[]) {
 }
 
 export async function listQueue(tx: Tx, ownerId: string) {
+  await escalateHandoverContact(tx);
   const found = await tx<{ id: string }[]>`
     SELECT x AS id FROM arth_queue_lead_ids(${ownerId}::uuid) AS x
   `;
@@ -145,6 +146,7 @@ export async function listPipeline(
   ownerId: string,
   opts?: { stage?: string; limit?: number },
 ): Promise<PipelinePage> {
+  await escalateHandoverContact(tx);
   const [viewer] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${ownerId}::uuid
   `;
@@ -408,6 +410,13 @@ export async function recordDisposition(
   }
   if (scoringConnect) {
     await claimOnReach(tx, input.leadId, input.userId);
+    await tx`
+      UPDATE leads SET handover_contacted_at = COALESCE(handover_contacted_at, now())
+      WHERE id = ${input.leadId}::uuid
+        AND owner_user_id = ${input.userId}::uuid
+        AND handed_on_at IS NOT NULL
+        AND handover_contacted_at IS NULL
+    `;
   }
 
   const points = scoringConnect || !disp.connected

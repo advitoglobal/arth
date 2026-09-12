@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { assignmentModesEnabled, handoverModeLabel } from "@/domain/handover";
 
 function ready(stageKey: string, department?: string | null) {
   if (department === "service") {
@@ -28,8 +29,11 @@ export function HandoffButton({
   mode: string;
 }) {
   const router = useRouter();
-  const can = ready(stageKey, department);
+  const canHand = ready(stageKey, department);
+  const enabled = assignmentModesEnabled(mode)[0] ?? "direct";
+  const [choice, setChoice] = useState<"hand" | "nurture">("hand");
   const [salesUserId, setSalesUserId] = useState(salesPeople[0]?.id ?? "");
+  const [revisitAt, setRevisitAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
   const label =
@@ -46,8 +50,13 @@ export function HandoffButton({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         leadId,
-        note: "Ready. Handed on for conversion.",
-        salesUserId: mode === "direct" ? salesUserId : undefined,
+        note:
+          choice === "nurture"
+            ? "Not ready. Kept on this book with a revisit date."
+            : "Ready. Handed on for conversion.",
+        mode: choice === "nurture" ? "nurture" : enabled,
+        salesUserId: enabled === "direct" && choice === "hand" ? salesUserId : undefined,
+        revisitAt: choice === "nurture" ? revisitAt : undefined,
       }),
     });
     const data = await res.json();
@@ -56,8 +65,18 @@ export function HandoffButton({
       return;
     }
     setConfirm(data.recorded);
-    window.setTimeout(() => router.push("/w/dayb"), 1500);
+    window.setTimeout(() => {
+      if (choice === "nurture") router.refresh();
+      else router.push("/w/dayb");
+    }, 1500);
   }
+
+  const handCopy =
+    enabled === "pool"
+      ? `This branch is on pool. First ${label} to reach owns it.`
+      : enabled === "queue"
+        ? "This branch is on the department queue. The sales manager assigns the receiving executive."
+        : `Direct mode. Name the receiving ${label}.`;
 
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
@@ -65,11 +84,26 @@ export function HandoffButton({
         Hand on
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        A telecaller job ends at assignment. {mode === "pool"
-          ? `This branch is on pool. First ${label} to claim owns it.`
-          : `Direct mode. Name the receiving ${label}.`}
+        A telecaller job ends at assignment. The digital desk enables one of three ways. Keep and nurture is always available.
       </p>
-      {mode === "direct" && salesPeople.length > 0 ? (
+      <p className="mt-2 text-sm">{handoverModeLabel(enabled)}. {handCopy}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant={choice === "hand" ? "default" : "outline"}
+          onClick={() => setChoice("hand")}
+        >
+          {enabled === "pool" ? "Send to pool" : enabled === "queue" ? "Send to queue" : `Hand to ${label}`}
+        </Button>
+        <Button
+          type="button"
+          variant={choice === "nurture" ? "default" : "outline"}
+          onClick={() => setChoice("nurture")}
+        >
+          Keep and nurture
+        </Button>
+      </div>
+      {choice === "hand" && enabled === "direct" && salesPeople.length > 0 ? (
         <label className="mt-3 block text-sm">
           {label}
           <select
@@ -85,12 +119,34 @@ export function HandoffButton({
           </select>
         </label>
       ) : null}
+      {choice === "nurture" ? (
+        <label className="mt-3 block text-sm">
+          Revisit date
+          <input
+            type="date"
+            className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2 font-data"
+            value={revisitAt}
+            onChange={(e) => setRevisitAt(e.target.value)}
+          />
+        </label>
+      ) : null}
       {confirm ? <p className="mt-3 font-medium">{confirm}</p> : null}
       {error ? <p className="mt-3 text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-      <Button className="mt-3" type="button" disabled={!can || Boolean(confirm)} onClick={send}>
-        {mode === "pool" ? "Send to pool" : `Hand to ${label}`}
+      <Button
+        className="mt-3"
+        type="button"
+        disabled={(choice === "hand" && !canHand) || Boolean(confirm)}
+        onClick={send}
+      >
+        {choice === "nurture"
+          ? "Keep on my book"
+          : enabled === "pool"
+            ? "Send to pool"
+            : enabled === "queue"
+              ? "Send to queue"
+              : `Hand to ${label}`}
       </Button>
-      {!can ? (
+      {choice === "hand" && !canHand ? (
         <p className="mt-2 text-sm text-[var(--arth-n60)]">
           Stage is not ready to hand on. Use the stage panel.
         </p>

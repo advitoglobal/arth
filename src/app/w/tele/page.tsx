@@ -54,8 +54,9 @@ export default async function TelePage({
       ORDER BY sort_order
     `;
     const consents = await listConsents(tx, leadId);
+    const handedOn = Boolean(lead.handed_on_at) && String(lead.handed_on_by ?? "") === seat.userId;
     const ownerId = String(lead.owner_user_id ?? "");
-    const canWork = !ownerId || ownerId === seat.userId;
+    const canWork = (!ownerId || ownerId === seat.userId) && !handedOn;
     const remaining = queue.filter((r) => r.id !== leadId);
     const nextUp = remaining[0];
     const handedToSales = Boolean(ownerId) && ownerId !== seat.userId && String(lead.owner_name ?? "").length > 0;
@@ -140,9 +141,11 @@ export default async function TelePage({
             />
           ) : (
             <p>
-              {handedToSales
-                ? `This enquiry is with ${lead.owner_name}. Conversion is a sales job.`
-                : `You do not own this enquiry. ${lead.owner_name ?? "Another seat"} reached the customer.`}
+              {handedOn
+                ? "You handed this on. Stage and outcome stay visible. Working it is a sales job now."
+                : handedToSales
+                  ? `This enquiry is with ${lead.owner_name}. Conversion is a sales job.`
+                  : `You do not own this enquiry. ${lead.owner_name ?? "Another seat"} reached the customer.`}
             </p>
           )}
         </div>

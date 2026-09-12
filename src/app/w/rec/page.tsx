@@ -10,7 +10,7 @@ import { Forbidden } from "@/components/forbidden";
 import { StageLadder } from "@/components/stage-ladder";
 import { ClaimButton } from "@/components/claim-button";
 import { FigureSource } from "@/components/figure-source";
-import { QuoteButton, ReassignForm } from "@/components/register-forms";
+import { QuoteButton, ReassignForm, BounceToPoolForm } from "@/components/register-forms";
 import { listBranchPeople } from "@/services/floor-register";
 import { listStock, listDiscounts, listConsents } from "@/services/conversion";
 import { SalesConversion } from "@/components/sales-conversion";
@@ -59,6 +59,14 @@ export default async function RecPage({
     const discounts = canApproveDiscount(seat.roleKey) ? await listDiscounts(tx) : [];
     const consents = await listConsents(tx, id);
     const card = await handoverCard(tx, id);
+    const handedRead =
+      String(lead.handed_on_by ?? "") === seat.userId &&
+      ["tele", "svctele", "instele"].includes(seat.roleKey) &&
+      String(lead.owner_user_id ?? "") !== seat.userId;
+    const canWorkLead = !handedRead && (
+      String(lead.owner_user_id ?? "") === seat.userId ||
+      (!lead.owner_user_id && ["tele", "svctele", "instele"].includes(seat.roleKey))
+    );
 
     return (
       <div className="space-y-6">
@@ -86,6 +94,11 @@ export default async function RecPage({
               : "Pushed from telecalling"}
             {lead.department_key ? ` · ${String(lead.department_key)}` : ""}
           </p>
+          {handedRead ? (
+            <p className="mt-3 text-sm">
+              You handed this on. Stage and outcome stay visible. Dial, WhatsApp, and stage moves are a sales job now.
+            </p>
+          ) : null}
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Vehicle</dt>
@@ -144,8 +157,7 @@ export default async function RecPage({
               </ActionButton>
             </div>
           ) : null}
-          {canOpen(seat.roleKey, "tele") &&
-          (!lead.owner_user_id || String(lead.owner_user_id) === seat.userId) ? (
+          {canWorkLead && canOpen(seat.roleKey, "tele") ? (
             <div className="mt-6">
               <ActionButton href={`/w/tele?id=${lead.id}`} variant="default">
                 Log a call
@@ -157,8 +169,9 @@ export default async function RecPage({
               <ClaimButton leadId={String(lead.id)} />
             </div>
           ) : null}
-          {String(lead.owner_user_id ?? "") === seat.userId ||
-          ["sales", "svc", "ins", "lead", "mgr", "owner", "admin", "gm", "salesmgr", "svcmgr"].includes(seat.roleKey) ? (
+          {!handedRead &&
+          (String(lead.owner_user_id ?? "") === seat.userId ||
+            ["sales", "svc", "ins", "lead", "mgr", "owner", "admin", "gm", "salesmgr", "svcmgr"].includes(seat.roleKey)) ? (
             <div className="mt-6 space-y-4">
               <StagePanel
                 leadId={String(lead.id)}
@@ -166,6 +179,13 @@ export default async function RecPage({
                 department={String(lead.department_key ?? "sales")}
               />
               {String(lead.department_key) === "sales" ? <QuoteButton leadId={String(lead.id)} /> : null}
+            </div>
+          ) : null}
+          {["sales", "svc", "ins"].includes(seat.roleKey) &&
+          String(lead.owner_user_id ?? "") === seat.userId &&
+          lead.handed_on_at ? (
+            <div className="mt-6">
+              <BounceToPoolForm leadId={String(lead.id)} />
             </div>
           ) : null}
           {canReassign ? (
@@ -176,8 +196,7 @@ export default async function RecPage({
           <div className="mt-6">
             <ConsentPanel leadId={String(lead.id)} initial={consents} />
           </div>
-          {String(lead.owner_user_id ?? "") === seat.userId ||
-          (!lead.owner_user_id && ["tele", "svctele", "instele"].includes(seat.roleKey)) ? (
+          {canWorkLead ? (
             <div className="mt-6">
               <WhatsAppSend leadId={String(lead.id)} department={dept} />
             </div>

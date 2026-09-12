@@ -499,6 +499,13 @@ export async function markDial(tx: Tx, leadId: string, userId: string) {
       ${tx.json({ source: "dial_button", duration_source: "desk_simulation" })}
     )
   `;
+  await tx`
+    UPDATE leads SET handover_contacted_at = COALESCE(handover_contacted_at, now())
+    WHERE id = ${leadId}::uuid
+      AND owner_user_id = ${userId}::uuid
+      AND handed_on_at IS NOT NULL
+      AND handover_contacted_at IS NULL
+  `;
 }
 
 export async function dialPreflight(tx: Tx, leadId: string, userId: string) {

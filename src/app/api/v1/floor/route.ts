@@ -33,8 +33,10 @@ export async function POST(req: Request) {
           WHERE u.id = ${seat.userId}::uuid
         `;
         if (!pos?.branch_id) throw new Error("This seat has no branch.");
+        const raw = String(body.mode ?? "direct");
+        const mode = raw === "pool" || raw === "queue" ? raw : "direct";
         return NextResponse.json(
-          await setAssignmentMode(tx, seat.userId, pos.branch_id, body.mode === "pool" ? "pool" : "direct"),
+          await setAssignmentMode(tx, seat.userId, pos.branch_id, mode),
         );
       }
       if (action === "upload") {
@@ -58,6 +60,18 @@ export async function POST(req: Request) {
           await saveProfile(tx, seat.userId, {
             fullName: String(body.fullName ?? ""),
             whatsappPhone: String(body.whatsappPhone ?? ""),
+          }),
+        );
+      }
+      if (action === "bounce") {
+        const denied = requireAnyScreen(seat, ["rec", "pipe", "desk"]);
+        if (denied) return denied;
+        const { bounceToPool } = await import("@/services/floor-register");
+        return NextResponse.json(
+          await bounceToPool(tx, {
+            leadId: String(body.leadId),
+            actorId: seat.userId,
+            reason: String(body.reason ?? ""),
           }),
         );
       }

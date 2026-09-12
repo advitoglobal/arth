@@ -93,7 +93,7 @@ export function ProfileForm({
 
 export function AssignmentModeForm({ current }: { current: string }) {
   const [msg, setMsg] = useState<string | null>(null);
-  async function setMode(mode: "direct" | "pool") {
+  async function setMode(mode: "direct" | "pool" | "queue") {
     const res = await fetch("/api/v1/floor", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,21 +102,25 @@ export function AssignmentModeForm({ current }: { current: string }) {
     const data = await res.json();
     setMsg(data.recorded ?? data.error ?? "Not saved.");
   }
+  const label = current === "pool" ? "Pool" : current === "queue" ? "Department queue" : "Direct";
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Assignment mode
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        Direct: the telecaller names the receiving executive. Pool: first to claim owns it. Unclaimed names escalate after the first-response window.
+        Direct: the telecaller names the receiving executive. Pool: first to reach owns it. Department queue: the sales manager assigns. Keep and nurture is always available on the telecaller desk.
       </p>
-      <p className="mt-2 text-sm">Current: {current === "pool" ? "Pool" : "Direct"}.</p>
+      <p className="mt-2 text-sm">Current: {label}.</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => setMode("direct")}>
           Direct
         </Button>
         <Button type="button" variant="outline" onClick={() => setMode("pool")}>
           Pool
+        </Button>
+        <Button type="button" variant="outline" onClick={() => setMode("queue")}>
+          Department queue
         </Button>
       </div>
       {msg ? <p className="mt-2 text-sm">{msg}</p> : null}
@@ -241,10 +245,46 @@ export function ReassignForm({
           onChange={(e) => setReason(e.target.value)}
         />
       </label>
-      <Button className="mt-3" type="button" onClick={send}>
+      <Button type="button" onClick={send}>
         Reassign
       </Button>
       {msg ? <p className="mt-2 text-sm">{msg}</p> : null}
+    </div>
+  );
+}
+
+export function BounceToPoolForm({ leadId }: { leadId: string }) {
+  const [reason, setReason] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  async function send() {
+    const res = await fetch("/api/v1/floor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "bounce", leadId, reason }),
+    });
+    const data = await res.json();
+    setMsg(data.recorded ?? data.error ?? "Not bounced.");
+  }
+  return (
+    <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
+        Bounce to pool
+      </p>
+      <p className="mt-2 text-sm text-[var(--arth-n60)]">
+        Returns to the branch pool with a reason. It does not go back to the telecaller who handed it on.
+      </p>
+      <label className="mt-3 block text-sm">
+        Reason
+        <input
+          className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+      </label>
+      <Button className="mt-3" type="button" onClick={send}>
+        Bounce to pool
+      </Button>
+      {msg ? <p className="mt-3 font-medium">{msg}</p> : null}
     </div>
   );
 }
