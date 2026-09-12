@@ -1,6 +1,7 @@
 import type { Tx } from "@/db/with-tenant";
 import { pointsFor } from "@/domain/points";
 import { stagesFor } from "@/domain/ladders";
+import { consentRefusalCopy } from "@/domain/whatsapp-loop";
 
 export function emiPaise(principalPaise: number, rateBps: number, tenureMonths: number) {
   const r = rateBps / 10000 / 12;
@@ -365,9 +366,7 @@ export async function requireConsent(tx: Tx, leadId: string, purpose: string) {
     FROM leads l WHERE l.id = ${leadId}::uuid
   `;
   if (!row?.ok) {
-    throw new Error(
-      "This customer has not agreed to a sales enquiry message, or they have withdrawn. The button refuses rather than sending.",
-    );
+    throw new Error(consentRefusalCopy(purpose));
   }
 }
 

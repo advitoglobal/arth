@@ -1,36 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { WhatsAppKind } from "@/lib/whatsapp";
+import { QUICK_LINKS } from "@/domain/whatsapp-loop";
 
 export function WhatsAppSend({
   leadId,
-  conversation,
   department,
 }: {
   leadId: string;
-  conversation: string;
   department?: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
   const [busy, setBusy] = useState<WhatsAppKind | null>(null);
+
+  useEffect(() => {
+    if (!saved) return;
+    const t = window.setTimeout(() => setSaved(null), 1500);
+    return () => window.clearTimeout(t);
+  }, [saved]);
 
   async function send(kind: WhatsAppKind) {
     setError(null);
     setBusy(kind);
-    const res = await fetch("/api/v1/whatsapp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ leadId, kind, conversation }),
-    });
-    const data = await res.json();
-    setBusy(null);
-    if (!res.ok) {
-      setError(data.error ?? "WhatsApp was not prepared.");
-      return;
+    try {
+      const res = await fetch("/api/v1/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId, kind }),
+      });
+      const data = await res.json();
+      setBusy(null);
+      if (!res.ok) {
+        setError(data.error ?? "WhatsApp was not sent.");
+        return;
+      }
+      setSaved(data.recorded ?? "Sent from the dealership number.");
+    } catch {
+      setBusy(null);
+      setError("Not sent. Try again when the line is back.");
     }
-    if (data.url) window.open(data.url, "_blank", "noopener,noreferrer");
   }
 
   const kinds: { kind: WhatsAppKind; label: string }[] =
@@ -44,12 +55,7 @@ export function WhatsAppSend({
             { kind: "insurance_quote", label: "Insurance quote" },
             { kind: "offer", label: "Renewal offer" },
           ]
-        : [
-            { kind: "brochure", label: "Send brochure" },
-            { kind: "quotation", label: "Send quotation" },
-            { kind: "both", label: "Send brochure and quotation" },
-            { kind: "offer", label: "Send offer" },
-          ];
+        : QUICK_LINKS.map((l) => ({ kind: l.key, label: l.label }));
 
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
@@ -57,15 +63,16 @@ export function WhatsAppSend({
         WhatsApp
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        Each purpose has its own consent. Offers are separate from enquiry, service, and insurance messages.
+        One tap. Consent is checked first. Templates only. Sent from the dealership number, never a personal phone. A brochure earns no points. A quotation sent does.
       </p>
       <div className="mt-3 flex flex-col gap-2">
         {kinds.map((k) => (
           <Button key={k.kind} type="button" variant="outline" disabled={busy !== null} onClick={() => send(k.kind)}>
-            {busy === k.kind ? "Opening…" : k.label}
+            {busy === k.kind ? "Sending…" : k.label}
           </Button>
         ))}
       </div>
+      {saved ? <p className="mt-2 text-sm font-medium">{saved}</p> : null}
       {error ? <p className="mt-2 text-sm text-[var(--arth-overdue)]">{error}</p> : null}
     </div>
   );

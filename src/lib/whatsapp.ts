@@ -1,11 +1,13 @@
-export type WhatsAppKind = "brochure" | "quotation" | "both" | "service_reminder" | "insurance_quote" | "offer";
-
-export function waDigits(phone: string) {
-  const d = phone.replace(/\D/g, "");
-  if (d.length === 10) return `91${d}`;
-  if (d.length === 12 && d.startsWith("91")) return d;
-  return d;
-}
+export type WhatsAppKind =
+  | "brochure"
+  | "price"
+  | "quotation"
+  | "alternative"
+  | "offer"
+  | "location"
+  | "testdrive"
+  | "service_reminder"
+  | "insurance_quote";
 
 export function vehicleLine(model: string | null | undefined, variant: string | null | undefined) {
   const modelText = model?.trim() || "the model you asked about";
@@ -18,43 +20,61 @@ export function whatsappMessage(input: {
   customerName: string;
   model: string | null;
   variant: string | null;
-  conversation: string;
   dealer: string;
   sender: string;
+  altModel?: string | null;
+  priceLine?: string | null;
+  hoursLine?: string | null;
+  slotLine?: string | null;
+  quoteUntil?: string | null;
 }) {
   const vehicle = vehicleLine(input.model, input.variant);
   const name = input.customerName.split(" ")[0] || input.customerName;
-  const talked = input.conversation.trim()
-    ? ` As discussed: ${input.conversation.trim()}`
-    : "";
   const sign = `${input.dealer}, ${input.sender}`;
   if (input.kind === "brochure") {
-    return `Namaste ${name}. Sharing the brochure for ${vehicle}.${talked} Please reply here if you want a quotation or a visit. ${sign}`;
+    return `Namaste ${name}. Sharing the brochure for ${vehicle}. Reply here if you want a quotation or a visit. ${sign}`;
+  }
+  if (input.kind === "price") {
+    const price = input.priceLine?.trim() || "On-road is on the dealer price master for this variant.";
+    return `Namaste ${name}. On-road for ${vehicle}: ${price} Reply here with any change you want explained. ${sign}`;
   }
   if (input.kind === "quotation") {
-    return `Namaste ${name}. Sharing a quotation for ${vehicle}.${talked} Reply here with any change you want on the numbers. ${sign}`;
+    const until = input.quoteUntil ? ` Valid until ${input.quoteUntil}.` : "";
+    const price = input.priceLine?.trim() ? ` ${input.priceLine.trim()}` : "";
+    return `Namaste ${name}. Sharing a frozen quotation for ${vehicle}.${price}${until} This quotation will not reprice itself later. Reply here with any change you want on the numbers. ${sign}`;
+  }
+  if (input.kind === "alternative") {
+    const other = vehicleLine(input.altModel, null);
+    return `Namaste ${name}. Sharing the brochure and on-road for the other choice, ${other}, on the same thread as ${vehicle}. ${sign}`;
+  }
+  if (input.kind === "location") {
+    const hours = input.hoursLine?.trim() || "Working hours are on the branch board.";
+    return `Namaste ${name}. ${input.dealer} ${hours} Search the branch name on Maps for the pin. ${sign}`;
+  }
+  if (input.kind === "testdrive") {
+    const slot = input.slotLine?.trim() || "the slot we booked";
+    return `Namaste ${name}. Test drive confirmed for ${vehicle} at ${slot}. Bring a valid driving licence. ${sign}`;
   }
   if (input.kind === "service_reminder") {
     return `Namaste ${name}. Reminder from ${input.dealer} service: your ${vehicle} is due. Reply here to book a slot. ${sign}`;
   }
   if (input.kind === "insurance_quote") {
-    return `Namaste ${name}. Sharing insurance options for ${vehicle}.${talked} All products stay on the list. Reply here with what you want explained. ${sign}`;
+    return `Namaste ${name}. Sharing insurance options for ${vehicle}. All products stay on the list. Reply here with what you want explained. ${sign}`;
   }
-  if (input.kind === "offer") {
-    return `Namaste ${name}. A current offer from ${input.dealer} on ${vehicle}.${talked} Reply STOP if you do not want offers. ${sign}`;
-  }
-  return `Namaste ${name}. Sharing the brochure and a quotation for ${vehicle}.${talked} Open the files on this chat and tell me if you want a test drive. ${sign}`;
+  return `Namaste ${name}. A current offer from ${input.dealer} on ${vehicle}. The scheme expiry is on this message. Reply STOP if you do not want offers. ${sign}`;
 }
 
-export function waMeUrl(phone: string, text: string) {
-  return `https://wa.me/${waDigits(phone)}?text=${encodeURIComponent(text)}`;
-}
-
-export function whatsappKindLabel(kind: WhatsAppKind) {
-  if (kind === "brochure") return "Brochure";
-  if (kind === "quotation") return "Quotation";
-  if (kind === "service_reminder") return "Service reminder";
-  if (kind === "insurance_quote") return "Insurance quote";
-  if (kind === "offer") return "Offer";
-  return "Brochure and quotation";
+export function whatsappKindLabel(kind: WhatsAppKind | string) {
+  const map: Record<string, string> = {
+    brochure: "Brochure",
+    price: "Price",
+    quotation: "Quotation",
+    alternative: "Alternative",
+    offer: "Live offer",
+    location: "Location and timings",
+    testdrive: "Test drive confirmation",
+    service_reminder: "Service reminder",
+    insurance_quote: "Insurance quote",
+  };
+  return map[kind] ?? kind;
 }

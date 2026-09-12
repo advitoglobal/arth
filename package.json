@@ -19,6 +19,7 @@
     "db:disposition": "npx tsx scripts/prove-disposition.ts",
     "db:call-wrap": "npx tsx scripts/prove-call-wrap.ts",
     "db:add-enquiry": "npx tsx scripts/prove-add-enquiry.ts",
+    "db:whatsapp-loop": "npx tsx scripts/prove-whatsapp-loop.ts",
     "db:queue": "npx tsx scripts/prove-queue.ts",
     "db:queue-bands": "npx tsx scripts/prove-queue-bands.ts",
     "db:points": "npx tsx scripts/prove-points.ts",

@@ -11,6 +11,7 @@ const checks: [string, string][] = [
   ["db:disposition", "DISPOSITION_OK"],
   ["db:call-wrap", "CALL_WRAP_OK"],
   ["db:add-enquiry", "ADD_ENQUIRY_OK"],
+  ["db:whatsapp-loop", "WHATSAPP_LOOP_OK"],
   ["db:queue", "QUEUE_OK"],
   ["db:queue-bands", "QUEUE_BANDS_OK"],
   ["db:points", "POINTS_OK"],

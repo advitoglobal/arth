@@ -30,6 +30,7 @@ export function CallDesk({
   emiLine,
   consents,
   adviseSnap,
+  queuedMessages = [],
 }: {
   leadId: string;
   phone: string;
@@ -69,6 +70,7 @@ export function CallDesk({
     colours: { colour: string; n: string }[];
     trust: Record<string, string>;
   };
+  queuedMessages?: { id: string; note: string }[];
 }) {
   const [seconds, setSeconds] = useState(0);
   const [note, setNote] = useState("");
@@ -126,6 +128,16 @@ export function CallDesk({
               ? `${wrapLeft ?? WRAP_UP_SECONDS} seconds to record the outcome. The next name does not load until you do, or until you skip with a reason.`
               : "The wrap-up window has ended. Record an outcome or skip with a reason. The next name still waits."}
           </p>
+          {queuedMessages.length > 0 ? (
+            <div className="mt-3 space-y-1 text-sm">
+              <p>WhatsApp replies waited. Nothing popped up while you were talking.</p>
+              {queuedMessages.map((m) => (
+                <p key={m.id} className="text-[var(--arth-n60)]">
+                  {m.note}
+                </p>
+              ))}
+            </div>
+          ) : null}
           <label className="mt-3 block text-sm">
             Skip wrap-up
             <input
@@ -155,7 +167,7 @@ export function CallDesk({
       ) : null}
       {emiLine && sales && !adviseSnap ? <p className="text-sm">{emiLine} Rates are a maintained table, never inferred by a model.</p> : null}
       <ConsentPanel leadId={leadId} initial={consents ?? []} />
-      <WhatsAppSend leadId={leadId} conversation={note} department={department} />
+      <WhatsAppSend leadId={leadId} department={department} />
       <DispositionPanel
         leadId={leadId}
         nextLeadId={nextLeadId}

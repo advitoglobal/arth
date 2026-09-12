@@ -7,19 +7,15 @@ import {
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
 import { claimOnReach, scheduleNextAction } from "@/services/assignment";
-import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
+import { recordMovement, applyConcealmentPenalties } from "@/services/floor-register";
 import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
 import { stageLabel, enquiryNo } from "@/lib/labels";
 import { junkReason } from "@/domain/junk";
 import { classifyQueueBand, type QueueBandKey } from "@/domain/queue-bands";
 import { hadRecentDial } from "@/services/conversion";
 import { scheduleTestDrive } from "@/services/conversion";
-import {
-  type WhatsAppKind,
-  waMeUrl,
-  whatsappKindLabel,
-  whatsappMessage,
-} from "@/lib/whatsapp";
+import { type WhatsAppKind } from "@/lib/whatsapp";
+import { sendWhatsAppLoop } from "@/services/whatsapp-loop";
 
 export type LeadRow = {
   id: string;
@@ -736,79 +732,18 @@ export async function sendWhatsApp(
     leadId: string;
     userId: string;
     kind: WhatsAppKind;
-    conversation: string;
+    conversation?: string;
     senderName: string;
     dealer: string;
   },
 ) {
-  await assertCanLog(tx, input.leadId, input.userId);
-  const purpose =
-    input.kind === "service_reminder"
-      ? "service_reminders"
-      : input.kind === "insurance_quote"
-        ? "insurance_renewal"
-        : input.kind === "offer"
-          ? "offers"
-          : "sales_enquiry";
-  await requireConsent(tx, input.leadId, purpose);
-  const [lead] = await tx<{
-    customer_name: string;
-    phone: string;
-    model_interest: string | null;
-    variant_interest: string | null;
-    difficulty_band: string | null;
-  }[]>`
-    SELECT
-      c.full_name AS customer_name,
-      c.phone,
-      l.model_interest,
-      l.variant_interest,
-      l.difficulty_band
-    FROM leads l
-    JOIN customers c ON c.id = l.customer_id
-    WHERE l.id = ${input.leadId}::uuid
-  `;
-  if (!lead) throw new Error("This enquiry is not on your book.");
-  const text = whatsappMessage({
+  return sendWhatsAppLoop(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
     kind: input.kind,
-    customerName: lead.customer_name,
-    model: lead.model_interest,
-    variant: lead.variant_interest,
-    conversation: input.conversation,
+    senderName: input.senderName,
     dealer: input.dealer,
-    sender: input.senderName,
   });
-  const url = waMeUrl(lead.phone, text);
-  const points = pointsFor({
-    kind: "whatsapp",
-    difficulty: lead.difficulty_band,
-  });
-  const [inserted] = await tx<{ id: string }[]>`
-    INSERT INTO lead_events (
-      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
-    ) VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${input.leadId}::uuid,
-      'whatsapp',
-      'USER',
-      ${input.userId}::uuid,
-      ${whatsappKindLabel(input.kind) + " prepared for WhatsApp."},
-      ${tx.json({
-        kind: input.kind,
-        text,
-        points,
-        channel: "whatsapp",
-      })}
-    )
-    RETURNING id::text
-  `;
-  return {
-    recorded: `${whatsappKindLabel(input.kind)} is on the enquiry history. WhatsApp opens with the prepared message. Attach the PDF from this phone. A WhatsApp Business API is not connected.`,
-    eventId: inserted?.id,
-    points,
-    url,
-    text,
-  };
 }
 
 export async function raiseFirstResponseBreaches(tx: Tx, userId: string) {

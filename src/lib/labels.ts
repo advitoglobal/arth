@@ -81,6 +81,9 @@ export function eventLabel(type: string) {
     handoff: "Handed to sales",
     note: "What he said",
     discussed: "Discussed",
+    whatsapp_inbound: "WhatsApp reply",
+    whatsapp_receipt: "WhatsApp receipt",
+    whatsapp_auto: "WhatsApp auto-reply",
   };
   return map[type] ?? type;
 }

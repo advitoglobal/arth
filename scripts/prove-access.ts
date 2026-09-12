@@ -39,6 +39,8 @@ assert(canOpen("owner", "bot"), "principal opens Arthbot");
 assert(!canOpen("tele", "bot"), "telecaller is 403 on Arthbot");
 assert(canOpen("salesmgr", "stock"), "sales manager opens stock");
 assert(canOpen("tdcoord", "drive"), "coordinator opens test drives");
+assert(canOpen("tele", "msg"), "telecaller opens Messages");
+assert(!canOpen("acct", "msg"), "accounts is 403 on Messages");
 assert(!canOpen("svctele", "ins"), "service telecaller is 403 on Insurance");
 
 console.log("ACCESS_OK sales is 403 on Today; desk, principal, and Advito seats are split");
