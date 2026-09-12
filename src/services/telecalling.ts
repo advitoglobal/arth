@@ -134,17 +134,41 @@ export async function listQueue(tx: Tx, ownerId: string) {
   });
 }
 
+export type PipelineFilters = {
+  stage?: string;
+  source?: string;
+  overdue?: string;
+  parked?: string;
+  owner?: string;
+  limit?: number;
+};
+
+export type PipelineOwner = { id: string; name: string };
+
 export type PipelinePage = {
   rows: LeadRow[];
   total: number;
   counts: Record<string, number>;
   limit: number;
+  owners: PipelineOwner[];
+  filters: {
+    stage: string;
+    source: string;
+    overdue: string;
+    parked: string;
+    owner: string;
+  };
 };
+
+function presentOpt(value?: string) {
+  const v = value?.trim() ?? "";
+  return v.length ? v : "";
+}
 
 export async function listPipeline(
   tx: Tx,
   ownerId: string,
-  opts?: { stage?: string; limit?: number },
+  opts?: PipelineFilters,
 ): Promise<PipelinePage> {
   await escalateHandoverContact(tx);
   const [viewer] = await tx<{ role_key: string }[]>`
@@ -155,12 +179,27 @@ export async function listPipeline(
   }
   const personal = isPersonalRole(viewer.role_key);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? LIST_LIMIT));
-  const stage = opts?.stage?.trim() ?? "";
+  const stage = presentOpt(opts?.stage);
+  const source = presentOpt(opts?.source);
+  const overdue = presentOpt(opts?.overdue);
+  const parked = presentOpt(opts?.parked);
+  const ownerRaw = presentOpt(opts?.owner);
   const known = new Set<string>([...SALES_STAGES, ...SERVICE_STAGES, ...INSURANCE_STAGES, ...STAGE_KEYS]);
   const stageFilter = known.has(stage) ? stage : "";
+  const ownerFilter = /^[0-9a-f-]{36}$/i.test(ownerRaw) ? ownerRaw : "";
+  const ownerArg = ownerFilter || null;
+  const sourceArg = source || null;
+  const overdueArg = overdue || null;
+  const parkedArg = parked || null;
 
   const grouped = await tx<{ stage_key: string; n: string }[]>`
-    SELECT stage_key, n::text FROM arth_pipeline_counts(${personal})
+    SELECT stage_key, n::text FROM arth_pipeline_counts(
+      ${personal},
+      ${sourceArg},
+      ${overdueArg},
+      ${parkedArg},
+      ${ownerArg}::uuid
+    )
   `;
   const counts: Record<string, number> = {};
   let total = 0;
@@ -174,11 +213,36 @@ export async function listPipeline(
     SELECT x AS id FROM arth_pipeline_lead_ids(
       ${personal},
       ${stageFilter},
-      ${limit}
+      ${limit},
+      ${sourceArg},
+      ${overdueArg},
+      ${parkedArg},
+      ${ownerArg}::uuid
     ) AS x
   `;
   const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
-  return { rows, total, counts, limit };
+  const owners = personal
+    ? []
+    : await tx<PipelineOwner[]>`
+        SELECT DISTINCT u.id::text AS id, u.full_name AS name
+        FROM users u
+        JOIN leads l ON l.owner_user_id = u.id
+        ORDER BY u.full_name
+      `;
+  return {
+    rows,
+    total,
+    counts,
+    limit,
+    owners,
+    filters: {
+      stage: stageFilter,
+      source,
+      overdue,
+      parked,
+      owner: ownerFilter,
+    },
+  };
 }
 
 export async function searchByPhone(tx: Tx, q: string) {
