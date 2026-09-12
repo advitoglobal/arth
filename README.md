@@ -8,14 +8,33 @@ Governed by `00-START-HERE.md`, `docs/books/VISIBILITY-WALLS.md`, and THE ARTH B
 
 ## Run
 
+Node 22. Copy `.env.example` to `.env.local`. Do not commit `.env.local`.
+
+### Windows (Docker Desktop)
+
+Both Windows machines use this path. `scripts/migrate.ts` calls `sudo` and will not run on Windows.
+
+```powershell
+copy .env.example .env.local
+npm ci
+npm run db:migrate-docker
+npm run prove
+npm run dev
+```
+
+`db:migrate-docker` starts `postgres:16` as container `arth-pg` on port 5432, creates role `arth_app`, and applies every file in `src/db/migrations`. If port 5432 is already taken, stop that Postgres first so both laptops stay on the same database.
+
+### Linux
+
 ```bash
 cp .env.example .env.local
-npm install
-npx tsx scripts/migrate.ts 0034
-npx tsx scripts/migrate.ts 0035
+npm ci
+npx tsx scripts/migrate.ts
 npm run prove
 npm run dev              # 0.0.0.0:43127
 ```
+
+Linux can also use `npm run db:migrate-docker` if Docker is easier than a local `postgres` user.
 
 On this machine, open [http://127.0.0.1:43127/w/login](http://127.0.0.1:43127/w/login). Cursor Desktop Preview of `127.0.0.1` opens on your laptop, not this host, so it cannot reach the app. Use the public tunnel URL from the agent when you are not on the same machine.
 
