@@ -1,7 +1,10 @@
 import type { Tx } from "@/db/with-tenant";
+import { firstResponseDue, revisitDayToInstant, type DayHours } from "@/domain/clock";
+import { deskAssignmentMode, isHandOnMode } from "@/domain/handover";
 import { pointsFor } from "@/domain/points";
 import { stagesFor } from "@/domain/ladders";
 import { consentRefusalCopy } from "@/domain/whatsapp-loop";
+import { cardNotifyWhy, handoverCard } from "@/services/handover";
 
 export function emiPaise(principalPaise: number, rateBps: number, tenureMonths: number) {
   const r = rateBps / 10000 / 12;
@@ -53,7 +56,69 @@ export async function assignmentMode(tx: Tx, branchId: string, sourceKey: string
   const [row] = await tx<{ mode: string }[]>`
     SELECT arth_assignment_mode(${branchId}::uuid, ${sourceKey}) AS mode
   `;
-  return row?.mode === "pool" ? "pool" : "direct";
+  return deskAssignmentMode(row?.mode);
+}
+
+async function handoverDueAt(tx: Tx, branchId: string) {
+  const hours = await tx<DayHours[]>`
+    SELECT day_of_week AS "dayOfWeek",
+           opens_at::text AS "opensAt",
+           closes_at::text AS "closesAt"
+    FROM working_hours
+    WHERE branch_id = ${branchId}::uuid
+    ORDER BY day_of_week
+  `;
+  const [branch] = await tx<{ timezone: string }[]>`
+    SELECT timezone FROM branches WHERE id = ${branchId}::uuid
+  `;
+  const [th] = await tx<{ value_int: number }[]>`
+    SELECT value_int FROM config_thresholds WHERE key = 'first_response_minutes'
+  `;
+  return firstResponseDue(
+    new Date(),
+    hours.map((h) => ({
+      dayOfWeek: Number(h.dayOfWeek),
+      opensAt: h.opensAt,
+      closesAt: h.closesAt,
+    })),
+    th?.value_int ?? 30,
+    branch?.timezone ?? "Asia/Kolkata",
+  );
+}
+
+async function writeAssistCredit(
+  tx: Tx,
+  input: { userId: string; leadId: string; amount: number; note: string },
+) {
+  await tx`
+    INSERT INTO assist_credits (tenant_id, lead_id, user_id, amount, reason_key, note)
+    VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      ${input.userId}::uuid,
+      ${input.amount},
+      'assist',
+      ${input.note}
+    )
+  `;
+}
+
+async function listDepartmentManagers(tx: Tx, branchId: string, department: string) {
+  const roles =
+    department === "service"
+      ? (["svcmgr", "lead"] as const)
+      : department === "insurance"
+        ? (["lead"] as const)
+        : (["salesmgr", "lead"] as const);
+  return tx<{ id: string; full_name: string; role_key: string }[]>`
+    SELECT u.id::text, u.full_name, u.role_key
+    FROM users u
+    JOIN positions p ON p.id = u.position_id
+    WHERE u.is_active
+      AND p.branch_id = ${branchId}::uuid
+      AND u.role_key = ANY(${roles}::text[])
+    ORDER BY u.full_name
+  `;
 }
 
 export async function saveEnquiryDepth(
@@ -147,6 +212,41 @@ export async function listSalesReceivers(tx: Tx, branchId: string) {
   return listReceivers(tx, branchId, "sales");
 }
 
+export async function keepAndNurture(
+  tx: Tx,
+  input: { leadId: string; userId: string; revisitAt: string; note?: string },
+) {
+  const revisit = revisitDayToInstant(input.revisitAt);
+  if (!revisit) throw new Error("Keep and nurture needs a revisit date.");
+  const [lead] = await tx<{ owner_user_id: string | null }[]>`
+    SELECT owner_user_id::text FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (lead.owner_user_id !== input.userId) {
+    throw new Error("Only the telecaller who reached this customer can keep it.");
+  }
+  await tx`
+    UPDATE leads SET
+      handover_mode = 'nurture',
+      next_action_at = ${revisit}::timestamptz,
+      pool_open = false
+    WHERE id = ${input.leadId}::uuid
+  `;
+  await tx`
+    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+    VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'nurture',
+      'USER',
+      ${input.userId}::uuid,
+      ${input.note?.trim() || "Not ready. Kept on the telecaller book with a revisit date."},
+      ${tx.json({ mode: "nurture", revisit_at: revisit })}
+    )
+  `;
+  return { recorded: "Kept on your book. The revisit date is the next clock.", mode: "nurture" as const };
+}
+
 export async function routeEnquiry(
   tx: Tx,
   input: {
@@ -155,8 +255,19 @@ export async function routeEnquiry(
     note: string;
     salesUserId?: string;
     department?: string;
+    mode?: string;
+    revisitAt?: string;
   },
 ) {
+  if (input.mode === "nurture") {
+    return keepAndNurture(tx, {
+      leadId: input.leadId,
+      userId: input.userId,
+      revisitAt: input.revisitAt ?? "",
+      note: input.note,
+    });
+  }
+
   const [lead] = await tx<{
     owner_user_id: string | null;
     stage_key: string;
@@ -197,15 +308,38 @@ export async function routeEnquiry(
     );
   }
   const mode = await assignmentMode(tx, lead.branch_id, lead.source_key);
+  if (input.mode && isHandOnMode(input.mode) && input.mode !== mode) {
+    throw new Error("The digital desk sets whether this is direct, pool, or department queue.");
+  }
   const points = pointsFor({ kind: "handoff", difficulty: lead.difficulty_band });
+  const card = await handoverCard(tx, input.leadId);
+  const due = await handoverDueAt(tx, lead.branch_id);
+  const dueIso = due.toISOString();
+  const cardPayload = {
+    mode,
+    department: dept,
+    points,
+    completeness: card.completeness,
+    price: card.price,
+    emi: card.emi,
+    testdrive: card.testdrive,
+    exchange: card.exchange,
+    said: card.said,
+  };
 
-  if (mode === "pool" || !input.salesUserId) {
+  if (mode === "pool") {
     await tx`
       UPDATE leads SET
         owner_user_id = NULL,
         pool_open = true,
         department_key = ${dept},
-        first_responded_at = COALESCE(first_responded_at, now())
+        first_responded_at = COALESCE(first_responded_at, now()),
+        handed_on_at = now(),
+        handed_on_by = ${input.userId}::uuid,
+        handover_mode = 'pool',
+        handover_contact_due = ${dueIso}::timestamptz,
+        handover_contacted_at = NULL,
+        next_action_at = ${dueIso}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
     await tx`
@@ -216,8 +350,8 @@ export async function routeEnquiry(
         'handoff',
         'USER',
         ${input.userId}::uuid,
-        ${input.note.trim() || "Meeting done. Assigned to the branch pool. First to claim owns it."},
-        ${tx.json({ mode: "pool", department: dept, points })}
+        ${input.note.trim() || "Meeting done. Assigned to the branch pool. First to reach owns it."},
+        ${tx.json(cardPayload)}
       )
     `;
     await recordMovement(tx, {
@@ -227,6 +361,12 @@ export async function routeEnquiry(
       note: "Handed to the branch pool",
       leadId: input.leadId,
     });
+    await writeAssistCredit(tx, {
+      userId: input.userId,
+      leadId: input.leadId,
+      amount: points,
+      note: "Assist credit. Permanent. Conversion is not her measure.",
+    });
     const team = await listReceivers(tx, lead.branch_id, dept);
     for (const person of team) {
       await tx`
@@ -235,19 +375,90 @@ export async function routeEnquiry(
           current_setting('app.tenant_id')::uuid,
           ${person.id}::uuid,
           ${lead.customer_name + " is in the " + dept + " pool"},
-          'First to claim owns it. Unclaimed names escalate. Reassign is a superior decision.',
+          ${"First to reach owns it. " + cardNotifyWhy(card) + " Missed window escalates to the sales team leader, never back to telecalling."},
           ${"/w/rec?id=" + input.leadId}
         )
       `;
     }
-    return { recorded: `In the ${dept} pool. First consultant to claim owns it.`, points, mode: "pool" };
+    return { recorded: `In the ${dept} pool. First consultant to reach owns it.`, points, mode: "pool" };
+  }
+
+  if (mode === "queue") {
+    await tx`
+      UPDATE leads SET
+        owner_user_id = NULL,
+        pool_open = false,
+        department_key = ${dept},
+        first_responded_at = COALESCE(first_responded_at, now()),
+        handed_on_at = now(),
+        handed_on_by = ${input.userId}::uuid,
+        handover_mode = 'queue',
+        handover_contact_due = ${dueIso}::timestamptz,
+        handover_contacted_at = NULL,
+        next_action_at = ${dueIso}::timestamptz
+      WHERE id = ${input.leadId}::uuid
+    `;
+    await tx`
+      INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+      VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${input.leadId}::uuid,
+        'handoff',
+        'USER',
+        ${input.userId}::uuid,
+        ${input.note.trim() || "Meeting done. In the department queue for the sales manager to assign."},
+        ${tx.json(cardPayload)}
+      )
+    `;
+    await recordMovement(tx, {
+      userId: input.userId,
+      amount: points,
+      reasonKey: "handoff",
+      note: "Handed to the department queue",
+      leadId: input.leadId,
+    });
+    await writeAssistCredit(tx, {
+      userId: input.userId,
+      leadId: input.leadId,
+      amount: points,
+      note: "Assist credit. Permanent. Conversion is not her measure.",
+    });
+    const managers = await listDepartmentManagers(tx, lead.branch_id, dept);
+    for (const person of managers) {
+      await tx`
+        INSERT INTO notifications (tenant_id, user_id, title, why, href)
+        VALUES (
+          current_setting('app.tenant_id')::uuid,
+          ${person.id}::uuid,
+          ${lead.customer_name + " is in the department queue"},
+          ${"Assign a named executive. " + cardNotifyWhy(card)},
+          ${"/w/rec?id=" + input.leadId}
+        )
+      `;
+    }
+    return {
+      recorded: "In the department queue. The sales manager assigns the receiving executive.",
+      points,
+      mode: "queue",
+    };
+  }
+
+  if (!input.salesUserId) {
+    throw new Error("Direct mode needs a named receiving executive.");
   }
 
   await tx`
     UPDATE leads SET
       owner_user_id = ${input.salesUserId}::uuid,
       pool_open = false,
-      department_key = ${dept}
+      department_key = ${dept},
+      first_responded_at = COALESCE(first_responded_at, now()),
+      handed_on_at = now(),
+      handed_on_by = ${input.userId}::uuid,
+      handover_mode = 'direct',
+      handover_contact_due = ${dueIso}::timestamptz,
+      handover_contacted_at = NULL,
+      next_action_at = ${dueIso}::timestamptz
     WHERE id = ${input.leadId}::uuid
   `;
   await tx`
@@ -259,7 +470,7 @@ export async function routeEnquiry(
       'USER',
       ${input.userId}::uuid,
       ${input.note.trim() || "Meeting done. Handed to sales to convert."},
-      ${tx.json({ mode: "direct", sales_user_id: input.salesUserId, department: dept, points })}
+      ${tx.json({ ...cardPayload, sales_user_id: input.salesUserId })}
     )
   `;
   await recordMovement(tx, {
@@ -269,17 +480,118 @@ export async function routeEnquiry(
     note: "Handed to a named sales consultant",
     leadId: input.leadId,
   });
+  await writeAssistCredit(tx, {
+    userId: input.userId,
+    leadId: input.leadId,
+    amount: points,
+    note: "Assist credit. Permanent. Conversion is not her measure.",
+  });
   await tx`
     INSERT INTO notifications (tenant_id, user_id, title, why, href)
     VALUES (
       current_setting('app.tenant_id')::uuid,
       ${input.salesUserId}::uuid,
       ${lead.customer_name + " is ready for you"},
-      'Telecalling finished their job and handed this enquiry to you.',
+      ${"First-contact clock is on you. " + cardNotifyWhy(card)},
       ${"/w/rec?id=" + input.leadId}
     )
   `;
   return { recorded: "Handed to the named executive. Conversion is now their job.", points, mode: "direct" };
+}
+
+export async function bounceToPool(
+  tx: Tx,
+  input: { leadId: string; actorId: string; reason: string },
+) {
+  const reason = input.reason.trim();
+  if (reason.length < 8) {
+    throw new Error("A bounce always needs a reason. Write why, at least eight characters.");
+  }
+  const [actor] = await tx<{ role_key: string }[]>`
+    SELECT role_key FROM users WHERE id = ${input.actorId}::uuid AND is_active
+  `;
+  if (!actor || !["sales", "svc", "ins", "salesmgr", "svcmgr", "lead", "mgr", "owner", "gm"].includes(actor.role_key)) {
+    throw new Error("Only the receiving executive or a superior can bounce this to the pool.");
+  }
+  const [lead] = await tx<{ owner_user_id: string | null; handed_on_at: Date | null }[]>`
+    SELECT owner_user_id::text, handed_on_at FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your bucket.");
+  if (["sales", "svc", "ins"].includes(actor.role_key) && lead.owner_user_id !== input.actorId) {
+    throw new Error("Only the owner can bounce this enquiry to the pool.");
+  }
+  await tx`
+    UPDATE leads SET
+      owner_user_id = NULL,
+      pool_open = true,
+      handover_mode = 'pool',
+      handover_bounced_at = now(),
+      handover_contacted_at = NULL
+    WHERE id = ${input.leadId}::uuid
+  `;
+  await tx`
+    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+    VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'bounce',
+      'USER',
+      ${input.actorId}::uuid,
+      ${reason},
+      ${tx.json({ previous_owner_user_id: lead.owner_user_id, mode: "pool" })}
+    )
+  `;
+  return { recorded: "Returned to the branch pool. The reason is on the ledger." };
+}
+
+export async function escalateHandoverContact(tx: Tx) {
+  const due = await tx<{ id: string; branch_id: string; department_key: string; customer_name: string; handed_on_by: string | null }[]>`
+    SELECT l.id::text, l.branch_id::text, l.department_key, c.full_name AS customer_name, l.handed_on_by::text
+    FROM leads l
+    JOIN customers c ON c.id = l.customer_id
+    WHERE l.handed_on_at IS NOT NULL
+      AND l.handover_contact_due IS NOT NULL
+      AND l.handover_contact_due < now()
+      AND l.handover_contacted_at IS NULL
+      AND l.lost_reason_key IS NULL
+      AND l.handover_mode IN ('direct', 'pool', 'queue')
+      AND NOT EXISTS (
+        SELECT 1 FROM lead_events e
+        WHERE e.lead_id = l.id AND e.event_type = 'escalation' AND e.payload->>'kind' = 'handover_contact'
+      )
+    LIMIT 20
+  `;
+  let n = 0;
+  for (const lead of due) {
+    await tx`
+      INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+      VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${lead.id}::uuid,
+        'escalation',
+        'SYSTEM',
+        NULL,
+        'Handover first-contact window missed. Escalated to the receiving team leader, never back to the telecaller.',
+        ${tx.json({ kind: "handover_contact", handed_on_by: lead.handed_on_by })}
+      )
+    `;
+    const managers = await listDepartmentManagers(tx, lead.branch_id, lead.department_key);
+    for (const person of managers) {
+      if (lead.handed_on_by && person.id === lead.handed_on_by) continue;
+      await tx`
+        INSERT INTO notifications (tenant_id, user_id, title, why, href)
+        VALUES (
+          current_setting('app.tenant_id')::uuid,
+          ${person.id}::uuid,
+          ${lead.customer_name + " was not contacted after handover"},
+          'The first-contact clock sat with sales. It does not return to the telecaller who handed it on.',
+          ${"/w/rec?id=" + lead.id}
+        )
+      `;
+    }
+    n += 1;
+  }
+  return n;
 }
 
 export async function claimPool(tx: Tx, leadId: string, userId: string) {
@@ -333,7 +645,7 @@ export async function reassignLead(
   const [actor] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${input.actorId}::uuid AND is_active
   `;
-  if (!actor || !["lead", "mgr", "owner", "admin", "ops"].includes(actor.role_key)) {
+  if (!actor || !["lead", "mgr", "salesmgr", "svcmgr", "owner", "admin", "ops", "gm"].includes(actor.role_key)) {
     throw new Error("Only a team leader, manager, principal, or Advito support can reassign.");
   }
   const [before] = await tx<{ owner_user_id: string | null }[]>`
@@ -649,7 +961,12 @@ export async function uploadServiceDue(
   return { recorded: `${created} service-due names uploaded. They are labelled as uploaded by manager.`, created };
 }
 
-export async function setAssignmentMode(tx: Tx, actorId: string, branchId: string, mode: "direct" | "pool") {
+export async function setAssignmentMode(
+  tx: Tx,
+  actorId: string,
+  branchId: string,
+  mode: "direct" | "pool" | "queue",
+) {
   const [actor] = await tx<{ role_key: string }[]>`
     SELECT role_key FROM users WHERE id = ${actorId}::uuid
   `;
@@ -662,7 +979,13 @@ export async function setAssignmentMode(tx: Tx, actorId: string, branchId: strin
     ON CONFLICT (tenant_id, branch_id, source_key) DO UPDATE SET mode = EXCLUDED.mode
   `;
   await writeAudit(tx, "assignment_mode", branchId, { mode }, actorId);
-  return { recorded: mode === "pool" ? "Pool mode. First to claim owns it." : "Direct mode. The telecaller names the receiving executive." };
+  const recorded =
+    mode === "pool"
+      ? "Pool mode. First to reach owns it."
+      : mode === "queue"
+        ? "Department queue. The sales manager assigns."
+        : "Direct mode. The telecaller names the receiving executive.";
+  return { recorded };
 }
 
 export async function saveProfile(

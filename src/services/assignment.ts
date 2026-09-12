@@ -169,12 +169,29 @@ export async function claimOnReach(
 
 export async function handoffToSales(
   tx: Tx,
-  input: { leadId: string; userId: string; note: string; salesUserId?: string },
+  input: {
+    leadId: string;
+    userId: string;
+    note: string;
+    salesUserId?: string;
+    mode?: string;
+    revisitAt?: string;
+  },
 ) {
   const [lead] = await tx<{ branch_id: string; source_key: string; department_key: string }[]>`
     SELECT branch_id::text, source_key, department_key FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not in your tenant.");
+  if (input.mode === "nurture") {
+    return routeEnquiry(tx, {
+      leadId: input.leadId,
+      userId: input.userId,
+      note: input.note,
+      department: lead.department_key || "sales",
+      mode: "nurture",
+      revisitAt: input.revisitAt,
+    });
+  }
   const dept = lead.department_key || "sales";
   const mode = await assignmentMode(tx, lead.branch_id, lead.source_key);
   let salesUserId = input.salesUserId;
@@ -191,6 +208,8 @@ export async function handoffToSales(
     note: input.note,
     salesUserId: mode === "direct" ? salesUserId : undefined,
     department: dept,
+    mode,
+    revisitAt: input.revisitAt,
   });
 }
 

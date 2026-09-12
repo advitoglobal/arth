@@ -14,6 +14,8 @@ export async function POST(req: Request) {
         userId: seat.userId,
         note: String(body.note ?? ""),
         salesUserId: body.salesUserId ? String(body.salesUserId) : undefined,
+        mode: body.mode ? String(body.mode) : undefined,
+        revisitAt: body.revisitAt ? String(body.revisitAt) : undefined,
       });
       return NextResponse.json(result);
     });
