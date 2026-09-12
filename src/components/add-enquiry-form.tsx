@@ -24,6 +24,8 @@ import {
   exchangeVisible,
 } from "@/domain/add-enquiry";
 import { SOURCE_LABEL } from "@/lib/labels";
+import { SaveBar, UnsavedBar } from "@/components/save-bar";
+import { saveBarLabel } from "@/domain/save-bar";
 
 type Dup = {
   id: string;
@@ -122,6 +124,21 @@ export function AddEnquiryForm({
   const [openTool, setOpenTool] = useState<string | null>(null);
   const [consentTouched, setConsentTouched] = useState(false);
   const months = useMemo(() => bookingMonthChips(), []);
+  const captureDirty =
+    !leadId &&
+    (name !== "" ||
+      phone !== (presetPhone ?? "") ||
+      model !== "" ||
+      source !== "inbound_call");
+
+  function discardCapture() {
+    setName("");
+    setPhone(presetPhone ?? "");
+    setModel("");
+    setSource("inbound_call");
+    setError(null);
+    setMatches([]);
+  }
 
   const modelVariants = variants.filter((v) => v.model === model);
   const modelColours = colours.filter((c) => c.model === model);
@@ -243,6 +260,13 @@ export function AddEnquiryForm({
 
   return (
     <div className="max-w-lg space-y-6">
+      <UnsavedBar
+        show={captureDirty}
+        onSave={() => void capture()}
+        onDiscard={discardCapture}
+        saveDisabled={Boolean(leadId) || matches.length > 0}
+        saveLabel={saveBarLabel("save_enquiry")}
+      />
       <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
           Progress
@@ -342,9 +366,16 @@ export function AddEnquiryForm({
           </select>
         </label>
         {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-        <Button type="button" onClick={capture} disabled={Boolean(leadId) || matches.length > 0}>
-          Save enquiry
-        </Button>
+        <SaveBar hint="The enquiry exists the moment these four save.">
+          <Button
+            type="button"
+            className="h-11"
+            onClick={capture}
+            disabled={Boolean(leadId) || matches.length > 0}
+          >
+            {saveBarLabel("save_enquiry")}
+          </Button>
+        </SaveBar>
         {saved ? <p className="text-sm font-medium">{saved}</p> : null}
       </div>
 

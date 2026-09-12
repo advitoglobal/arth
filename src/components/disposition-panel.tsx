@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { JUNK_REASONS } from "@/domain/junk";
 import { needsCallbackReason } from "@/domain/clock";
+import { SaveBar, UnsavedBar } from "@/components/save-bar";
+import { saveBarLabel } from "@/domain/save-bar";
 
 export function DispositionPanel({
   leadId,
@@ -117,6 +119,26 @@ export function DispositionPanel({
     return () => window.clearTimeout(t);
   }, [confirm, eventId, router, nextLeadId, autoContinue]);
 
+  function discard() {
+    setKey("");
+    setRevisit("");
+    setLost("");
+    setNote("");
+    setCallbackReason("");
+    setLostFact("");
+    setJunkReason("");
+    setMergeLeadId("");
+    setRouteDepartment("");
+    setMeetingAt("");
+    setMeetingPlace("");
+    setTestdriveSlot("");
+    setTestdriveVariant("");
+    setQuoteRupees("");
+    setQuoteVariant("");
+    setQuoteValidUntil("");
+    setError(null);
+  }
+
   async function save() {
     if (!canSave) return;
     setError(null);
@@ -197,11 +219,13 @@ export function DispositionPanel({
 
   return (
     <div className="space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
-      {dirty ? (
-        <p className="bg-[var(--arth-n05)] px-3 py-2 text-sm">
-          Unsaved changes. Record outcome or they stay on this screen.
-        </p>
-      ) : null}
+      <UnsavedBar
+        show={dirty && !confirm}
+        onSave={() => void save()}
+        onDiscard={discard}
+        saveDisabled={!canSave}
+        saveLabel={saveBarLabel("record_outcome")}
+      />
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Disposition
       </p>
@@ -438,11 +462,11 @@ export function DispositionPanel({
         </p>
       ) : null}
       {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-      <div className="flex gap-2">
-        <Button onClick={save} disabled={!canSave}>
-          Record outcome
+      <SaveBar hint="The outcome writes a new ledger row. Nothing is edited.">
+        <Button className="h-11" onClick={save} disabled={!canSave}>
+          {saveBarLabel("record_outcome")}
         </Button>
-      </div>
+      </SaveBar>
     </div>
   );
 }
