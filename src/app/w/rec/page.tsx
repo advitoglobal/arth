@@ -1,7 +1,8 @@
 import { asSeat, canOpen, canSeeValue } from "@/db/session";
 import { getLead } from "@/services/telecalling";
 import { RuleHeading, StatusStamp } from "@/components/brand/type";
-import { inr, istDateTime, indianMobile } from "@/lib/format";
+import { inr, indianMobile } from "@/lib/format";
+import { enquiryDateStamps } from "@/domain/date-stamp";
 import { ActionButton } from "@/components/action-button";
 import { enquiryNo, sourceLabel } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
@@ -59,6 +60,14 @@ export default async function RecPage({
     const discounts = canApproveDiscount(seat.roleKey) ? await listDiscounts(tx) : [];
     const consents = await listConsents(tx, id);
     const card = await handoverCard(tx, id);
+    const stamps = enquiryDateStamps({
+      createdAt: lead.created_at as Date | string | null,
+      assignedAt: lead.assigned_at as Date | string | null,
+      firstResponseDue: lead.first_response_due as Date | string | null,
+      firstRespondedAt: lead.first_responded_at as Date | string | null,
+      nextActionAt: lead.next_action_at as Date | string | null,
+      events: events as Parameters<typeof enquiryDateStamps>[0]["events"],
+    });
     const handedRead =
       String(lead.handed_on_by ?? "") === seat.userId &&
       ["tele", "svctele", "instele"].includes(seat.roleKey) &&
@@ -118,19 +127,19 @@ export default async function RecPage({
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Arrived</dt>
-              <dd className="font-data">{istDateTime(lead.created_at)}</dd>
+              <dd className="font-data">{stamps.arrived}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Call by</dt>
-              <dd className="font-data">{istDateTime(lead.first_response_due)}</dd>
+              <dd className="font-data">{stamps.callBy}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">First call logged</dt>
-              <dd className="font-data">{istDateTime(lead.first_responded_at)}</dd>
+              <dd className="font-data">{stamps.firstCall}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Next action</dt>
-              <dd className="font-data">{istDateTime(lead.next_action_at)}</dd>
+              <dd className="font-data">{stamps.next}</dd>
             </div>
             {canSeeValue(seat.roleKey) ? (
             <div>
@@ -140,7 +149,7 @@ export default async function RecPage({
             ) : null}
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Assigned</dt>
-              <dd className="font-data">{istDateTime(lead.assigned_at)}</dd>
+              <dd className="font-data">{stamps.assigned}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Lost reason</dt>
