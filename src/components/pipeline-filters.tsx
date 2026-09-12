@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/action-button";
 import {
@@ -7,6 +9,7 @@ import {
   sourceFilterLabel,
 } from "@/domain/pipeline-filters";
 import type { PipelineOwner } from "@/services/telecalling";
+import type { FormEvent } from "react";
 
 export function pipeHref(opts: {
   stage?: string;
@@ -41,8 +44,21 @@ export function PipelineFiltersForm({
   owners: PipelineOwner[];
 }) {
   const active = Boolean(source || overdue || parked || owner);
+  function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    window.location.assign(
+      pipeHref({
+        stage: String(fd.get("stage") ?? "") || undefined,
+        source: String(fd.get("source") ?? "") || undefined,
+        overdue: String(fd.get("overdue") ?? "") || undefined,
+        parked: String(fd.get("parked") ?? "") || undefined,
+        owner: String(fd.get("owner") ?? "") || undefined,
+      }),
+    );
+  }
   return (
-    <form method="get" className="space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
+    <form method="get" onSubmit={submit} className="space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Filter
       </p>
