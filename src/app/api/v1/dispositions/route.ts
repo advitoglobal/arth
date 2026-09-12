@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
-import { recordDisposition } from "@/services/telecalling";
+import { recordDisposition, skipWrapUp } from "@/services/telecalling";
 import { requireScreen } from "@/lib/http";
 
 export async function POST(req: Request) {
@@ -9,6 +9,14 @@ export async function POST(req: Request) {
     return await asSeat(async (tx, seat) => {
       const denied = requireScreen(seat, "tele");
       if (denied) return denied;
+      if (body.skipWrap) {
+        const result = await skipWrapUp(tx, {
+          leadId: String(body.leadId),
+          userId: seat.userId,
+          reason: String(body.skipReason ?? ""),
+        });
+        return NextResponse.json(result);
+      }
       const result = await recordDisposition(tx, {
         leadId: body.leadId,
         userId: seat.userId,
@@ -22,6 +30,14 @@ export async function POST(req: Request) {
         notEnquiryReason: body.notEnquiryReason,
         mergeLeadId: body.mergeLeadId,
         routeDepartment: body.routeDepartment,
+        meetingAt: body.meetingAt,
+        meetingPlace: body.meetingPlace,
+        meetingBranch: body.meetingBranch,
+        testdriveSlot: body.testdriveSlot,
+        testdriveVariant: body.testdriveVariant,
+        quoteRupees: body.quoteRupees,
+        quoteVariant: body.quoteVariant,
+        quoteValidUntil: body.quoteValidUntil,
       });
       return NextResponse.json(result);
     });

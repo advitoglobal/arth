@@ -9,6 +9,7 @@ const checks: [string, string][] = [
   ["db:search", "SEARCH_OK"],
   ["db:ledger", "LEDGER_OK"],
   ["db:disposition", "DISPOSITION_OK"],
+  ["db:call-wrap", "CALL_WRAP_OK"],
   ["db:queue", "QUEUE_OK"],
   ["db:queue-bands", "QUEUE_BANDS_OK"],
   ["db:points", "POINTS_OK"],

@@ -17,6 +17,7 @@
     "db:search": "npx tsx scripts/prove-search.ts",
     "db:ledger": "npx tsx scripts/prove-ledger.ts",
     "db:disposition": "npx tsx scripts/prove-disposition.ts",
+    "db:call-wrap": "npx tsx scripts/prove-call-wrap.ts",
     "db:queue": "npx tsx scripts/prove-queue.ts",
     "db:queue-bands": "npx tsx scripts/prove-queue-bands.ts",
     "db:points": "npx tsx scripts/prove-points.ts",

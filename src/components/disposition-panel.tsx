@@ -12,6 +12,8 @@ export function DispositionPanel({
   nextName,
   autoContinue = false,
   callSeconds = 0,
+  wrapOpen = false,
+  underFloor = false,
   onNote,
   dispositions,
   lostReasons,
@@ -22,6 +24,8 @@ export function DispositionPanel({
   nextName?: string;
   autoContinue?: boolean;
   callSeconds?: number;
+  wrapOpen?: boolean;
+  underFloor?: boolean;
   onNote?: (note: string) => void;
   dispositions: {
     key: string;
@@ -43,6 +47,13 @@ export function DispositionPanel({
   const [junkReason, setJunkReason] = useState("");
   const [mergeLeadId, setMergeLeadId] = useState("");
   const [routeDepartment, setRouteDepartment] = useState("");
+  const [meetingAt, setMeetingAt] = useState("");
+  const [meetingPlace, setMeetingPlace] = useState("");
+  const [testdriveSlot, setTestdriveSlot] = useState("");
+  const [testdriveVariant, setTestdriveVariant] = useState("");
+  const [quoteRupees, setQuoteRupees] = useState("");
+  const [quoteVariant, setQuoteVariant] = useState("");
+  const [quoteValidUntil, setQuoteValidUntil] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +78,10 @@ export function DispositionPanel({
     callbackReason !== "" ||
     lostFact !== "" ||
     junkReason !== "" ||
-    key !== "";
+    key !== "" ||
+    meetingAt !== "" ||
+    testdriveSlot !== "" ||
+    quoteRupees !== "";
   const canSave = Boolean(
     key &&
       (!needsRevisit || revisit) &&
@@ -78,7 +92,11 @@ export function DispositionPanel({
       (selected?.key !== "not_an_enquiry" ||
         (junkReason &&
           (junk?.key !== "duplicate" || mergeLeadId.trim()) &&
-          (junk?.key !== "route_other_dept" || routeDepartment))),
+          (junk?.key !== "route_other_dept" || routeDepartment))) &&
+      (selected?.key !== "meeting_booked" || (meetingAt && meetingPlace)) &&
+      (selected?.key !== "testdrive_booked" || testdriveSlot) &&
+      (selected?.key !== "quotation_sent" ||
+        (quoteRupees.trim() && quoteVariant.trim() && quoteValidUntil)),
   );
 
   useEffect(() => {
@@ -117,6 +135,13 @@ export function DispositionPanel({
         notEnquiryReason: junkReason || undefined,
         mergeLeadId: mergeLeadId || undefined,
         routeDepartment: routeDepartment || undefined,
+        meetingAt: meetingAt || undefined,
+        meetingPlace: meetingPlace || undefined,
+        testdriveSlot: testdriveSlot || undefined,
+        testdriveVariant: testdriveVariant || undefined,
+        quoteRupees: quoteRupees || undefined,
+        quoteVariant: quoteVariant || undefined,
+        quoteValidUntil: quoteValidUntil || undefined,
       }),
     });
     const data = await res.json();
@@ -180,6 +205,16 @@ export function DispositionPanel({
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Disposition
       </p>
+      {wrapOpen ? (
+        <p className="text-sm">
+          No outcome, no save. The next enquiry waits here.
+        </p>
+      ) : null}
+      {underFloor ? (
+        <p className="text-sm text-[var(--arth-overdue)]">
+          Under 20 seconds is not a connected call for scoring. You can still record a not-connected outcome.
+        </p>
+      ) : null}
       <label className="block text-sm">
         Outcome
           <select
@@ -260,6 +295,82 @@ export function DispositionPanel({
             onChange={(e) => setLostFact(e.target.value)}
           />
         </label>
+      ) : null}
+      {selected?.key === "meeting_booked" ? (
+        <>
+          <label className="block text-sm">
+            Meeting at
+            <input
+              type="datetime-local"
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={meetingAt}
+              onChange={(e) => setMeetingAt(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Where
+            <select
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={meetingPlace}
+              onChange={(e) => setMeetingPlace(e.target.value)}
+            >
+              <option value="">Select</option>
+              <option value="showroom">Showroom</option>
+              <option value="home">Home</option>
+            </select>
+          </label>
+        </>
+      ) : null}
+      {selected?.key === "testdrive_booked" ? (
+        <>
+          <label className="block text-sm">
+            Slot
+            <input
+              type="datetime-local"
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={testdriveSlot}
+              onChange={(e) => setTestdriveSlot(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Variant
+            <input
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={testdriveVariant}
+              onChange={(e) => setTestdriveVariant(e.target.value)}
+            />
+          </label>
+        </>
+      ) : null}
+      {selected?.key === "quotation_sent" ? (
+        <>
+          <label className="block text-sm">
+            Amount in rupees
+            <input
+              inputMode="numeric"
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={quoteRupees}
+              onChange={(e) => setQuoteRupees(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Variant
+            <input
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={quoteVariant}
+              onChange={(e) => setQuoteVariant(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Valid until
+            <input
+              type="date"
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={quoteValidUntil}
+              onChange={(e) => setQuoteValidUntil(e.target.value)}
+            />
+          </label>
+        </>
       ) : null}
       <label className="block text-sm">
         What was said

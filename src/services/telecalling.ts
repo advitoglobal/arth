@@ -13,6 +13,7 @@ import { stageLabel, enquiryNo } from "@/lib/labels";
 import { junkReason } from "@/domain/junk";
 import { classifyQueueBand, type QueueBandKey } from "@/domain/queue-bands";
 import { hadRecentDial } from "@/services/conversion";
+import { scheduleTestDrive } from "@/services/conversion";
 import {
   type WhatsAppKind,
   waMeUrl,
@@ -313,6 +314,14 @@ export async function recordDisposition(
     notEnquiryReason?: string;
     mergeLeadId?: string;
     routeDepartment?: string;
+    meetingAt?: string;
+    meetingPlace?: string;
+    meetingBranch?: string;
+    testdriveSlot?: string;
+    testdriveVariant?: string;
+    quoteRupees?: string;
+    quoteVariant?: string;
+    quoteValidUntil?: string;
   },
 ) {
   if (!input.dispositionKey?.trim()) {
@@ -371,6 +380,22 @@ export async function recordDisposition(
       throw new Error("Name the department this customer belongs in.");
     }
   }
+  if (input.dispositionKey === "meeting_booked") {
+    if (!input.meetingAt?.trim() || !input.meetingPlace?.trim()) {
+      throw new Error("Meeting needs a date, a time, and whether it is showroom or home.");
+    }
+  }
+  if (input.dispositionKey === "testdrive_booked") {
+    if (!input.testdriveSlot?.trim()) {
+      throw new Error("Test drive needs a slot.");
+    }
+  }
+  if (input.dispositionKey === "quotation_sent") {
+    const rupees = Number(String(input.quoteRupees ?? "").replace(/,/g, ""));
+    if (!Number.isFinite(rupees) || rupees <= 0 || !input.quoteVariant?.trim() || !input.quoteValidUntil?.trim()) {
+      throw new Error("Quotation needs amount in rupees, variant, and validity date.");
+    }
+  }
 
   const [before] = await tx<{
     next_action_at: Date | null;
@@ -413,6 +438,14 @@ export async function recordDisposition(
     not_enquiry_reason: input.notEnquiryReason ?? null,
     merge_lead_id: input.mergeLeadId ?? null,
     route_department: input.routeDepartment ?? null,
+    duration_source: "desk_simulation",
+    meeting_at: input.meetingAt ?? null,
+    meeting_place: input.meetingPlace ?? null,
+    testdrive_slot: input.testdriveSlot ?? null,
+    quote_paise:
+      input.dispositionKey === "quotation_sent"
+        ? Math.round(Number(String(input.quoteRupees ?? "0").replace(/,/g, "")) * 100)
+        : null,
   };
 
   const [inserted] = await tx<{ id: string }[]>`
@@ -504,6 +537,45 @@ export async function recordDisposition(
     }
   }
 
+  if (input.dispositionKey === "meeting_booked" && input.meetingAt) {
+    const place = input.meetingPlace === "home" ? "home" : "showroom";
+    await tx`
+      UPDATE leads SET
+        meeting_at = ${input.meetingAt}::timestamptz,
+        meeting_kind = ${place},
+        stage_key = CASE WHEN stage_key IN ('new','assigned','contacted') THEN 'meeting' ELSE stage_key END
+      WHERE id = ${input.leadId}::uuid
+    `;
+  }
+  if (input.dispositionKey === "testdrive_booked" && input.testdriveSlot) {
+    await scheduleTestDrive(tx, {
+      leadId: input.leadId,
+      actorId: input.userId,
+      slotAt: input.testdriveSlot,
+    });
+  }
+  if (input.dispositionKey === "quotation_sent") {
+    const paise = Math.round(Number(String(input.quoteRupees ?? "0").replace(/,/g, "")) * 100);
+    await tx`
+      INSERT INTO quotations (tenant_id, lead_id, frozen, actor_id)
+      VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${input.leadId}::uuid,
+        ${tx.json({
+          variant: input.quoteVariant,
+          on_road_paise: paise,
+          valid_until: input.quoteValidUntil,
+        })},
+        ${input.userId}::uuid
+      )
+    `;
+    await tx`
+      UPDATE leads SET
+        stage_key = CASE WHEN stage_key IN ('new','assigned','contacted','meeting','test_drive') THEN 'quotation' ELSE stage_key END
+      WHERE id = ${input.leadId}::uuid
+    `;
+  }
+
   const earned = pointsLine(earnedPoints, scoringConnect, disp.connected);
   await recordMovement(tx, {
     userId: input.userId,
@@ -518,6 +590,31 @@ export async function recordDisposition(
     points: earnedPoints,
     confirm: `${disp.label}. ${earned} Next action is on the queue.`,
   };
+}
+
+export async function skipWrapUp(
+  tx: Tx,
+  input: { leadId: string; userId: string; reason: string },
+) {
+  const reason = input.reason.trim();
+  if (reason.length < 4) {
+    throw new Error("Say why the next name is loading without an outcome.");
+  }
+  await assertCanLog(tx, input.leadId, input.userId);
+  await tx`
+    INSERT INTO lead_events (
+      tenant_id, lead_id, event_type, actor_type, actor_id, note, payload
+    ) VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      'wrap_skip',
+      'USER',
+      ${input.userId}::uuid,
+      ${reason},
+      ${tx.json({ wrap_up_seconds: 90 })}
+    )
+  `;
+  return { recorded: "Wrap-up skipped. The skip is on the ledger." };
 }
 
 export async function undoDisposition(

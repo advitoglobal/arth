@@ -8,10 +8,9 @@ import { departmentOfRole } from "@/domain/ladders";
 import { CallDesk } from "@/components/call-desk";
 import { RuleHeading } from "@/components/brand/type";
 import { istDateTime, indianMobile } from "@/lib/format";
-import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
 import { LedgerLine } from "@/components/ledger-line";
-import { enquiryNo } from "@/lib/labels";
+import { enquiryNo, intakeLabel } from "@/lib/labels";
 import Link from "next/link";
 
 export default async function TelePage({
@@ -88,9 +87,8 @@ export default async function TelePage({
             </div>
             {lead.intake_kind ? (
               <p className="mt-2 text-sm text-[var(--arth-n60)]">
-                {String(lead.intake_kind) === "manager_upload"
-                  ? `Uploaded by manager${lead.intake_batch_name ? ` · ${lead.intake_batch_name}` : ""}`
-                  : "Pushed from telecalling"}
+                {intakeLabel(String(lead.intake_kind))}
+                {lead.intake_batch_name ? ` · ${lead.intake_batch_name}` : ""}
               </p>
             ) : null}
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
@@ -105,18 +103,8 @@ export default async function TelePage({
                 Still in Today
               </p>
               <p className="mt-2 text-sm text-[var(--arth-n60)]">
-                {remaining.length} after this one. Late names first. The queue decrements when you record an outcome.
+                {remaining.length} after this one. The next name loads after you record an outcome, or skip wrap-up with a reason.
               </p>
-              {nextUp ? (
-                <div className="mt-3">
-                  <ActionButton
-                    href={autoContinue ? `/w/tele?id=${nextUp.id}&auto=1` : `/w/tele?id=${nextUp.id}`}
-                    variant="default"
-                  >
-                    Next: {nextUp.customer_name}
-                  </ActionButton>
-                </div>
-              ) : null}
             </div>
           ) : null}
           <h2 className="mt-8 font-display text-[20px] font-semibold">History</h2>

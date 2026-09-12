@@ -1,4 +1,6 @@
 import type { Tx } from "@/db/with-tenant";
+import { consentPurposeForDepartment, isInsideWorkingHours } from "@/domain/call-flow";
+import type { DayHours } from "@/domain/clock";
 import { stagesFor } from "@/domain/ladders";
 import { writeAudit, recordMovement } from "@/services/floor-register";
 import { autoAssignLapsedRecent } from "@/services/assignment";
@@ -418,7 +420,13 @@ export async function answerInbound(tx: Tx, callId: string, userId: string) {
     RETURNING from_phone, (SELECT department_key FROM inbound_lines WHERE id = inbound_calls.line_id) AS department_key
   `;
   if (!call) throw new Error("That call is no longer ringing.");
-  return call;
+  const matches = await findByPhone(tx, call.from_phone);
+  const hit = matches.find((m) => m.department_key === call.department_key) ?? matches[0];
+  return {
+    ...call,
+    leadId: hit?.id ?? null,
+    customer_name: hit?.customer_name ?? null,
+  };
 }
 
 export async function listConsents(tx: Tx, leadId: string) {
@@ -444,6 +452,10 @@ export async function setConsent(tx: Tx, leadId: string, purpose: string, grante
 }
 
 export async function markDial(tx: Tx, leadId: string, userId: string) {
+  const pre = await dialPreflight(tx, leadId, userId);
+  if (!pre.ok) {
+    throw new Error(pre.blocks[0] ?? "This number cannot be dialled.");
+  }
   await tx`
     INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
     VALUES (
@@ -453,9 +465,73 @@ export async function markDial(tx: Tx, leadId: string, userId: string) {
       'USER',
       ${userId}::uuid,
       'Dial started from Arth.',
-      ${tx.json({ source: "dial_button" })}
+      ${tx.json({ source: "dial_button", duration_source: "desk_simulation" })}
     )
   `;
+}
+
+export async function dialPreflight(tx: Tx, leadId: string, userId: string) {
+  const blocks: string[] = [];
+  const warnings: string[] = [];
+  const [lead] = await tx<{
+    owner_user_id: string | null;
+    branch_id: string;
+    department_key: string | null;
+    customer_id: string;
+  }[]>`
+    SELECT owner_user_id::text, branch_id::text, department_key, customer_id::text
+    FROM leads WHERE id = ${leadId}::uuid
+  `;
+  if (!lead) {
+    return { ok: false, blocks: ["This enquiry is not on your book."] };
+  }
+  if (lead.owner_user_id && lead.owner_user_id !== userId) {
+    blocks.push("Somebody else owns this enquiry. Help is assist credit, not a second owner.");
+  }
+  const [busy] = await tx<{ n: string }[]>`
+    SELECT count(*)::text AS n FROM lead_events
+    WHERE lead_id = ${leadId}::uuid
+      AND event_type = 'call_attempt'
+      AND actor_id IS DISTINCT FROM ${userId}::uuid
+      AND created_at > now() - interval '5 minutes'
+  `;
+  if (Number(busy?.n ?? 0) > 0) {
+    blocks.push("Somebody else is already on this lead.");
+  }
+  const purpose = consentPurposeForDepartment(lead.department_key);
+  const [consent] = await tx<{ ok: boolean }[]>`
+    SELECT arth_consent_ok(${lead.customer_id}::uuid, ${purpose}) AS ok
+  `;
+  if (!consent?.ok) {
+    blocks.push("This customer has withdrawn consent for calls, or never granted it.");
+  }
+  const hours = await tx<DayHours[]>`
+    SELECT day_of_week AS "dayOfWeek",
+           opens_at::text AS "opensAt",
+           closes_at::text AS "closesAt"
+    FROM working_hours
+    WHERE branch_id = ${lead.branch_id}::uuid
+    ORDER BY day_of_week
+  `;
+  const [branch] = await tx<{ timezone: string }[]>`
+    SELECT timezone FROM branches WHERE id = ${lead.branch_id}::uuid
+  `;
+  const mapped = hours.map((h) => ({
+    dayOfWeek: Number(h.dayOfWeek),
+    opensAt: h.opensAt,
+    closesAt: h.closesAt,
+  }));
+  const zone = branch?.timezone ?? "Asia/Kolkata";
+  if (mapped.length > 0 && !isInsideWorkingHours(new Date(), mapped, zone)) {
+    warnings.push("Outside working hours for this branch. The first-response clock does not run against her.");
+  }
+  return {
+    ok: blocks.length === 0,
+    blocks,
+    warnings,
+    recordingNotice:
+      "This call is recorded. Both of you hear that before anyone speaks. It is the law, not a setting.",
+  };
 }
 
 export async function hadRecentDial(tx: Tx, leadId: string, userId: string) {
