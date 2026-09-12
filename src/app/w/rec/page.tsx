@@ -15,6 +15,7 @@ import { listBranchPeople } from "@/services/floor-register";
 import { listStock, listDiscounts, listConsents } from "@/services/conversion";
 import { SalesConversion } from "@/components/sales-conversion";
 import { ConsentPanel } from "@/components/consent-panel";
+import { WhatsAppSend } from "@/components/whatsapp-send";
 import { handoverCard } from "@/services/handover";
 import { HandoverCard } from "@/components/handover-card";
 import { canApproveDiscount } from "@/lib/access";
@@ -175,6 +176,12 @@ export default async function RecPage({
           <div className="mt-6">
             <ConsentPanel leadId={String(lead.id)} initial={consents} />
           </div>
+          {String(lead.owner_user_id ?? "") === seat.userId ||
+          (!lead.owner_user_id && ["tele", "svctele", "instele"].includes(seat.roleKey)) ? (
+            <div className="mt-6">
+              <WhatsAppSend leadId={String(lead.id)} department={dept} />
+            </div>
+          ) : null}
           {dept === "sales" &&
           ["sales", "salesmgr", "lead", "owner", "gm", "admin", "tdcoord"].includes(seat.roleKey) ? (
             <div className="mt-6">

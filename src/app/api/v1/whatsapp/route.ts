@@ -1,26 +1,44 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
-import { sendWhatsApp } from "@/services/telecalling";
-import { requireScreen } from "@/lib/http";
+import { sendWhatsAppLoop, receiveWhatsApp, listMessageInbox } from "@/services/whatsapp-loop";
+import { requireAnyScreen } from "@/lib/http";
 import type { WhatsAppKind } from "@/lib/whatsapp";
 
-const KINDS: WhatsAppKind[] = ["brochure", "quotation", "both", "service_reminder", "insurance_quote", "offer"];
+export async function GET(req: Request) {
+  const leadId = new URL(req.url).searchParams.get("leadId");
+  try {
+    return await asSeat(async (tx, seat) => {
+      const denied = requireAnyScreen(seat, ["tele", "msg", "rec", "new"]);
+      if (denied) return denied;
+      const rows = await listMessageInbox(tx, seat.userId);
+      return NextResponse.json({ rows, leadId: leadId || null });
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Not loaded.";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
 
 export async function POST(req: Request) {
   const body = await req.json();
   try {
     return await asSeat(async (tx, seat) => {
-      const denied = requireScreen(seat, "tele");
+      const denied = requireAnyScreen(seat, ["tele", "msg", "rec", "new"]);
       if (denied) return denied;
-      const kind = body.kind as WhatsAppKind;
-      if (!KINDS.includes(kind)) {
-        return NextResponse.json({ error: "Unknown WhatsApp template." }, { status: 400 });
+      const action = String(body.action ?? "send");
+      if (action === "inbound") {
+        const result = await receiveWhatsApp(tx, {
+          fromPhone: String(body.fromPhone ?? ""),
+          text: String(body.text ?? ""),
+          mediaKind: body.mediaKind ? String(body.mediaKind) : null,
+          userId: seat.userId,
+        });
+        return NextResponse.json(result);
       }
-      const result = await sendWhatsApp(tx, {
-        leadId: body.leadId,
+      const result = await sendWhatsAppLoop(tx, {
+        leadId: String(body.leadId),
         userId: seat.userId,
-        kind,
-        conversation: String(body.conversation ?? ""),
+        kind: body.kind as WhatsAppKind,
         senderName: seat.name,
         dealer: seat.tenantName,
       });

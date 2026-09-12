@@ -16,6 +16,7 @@ export function canOpen(roleKey: string, screen: string): boolean {
       "lead", "mgr", "owner", "gm", "ops", "admin", "tdcoord",
     ],
     new: ["tele", "svctele", "instele"],
+    msg: ["tele", "svctele", "instele", "sales", "lead", "mgr", "salesmgr", "ops"],
     notif: [
       "tele", "svctele", "instele", "sales", "svc", "ins", "lead", "mgr", "owner", "gm",
       "admin", "salesmgr", "svcmgr", "tdcoord",

@@ -48,6 +48,8 @@ export default async function FloorLayout({
       }
       const { runEscalations } = await import("@/services/conversion");
       await runEscalations(tx);
+      const { escalateUnansweredMessages } = await import("@/services/whatsapp-loop");
+      await escalateUnansweredMessages(tx);
       const wallet = await walletMovements(tx, s.userId);
       monthPoints = wallet.reduce((sum, row) => sum + row.amount, 0);
       unread = canOpen(s.roleKey, "notif") ? await countUnread(tx, s.userId) : 0;

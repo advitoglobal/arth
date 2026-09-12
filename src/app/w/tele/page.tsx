@@ -4,6 +4,7 @@ import { StageLadder } from "@/components/stage-ladder";
 import { adviseSnapshot } from "@/services/advise";
 import { assignmentMode, listReceivers } from "@/services/floor-register";
 import { listConsents } from "@/services/conversion";
+import { queuedInbound } from "@/services/whatsapp-loop";
 import { departmentOfRole } from "@/domain/ladders";
 import { CallDesk } from "@/components/call-desk";
 import { RuleHeading } from "@/components/brand/type";
@@ -61,6 +62,7 @@ export default async function TelePage({
     const salesPeople = await listReceivers(tx, String(lead.branch_id), dept);
     const mode = await assignmentMode(tx, String(lead.branch_id), String(lead.source_key));
     const adviseSnap = dept === "sales" ? await adviseSnapshot(tx, leadId) : null;
+    const queuedMessages = canWork ? await queuedInbound(tx, leadId) : [];
 
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -134,6 +136,7 @@ export default async function TelePage({
               mode={mode}
               consents={consents}
               adviseSnap={adviseSnap ?? undefined}
+              queuedMessages={queuedMessages}
             />
           ) : (
             <p>

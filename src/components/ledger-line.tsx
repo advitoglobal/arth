@@ -8,6 +8,7 @@ type Payload = {
   delay_minutes?: number | null;
   points?: number | null;
   kind?: string | null;
+  status?: string | null;
   scoring_connected?: boolean | null;
 };
 
@@ -28,6 +29,7 @@ export function LedgerLine({
     payload?.charged_to ? `Delay charged to ${payload.charged_to}` : null,
     payload?.delay_minutes != null ? `${payload.delay_minutes} minutes deferred` : null,
     payload?.kind ? String(payload.kind) : null,
+    payload?.status ? String(payload.status) : null,
     ev.call_seconds != null ? `${ev.call_seconds}s on the timer` : null,
     payload?.points != null ? `+${payload.points} points` : null,
     payload?.scoring_connected === false && ev.disposition_key

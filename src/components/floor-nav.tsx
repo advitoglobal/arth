@@ -12,6 +12,7 @@ const items = [
   { href: "/w/prin", screen: "prin", label: "This dealer" },
   { href: "/w/perf", screen: "perf", label: "Performance" },
   { href: "/w/tele", screen: "tele", label: "Log a call" },
+  { href: "/w/msg", screen: "msg", label: "Messages" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
   { href: "/w/svc", screen: "svc", label: "Service" },
   { href: "/w/ins", screen: "ins", label: "Insurance" },
