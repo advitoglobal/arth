@@ -107,7 +107,7 @@ function Block({
 
 export default async function DayPanelPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "dayb")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "dayb")) return <Forbidden screen="dayb" />;
     await armUnownedClocks(tx);
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listQueue(tx, seat.userId);

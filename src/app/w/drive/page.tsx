@@ -6,7 +6,7 @@ import { istDateTime } from "@/lib/format";
 
 export default async function DrivePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "drive")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "drive")) return <Forbidden screen="drive" />;
     const rows = await listTestDrives(tx);
     return (
       <div className="space-y-6">

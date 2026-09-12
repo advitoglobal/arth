@@ -29,6 +29,19 @@ function sendLogin(req: NextRequest) {
   return NextResponse.redirect(login);
 }
 
+function rewriteDenied(req: NextRequest) {
+  const denied = req.nextUrl.clone();
+  denied.pathname = "/w/denied";
+  denied.search = "";
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-arth-path", "/w/denied");
+  requestHeaders.set("x-arth-refused", req.nextUrl.pathname);
+  return NextResponse.rewrite(denied, {
+    status: 403,
+    request: { headers: requestHeaders },
+  });
+}
+
 export function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const seatCookie = req.cookies.get("arth_seat")?.value;
@@ -40,27 +53,11 @@ export function proxy(req: NextRequest) {
 
   if (path.startsWith("/a/")) {
     if (!signedIn || !role || !isPlatformRole(role)) {
-      const denied = req.nextUrl.clone();
-      denied.pathname = signedIn ? "/w/denied" : "/w/login";
-      denied.search = "";
-      if (!signedIn) return NextResponse.redirect(denied);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set("x-arth-path", "/w/denied");
-      return NextResponse.rewrite(denied, {
-        status: 403,
-        request: { headers: requestHeaders },
-      });
+      if (!signedIn) return sendLogin(req);
+      return rewriteDenied(req);
     }
     if (path.startsWith("/a/onboard") && !canOpen(role, "aonboard")) {
-      const denied = req.nextUrl.clone();
-      denied.pathname = "/w/denied";
-      denied.search = "";
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set("x-arth-path", "/w/denied");
-      return NextResponse.rewrite(denied, {
-        status: 403,
-        request: { headers: requestHeaders },
-      });
+      return rewriteDenied(req);
     }
     return passPath(req);
   }
@@ -79,15 +76,7 @@ export function proxy(req: NextRequest) {
   if (!role) return sendLogin(req);
   if (canOpen(role, screen)) return passPath(req);
 
-  const denied = req.nextUrl.clone();
-  denied.pathname = "/w/denied";
-  denied.search = "";
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-arth-path", "/w/denied");
-  return NextResponse.rewrite(denied, {
-    status: 403,
-    request: { headers: requestHeaders },
-  });
+  return rewriteDenied(req);
 }
 
 export const config = {

@@ -6,7 +6,7 @@ import { incentiveExport } from "@/services/floor-register";
 
 export default async function BooksPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "books")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "books")) return <Forbidden screen="books" />;
     const rows = await incentiveExport(tx);
     return (
       <div className="space-y-6">

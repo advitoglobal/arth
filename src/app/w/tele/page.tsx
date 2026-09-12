@@ -22,7 +22,7 @@ export default async function TelePage({
 }) {
   const { id, auto } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "tele")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "tele")) return <Forbidden screen="tele" />;
     const queue = await listQueue(tx, seat.userId);
     const leadId = id ?? queue[0]?.id;
     const autoContinue = auto === "1";

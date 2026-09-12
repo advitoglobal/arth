@@ -12,7 +12,7 @@ export default async function NewEnquiryPage({
 }) {
   const { phone } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "new")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "new")) return <Forbidden screen="new" />;
     const rates = await listRates(tx);
     const catalogue = await listCatalogue(tx);
     const colours = await listPriceColours(tx);

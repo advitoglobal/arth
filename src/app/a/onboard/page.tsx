@@ -45,7 +45,7 @@ export default async function OnboardPage({
 
   return asPlatform(async (_tx, seat) => {
     if (!canOpen(seat.roleKey, "aonboard")) {
-      return <Forbidden landing="/a/dealers" />;
+      return <Forbidden landing="/a/dealers" screen="aonboard" />;
     }
     return (
       <div className="space-y-6">

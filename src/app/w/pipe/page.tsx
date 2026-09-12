@@ -26,7 +26,7 @@ export default async function PipePage({
 }) {
   const filters = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "pipe")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "pipe")) return <Forbidden screen="pipe" />;
     const dept = departmentOfRole(seat.roleKey);
     const ladder =
       dept === "all"

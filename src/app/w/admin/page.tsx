@@ -15,7 +15,7 @@ import { istDateTime } from "@/lib/format";
 
 export default async function AdminPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "admin")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "admin")) return <Forbidden screen="admin" />;
     const [pos] = await tx<{ branch_id: string | null }[]>`
       SELECT p.branch_id::text FROM users u
       LEFT JOIN positions p ON p.id = u.position_id

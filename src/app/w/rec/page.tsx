@@ -28,7 +28,7 @@ export default async function RecPage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "rec")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "rec")) return <Forbidden screen="rec" />;
     if (!id) {
       return (
         <div>
@@ -42,7 +42,7 @@ export default async function RecPage({
       return (
         <div>
           <RuleHeading>Enquiry record</RuleHeading>
-          <p className="mt-4">This enquiry is not on your book.</p>
+          <p className="mt-4">This enquiry is not on your book. Ask the digital desk if you need a seat that can see it.</p>
         </div>
       );
     }

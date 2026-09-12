@@ -26,7 +26,7 @@ export default async function DealerControlPage({
   const { q } = await searchParams;
   const seat = await currentSeat();
   if (!canOpen(seat.roleKey, "adealers")) {
-    return <Forbidden landing="/w/login" />;
+    return <Forbidden landing="/w/login" screen="adealers" />;
   }
 
   const dealer = await asPlatform((tx) => getPlatformDealer(tx, id));

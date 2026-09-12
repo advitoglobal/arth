@@ -112,7 +112,7 @@ export default async function LoopPage({
 }) {
   const { user } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "loop")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "loop")) return <Forbidden screen="loop" />;
     const personal = ["tele", "svctele", "instele"].includes(seat.roleKey);
     const leadish = ["lead", "mgr", "gm", "ops"].includes(seat.roleKey);
     const criteria = await listReviewCriteria(tx);
@@ -138,7 +138,7 @@ export default async function LoopPage({
       );
     }
 
-    if (!leadish) return <Forbidden />;
+    if (!leadish) return <Forbidden screen="loop" />;
 
     const subject = user && !personal ? user : null;
     const coaching = await listCoaching(tx, seat.userId);

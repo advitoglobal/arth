@@ -350,30 +350,40 @@ export function resolveSeatKey(rawSeat: string | undefined): SeatKey | null {
   return null;
 }
 
+const PATH_SCREENS: Record<string, string> = {
+  "/w/dayb": "dayb",
+  "/w/tele": "tele",
+  "/w/pipe": "pipe",
+  "/w/rec": "rec",
+  "/w/delivery": "delivery",
+  "/w/search": "search",
+  "/w/new": "new",
+  "/w/notif": "notif",
+  "/w/profile": "profile",
+  "/w/desk": "desk",
+  "/w/prin": "prin",
+  "/w/perf": "perf",
+  "/w/admin": "admin",
+  "/w/books": "books",
+  "/w/gm": "gm",
+  "/w/svc": "svc",
+  "/w/ins": "ins",
+  "/w/stock": "stock",
+  "/w/drive": "drive",
+  "/w/bot": "bot",
+  "/w/loop": "loop",
+  "/w/msg": "msg",
+  "/a/dealers": "adealers",
+  "/a/onboard": "aonboard",
+};
+
 export function screenFromPath(pathname: string): string | null {
-  const map: Record<string, string> = {
-    "/w/dayb": "dayb",
-    "/w/tele": "tele",
-    "/w/pipe": "pipe",
-    "/w/rec": "rec",
-    "/w/delivery": "delivery",
-    "/w/search": "search",
-    "/w/new": "new",
-    "/w/notif": "notif",
-    "/w/profile": "profile",
-    "/w/desk": "desk",
-    "/w/prin": "prin",
-    "/w/perf": "perf",
-    "/w/admin": "admin",
-    "/w/books": "books",
-    "/w/gm": "gm",
-    "/w/svc": "svc",
-    "/w/ins": "ins",
-    "/w/stock": "stock",
-    "/w/drive": "drive",
-    "/w/bot": "bot",
-  };
-  return map[pathname] ?? null;
+  if (PATH_SCREENS[pathname]) return PATH_SCREENS[pathname];
+  const keys = Object.keys(PATH_SCREENS).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (pathname.startsWith(`${key}/`)) return PATH_SCREENS[key];
+  }
+  return null;
 }
 
 export function isPlatformRole(roleKey: string) {
