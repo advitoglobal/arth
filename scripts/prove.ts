@@ -27,6 +27,7 @@ const checks: [string, string][] = [
   ["db:promise", "PROMISE_OK"],
   ["db:advise", "ADVISE_OK"],
   ["db:handover", "HANDOVER_OK"],
+  ["db:weekly-loop", "WEEKLY_LOOP_OK"],
   ["db:figures", "FIGURES_OK"],
 ];
 

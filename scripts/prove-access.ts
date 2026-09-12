@@ -40,6 +40,11 @@ assert(!canOpen("tele", "bot"), "telecaller is 403 on Arthbot");
 assert(canOpen("salesmgr", "stock"), "sales manager opens stock");
 assert(canOpen("tdcoord", "drive"), "coordinator opens test drives");
 assert(canOpen("tele", "msg"), "telecaller opens Messages");
+assert(canOpen("tele", "loop"), "telecaller opens This week");
+assert(canOpen("lead", "loop"), "team leader opens the coaching list");
+assert(canOpen("mgr", "loop"), "digital desk opens the floor pattern");
+assert(!canOpen("owner", "loop"), "principal is 403 on individual coaching notes");
+assert(!canOpen("sales", "loop"), "sales consultant is 403 on the weekly loop");
 assert(!canOpen("acct", "msg"), "accounts is 403 on Messages");
 assert(!canOpen("svctele", "ins"), "service telecaller is 403 on Insurance");
 

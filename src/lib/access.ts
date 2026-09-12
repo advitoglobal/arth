@@ -40,6 +40,7 @@ export function canOpen(roleKey: string, screen: string): boolean {
     stock: ["sales", "salesmgr", "tdcoord", "owner", "gm", "admin"],
     drive: ["tdcoord", "sales", "salesmgr", "owner", "gm"],
     bot: ["owner", "gm", "admin"],
+    loop: ["tele", "svctele", "instele", "lead", "mgr", "gm", "ops"],
     adealers: ["adv_admin", "adv_support", "adv_onboard"],
     aonboard: ["adv_admin", "adv_onboard"],
   };
