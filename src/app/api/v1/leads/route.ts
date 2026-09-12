@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
 import { createOwnedEnquiry } from "@/services/assignment";
-import { findByPhone } from "@/services/conversion";
+import { findDuplicatesByPhone } from "@/services/conversion";
 import { requireScreen } from "@/lib/http";
 
 export async function GET(req: Request) {
@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     return await asSeat(async (tx, seat) => {
       const denied = requireScreen(seat, "new");
       if (denied) return denied;
-      const matches = await findByPhone(tx, phone);
+      const matches = await findDuplicatesByPhone(tx, phone);
       return NextResponse.json({ matches });
     });
   } catch (err) {

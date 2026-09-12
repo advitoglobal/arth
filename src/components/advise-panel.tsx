@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { inr } from "@/lib/format";
 
@@ -27,14 +27,20 @@ export function AdvisePanel({
   leadId,
   snap,
   onTap,
+  openTool,
 }: {
   leadId: string;
   snap: Snap;
   onTap?: (tool: string, values: Record<string, unknown>) => void;
+  openTool?: string | null;
 }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(openTool ?? null);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openTool) setOpen(openTool);
+  }, [openTool]);
 
   async function tap(tool: string, values: Record<string, unknown>) {
     setErr(null);
@@ -61,9 +67,17 @@ export function AdvisePanel({
         One tap answers the customer and writes that you discussed it. You type nothing here.
       </p>
       <div className="flex flex-wrap gap-2">
-        {["price", "emi", "delivery", "testdrive"].map((tool) => (
+        {["price", "emi", "delivery", "testdrive", "valuation"].map((tool) => (
           <Button key={tool} type="button" variant="outline" onClick={() => setOpen(tool)}>
-            {tool === "price" ? "Price" : tool === "emi" ? "EMI" : tool === "delivery" ? "When" : "Drive"}
+            {tool === "price"
+              ? "Price"
+              : tool === "emi"
+                ? "EMI"
+                : tool === "delivery"
+                  ? "When"
+                  : tool === "valuation"
+                    ? "Exchange"
+                    : "Drive"}
           </Button>
         ))}
       </div>
@@ -141,6 +155,15 @@ export function AdvisePanel({
             <p className="text-[var(--arth-n60)]">No free stock colours on this model.</p>
           )}
           <p className="text-[var(--arth-n60)]">{snap.trust.testdrive}</p>
+        </div>
+      ) : null}
+      {open === "valuation" ? (
+        <div className="space-y-2 text-sm">
+          <p>Used-car desk quotes the range. You do not type a figure here.</p>
+          <p className="text-[var(--arth-n60)]">{snap.trust.valuation}</p>
+          <Button type="button" onClick={() => tap("valuation", { opened: true })}>
+            Use this on the call
+          </Button>
         </div>
       ) : null}
       {msg ? <p className="text-sm">{msg}</p> : null}

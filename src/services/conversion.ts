@@ -18,6 +18,37 @@ export async function findByPhone(tx: Tx, phone: string) {
   `;
 }
 
+export type PhoneDuplicate = {
+  id: string;
+  customer_name: string;
+  department_key: string;
+  stage_key: string;
+  model_interest: string | null;
+  owner_user_id: string | null;
+  cars: string | null;
+  event_count: number;
+  filed_at: Date;
+};
+
+/** Intake-only. Same dealer, every department. Search still uses the four walls. */
+export async function findDuplicatesByPhone(tx: Tx, phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 6) return [];
+  return tx<PhoneDuplicate[]>`
+    SELECT
+      lead_id::text AS id,
+      customer_name,
+      department_key,
+      stage_key,
+      model_interest,
+      owner_user_id::text,
+      cars,
+      event_count,
+      filed_at
+    FROM arth_phone_duplicates(${digits})
+  `;
+}
+
 export async function runEscalations(tx: Tx) {
   const pool = await tx<{ id: string; customer_name: string; department_key: string; branch_id: string }[]>`
     SELECT l.id::text, c.full_name AS customer_name, l.department_key, l.branch_id::text

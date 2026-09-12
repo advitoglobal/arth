@@ -37,6 +37,29 @@ export async function listCatalogue(tx: Tx) {
   `;
 }
 
+export async function listCatalogueModels(tx: Tx) {
+  return tx<{ model: string }[]>`
+    SELECT DISTINCT model FROM oem_catalogue ORDER BY model
+  `;
+}
+
+export async function listCatalogueVariants(tx: Tx, model?: string) {
+  return tx<{ model: string; variant: string }[]>`
+    SELECT model, variant FROM oem_catalogue
+    WHERE ${model || null}::text IS NULL OR model = ${model ?? ""}
+    ORDER BY model, variant
+  `;
+}
+
+export async function listPriceColours(tx: Tx, model?: string) {
+  return tx<{ model: string; colour: string }[]>`
+    SELECT DISTINCT model, colour FROM price_master
+    WHERE colour IS NOT NULL
+      AND (${model || null}::text IS NULL OR model = ${model ?? ""})
+    ORDER BY model, colour
+  `;
+}
+
 export async function onRoadFor(
   tx: Tx,
   model: string,

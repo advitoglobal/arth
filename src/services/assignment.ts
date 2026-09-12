@@ -392,16 +392,17 @@ export async function createOwnedEnquiry(
     throw new Error("A customer name is required.");
   }
 
-  const [dup] = await tx<{ lead_id: string }[]>`
-    SELECT l.id::text AS lead_id
-    FROM customers c
-    JOIN leads l ON l.customer_id = c.id
-    WHERE c.phone = ${digits}
-    ORDER BY l.created_at DESC
-    LIMIT 1
+  const [dup] = await tx<{ lead_id: string; department_key: string }[]>`
+    SELECT lead_id::text, department_key FROM arth_phone_duplicates(${digits}) LIMIT 1
   `;
   if (dup) {
-    const err = new Error("This number is already on your book. Open the existing record.");
+    const dept =
+      dup.department_key === "service"
+        ? "Service"
+        : dup.department_key === "insurance"
+          ? "Insurance"
+          : "Sales";
+    const err = new Error(`This number is already on the ${dept} book. Open the existing record.`);
     (err as Error & { existingLeadId?: string }).existingLeadId = dup.lead_id;
     throw err;
   }
@@ -487,7 +488,7 @@ export async function createOwnedEnquiry(
         'created',
         'USER',
         ${input.userId}::uuid,
-        'Filed from Search. Owner is the seat that took the call.',
+        'Filed at the desk. Owner is the seat that took the call.',
         ${tx.json({ source_key: input.sourceKey })}
       )
     `;

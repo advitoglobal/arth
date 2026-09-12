@@ -14,9 +14,11 @@ const PURPOSES = [
 export function ConsentPanel({
   leadId,
   initial,
+  onToggle,
 }: {
   leadId: string;
   initial: { purpose_key: string; granted: boolean }[];
+  onToggle?: () => void;
 }) {
   const router = useRouter();
   const [rows, setRows] = useState(initial);
@@ -40,6 +42,7 @@ export function ConsentPanel({
       return next;
     });
     router.refresh();
+    onToggle?.();
   }
 
   return (

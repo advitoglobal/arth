@@ -9,13 +9,22 @@ export async function POST(req: Request) {
     return await asSeat(async (tx, seat) => {
       const denied = requireAnyScreen(seat, ["new", "tele"]);
       if (denied) return denied;
+      const financeNeeded =
+        body.financeNeeded === undefined && body.financePath === undefined
+          ? undefined
+          : body.financePath === "cash"
+            ? false
+            : Boolean(body.financeNeeded ?? body.financePath === "finance");
+      const testdriveNeeded =
+        body.testdriveNeeded === undefined ? undefined : Boolean(body.testdriveNeeded);
+      const seenVehicle = body.seenVehicle === undefined ? undefined : Boolean(body.seenVehicle);
       const result = await saveEnquiryDepth(tx, {
         leadId: String(body.leadId),
         userId: seat.userId,
         colour: body.colour,
         variant: body.variant,
         buyerType: body.buyerType,
-        financeNeeded: Boolean(body.financeNeeded),
+        financeNeeded,
         altModel: body.altModel,
         altVariant: body.altVariant,
         expectedBookingDate: body.expectedBookingDate,
@@ -26,9 +35,12 @@ export async function POST(req: Request) {
         exchangePlace: body.exchangePlace,
         meetingKind: body.meetingKind,
         meetingAt: body.meetingAt,
-        testdriveNeeded: body.testdriveNeeded,
+        testdriveNeeded,
         testdrivePrefDate: body.testdrivePrefDate,
         financeBankKey: body.financeBankKey,
+        whoElseDecides: body.whoElseDecides,
+        seenVehicle,
+        intakeSaid: body.intakeSaid,
       });
       return NextResponse.json(result);
     });
