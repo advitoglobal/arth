@@ -11,6 +11,7 @@ const items = [
   { href: "/w/gm", screen: "gm", label: "All departments" },
   { href: "/w/prin", screen: "prin", label: "This dealer" },
   { href: "/w/perf", screen: "perf", label: "Performance" },
+  { href: "/w/loop", screen: "loop", label: "This week" },
   { href: "/w/tele", screen: "tele", label: "Log a call" },
   { href: "/w/msg", screen: "msg", label: "Messages" },
   { href: "/w/pipe", screen: "pipe", label: "My enquiries" },
