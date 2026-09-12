@@ -68,7 +68,9 @@ async function main() {
     for (const [name, line] of Object.entries(rk)) {
       if (isBareDate(line)) throw new Error(`Ramesh ${name} is a bare date: ${line}`);
     }
-    if (!rk.next.includes(" · ")) throw new Error("Ramesh next action must name the event");
+    if (rk.firstCall.includes("not recorded") && ramesh.events.some((e) => e.event_type === "disposition")) {
+      throw new Error("A logged outcome must stamp first call with that event’s time");
+    }
   });
 
   console.log("DATE_STAMPS_OK event named on every rec date, Anita delay on the branch");

@@ -83,7 +83,7 @@ export function enquiryDateStamps(input: {
     arrived: withEvent(arrivedEvent, input.createdAt),
     assigned: withEvent(assignedEvent, input.assignedAt),
     callBy: withEvent(callByEvent, input.firstResponseDue),
-    firstCall: withEvent(firstCallEvent, input.firstRespondedAt),
+    firstCall: withEvent(firstCallEvent, input.firstRespondedAt ?? firstOutcome?.created_at),
     next: withEvent(nextEvent, input.nextActionAt),
   };
 }
