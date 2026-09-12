@@ -29,6 +29,7 @@ const checks: [string, string][] = [
   ["db:handover", "HANDOVER_OK"],
   ["db:weekly-loop", "WEEKLY_LOOP_OK"],
   ["db:pipeline-filters", "PIPE_FILTERS_OK"],
+  ["db:handed-search", "HANDED_SEARCH_OK"],
   ["db:figures", "FIGURES_OK"],
 ];
 

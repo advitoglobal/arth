@@ -37,6 +37,7 @@
     "db:handover": "npx tsx scripts/prove-handover.ts",
     "db:weekly-loop": "npx tsx scripts/prove-weekly-loop.ts",
     "db:pipeline-filters": "npx tsx scripts/prove-pipeline-filters.ts",
+    "db:handed-search": "npx tsx scripts/prove-handed-search.ts",
     "db:figures": "npx tsx scripts/prove-figures.ts",
     "db:capacity": "npx tsx scripts/prove-capacity.ts",
     "db:load-capacity": "npx tsx scripts/load-capacity.ts",
