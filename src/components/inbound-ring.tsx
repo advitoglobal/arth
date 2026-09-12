@@ -44,6 +44,10 @@ export function InboundRing({
       setError(data.error ?? "Not answered.");
       return;
     }
+    if (data.leadId) {
+      router.push(`/w/tele?id=${data.leadId}`);
+      return;
+    }
     router.push(`/w/new?phone=${encodeURIComponent(data.from_phone ?? phone)}`);
   }
 
@@ -53,7 +57,7 @@ export function InboundRing({
         Inbound on this department number
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        Marketing and shared numbers for this department ring here. A live PSTN vendor is not connected yet. Answer still opens capture so the name is not written on paper.
+        The department DID rings here. If the number matches a customer, Answer opens their console. If not, capture opens with the number filled. A live exchange waits on the telephone vendor.
       </p>
       <label className="mt-3 block text-sm">
         Simulate a ring from
@@ -74,6 +78,7 @@ export function InboundRing({
             <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <span className="font-data text-sm">
                 {c.from_phone} · {c.did}
+                {c.label ? ` · ${c.label}` : ""}
               </span>
               <Button type="button" onClick={() => answer(c.id)}>
                 Answer
