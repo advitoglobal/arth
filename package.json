@@ -39,6 +39,7 @@
     "db:pipeline-filters": "npx tsx scripts/prove-pipeline-filters.ts",
     "db:handed-search": "npx tsx scripts/prove-handed-search.ts",
     "db:date-stamps": "npx tsx scripts/prove-date-stamps.ts",
+    "db:save-bar": "npx tsx scripts/prove-save-bar.ts",
     "db:figures": "npx tsx scripts/prove-figures.ts",
     "db:capacity": "npx tsx scripts/prove-capacity.ts",
     "db:load-capacity": "npx tsx scripts/load-capacity.ts",

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SaveBar, UnsavedBar } from "@/components/save-bar";
+import { saveBarLabel } from "@/domain/save-bar";
 
 export function ForgotPassword() {
   const [username, setUsername] = useState("");
@@ -48,7 +50,10 @@ export function ProfileForm({
 }) {
   const [name, setName] = useState(fullName);
   const [phone, setPhone] = useState(whatsappPhone);
+  const [savedName, setSavedName] = useState(fullName);
+  const [savedPhone, setSavedPhone] = useState(whatsappPhone);
   const [msg, setMsg] = useState<string | null>(null);
+  const dirty = name !== savedName || phone !== savedPhone;
   async function save() {
     const res = await fetch("/api/v1/floor", {
       method: "POST",
@@ -57,9 +62,19 @@ export function ProfileForm({
     });
     const data = await res.json();
     setMsg(data.recorded ?? data.error ?? "Not saved.");
+    if (res.ok) {
+      setSavedName(name);
+      setSavedPhone(phone);
+    }
+  }
+  function discard() {
+    setName(savedName);
+    setPhone(savedPhone);
+    setMsg(null);
   }
   return (
     <div className="max-w-lg space-y-3 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
+      <UnsavedBar show={dirty} onSave={() => void save()} onDiscard={discard} />
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
         Name and WhatsApp
       </p>
@@ -83,9 +98,11 @@ export function ProfileForm({
           placeholder="10 digits"
         />
       </label>
-      <Button type="button" onClick={save}>
-        Save
-      </Button>
+      <SaveBar hint="Role, branch, and hours stay as the admin set them.">
+        <Button type="button" className="h-11" onClick={save} disabled={!dirty}>
+          {saveBarLabel("save")}
+        </Button>
+      </SaveBar>
       {msg ? <p className="text-sm">{msg}</p> : null}
     </div>
   );
