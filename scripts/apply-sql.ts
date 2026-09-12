@@ -13,10 +13,18 @@ export function hostedDatabaseUrl() {
 /** Neon copies the pooler URI by default. DDL needs the compute host. */
 export function directDatabaseUrl(url: string) {
   return url
-    .replace("-pooler.", ".")
-    .replace(/[?&]channel_binding=require/, "")
-    .replace(/\?&/, "?")
+    .replace(/-pooler\./gi, ".")
+    .replace(/[?&]pgbouncer=true/gi, "")
+    .replace(/[?&]channel_binding=require/gi, "")
+    .replace(/\?&/g, "?")
     .replace(/[?&]$/, "");
+}
+
+export function databaseHost(url: string) {
+  const at = url.lastIndexOf("@");
+  if (at < 0) return "(unknown)";
+  const rest = url.slice(at + 1);
+  return rest.split("/")[0]?.split("?")[0] ?? "(unknown)";
 }
 
 export async function applySqlFile(absPath: string) {

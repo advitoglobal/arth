@@ -7,7 +7,7 @@
  */
 import postgres from "postgres";
 import { spawnSync } from "node:child_process";
-import { directDatabaseUrl, hostedDatabaseUrl } from "./apply-sql";
+import { databaseHost, directDatabaseUrl, hostedDatabaseUrl } from "./apply-sql";
 
 async function main() {
   const url = hostedDatabaseUrl();
@@ -15,8 +15,10 @@ async function main() {
     throw new Error("Set DATABASE_URL to the Neon connection string first.");
   }
   const direct = directDatabaseUrl(url);
-  if (url.includes("-pooler")) {
-    console.log("Using the Neon direct host for migrations (pooler is for Vercel only).");
+  if (/-pooler\.|pgbouncer=true/i.test(url)) {
+    console.log(
+      `Using the Neon direct host for migrations: ${databaseHost(direct)} (pooler is for Vercel only).`,
+    );
   }
   const password = process.env.ARTH_APP_PASSWORD?.trim();
   if (!password || password.length < 16) {
@@ -49,7 +51,7 @@ async function main() {
   const migrate = spawnSync("npx", ["tsx", "scripts/migrate.ts"], {
     encoding: "utf8",
     stdio: "inherit",
-    env: process.env,
+    env: { ...process.env, DATABASE_URL: direct },
   });
   if (migrate.status !== 0) {
     process.exit(migrate.status ?? 1);

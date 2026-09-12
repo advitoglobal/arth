@@ -118,4 +118,6 @@ Do not run `npm run db:load-capacity`. The free 0.5 GB cap will not hold the 20 
 
 Sign in: `iyer` / `arth-demo`. Also `rao`, `gupta`, `shah`.
 
-If the build fails on `DATABASE_URL`, the env var is missing on Production. If login fails, you used the Neon owner URI on Vercel (bypasses RLS) or the pooler URI during `db:hosted`.
+If the build fails on `DATABASE_URL`, the env var is missing on Production. If login fails, Vercel still has the Neon owner URI (that seat bypasses RLS). Use the pooled `arth_app` URI there.
+
+If `db:hosted` prints `Migrations need the Neon direct URL, not the pooler URL`, this repo is behind. Pull `cursor/hosted-free-stack-9515` and run it again. The pooled Neon copy-button URI is accepted; the script switches host itself.
