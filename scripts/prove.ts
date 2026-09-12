@@ -10,6 +10,7 @@ const checks: [string, string][] = [
   ["db:ledger", "LEDGER_OK"],
   ["db:disposition", "DISPOSITION_OK"],
   ["db:queue", "QUEUE_OK"],
+  ["db:queue-bands", "QUEUE_BANDS_OK"],
   ["db:points", "POINTS_OK"],
   ["db:walls", "WALLS_OK"],
   ["db:desk", "DESK_OK"],

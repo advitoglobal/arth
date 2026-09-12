@@ -11,6 +11,7 @@ import { requireConsent, recordMovement, applyConcealmentPenalties } from "@/ser
 import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
 import { stageLabel, enquiryNo } from "@/lib/labels";
 import { junkReason } from "@/domain/junk";
+import { classifyQueueBand, type QueueBandKey } from "@/domain/queue-bands";
 import { hadRecentDial } from "@/services/conversion";
 import {
   type WhatsAppKind,
@@ -46,7 +47,11 @@ export type LeadRow = {
   department_key?: string | null;
   intake_kind?: string | null;
   intake_batch_name?: string | null;
+  intake_batch_at?: Date | null;
   pool_open?: boolean | null;
+  is_not_enquiry?: boolean | null;
+  queue_band?: QueueBandKey;
+  queue_reason?: string;
 };
 
 export const LIST_LIMIT = 80;
@@ -82,7 +87,9 @@ export async function hydrateLeads(tx: Tx, ids: string[]) {
       l.department_key,
       l.intake_kind,
       l.intake_batch_name,
-      l.pool_open
+      l.intake_batch_at,
+      l.pool_open,
+      l.is_not_enquiry
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
@@ -121,7 +128,12 @@ export async function listQueue(tx: Tx, ownerId: string) {
   const found = await tx<{ id: string }[]>`
     SELECT x AS id FROM arth_queue_lead_ids(${ownerId}::uuid) AS x
   `;
-  return hydrateLeads(tx, found.map((r) => String(r.id)));
+  const rows = await hydrateLeads(tx, found.map((r) => String(r.id)));
+  const now = new Date();
+  return rows.map((row) => {
+    const band = classifyQueueBand(row, now);
+    return { ...row, queue_band: band.key, queue_reason: band.reason };
+  });
 }
 
 export type PipelinePage = {

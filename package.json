@@ -18,6 +18,7 @@
     "db:ledger": "npx tsx scripts/prove-ledger.ts",
     "db:disposition": "npx tsx scripts/prove-disposition.ts",
     "db:queue": "npx tsx scripts/prove-queue.ts",
+    "db:queue-bands": "npx tsx scripts/prove-queue-bands.ts",
     "db:points": "npx tsx scripts/prove-points.ts",
     "db:walls": "npx tsx scripts/prove-visibility.ts",
     "db:desk": "npx tsx scripts/prove-desk.ts",
