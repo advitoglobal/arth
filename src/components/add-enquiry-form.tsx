@@ -26,6 +26,7 @@ import {
 import { SOURCE_LABEL } from "@/lib/labels";
 import { SaveBar, UnsavedBar } from "@/components/save-bar";
 import { saveBarLabel } from "@/domain/save-bar";
+import { CONFIRM_MS } from "@/domain/confirm";
 
 type Dup = {
   id: string;
@@ -189,7 +190,7 @@ export function AddEnquiryForm({
 
   useEffect(() => {
     if (!saved) return;
-    const t = window.setTimeout(() => setSaved(null), 1500);
+    const t = window.setTimeout(() => setSaved(null), CONFIRM_MS);
     return () => window.clearTimeout(t);
   }, [saved]);
 

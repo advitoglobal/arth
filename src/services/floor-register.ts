@@ -212,14 +212,83 @@ export async function listSalesReceivers(tx: Tx, branchId: string) {
   return listReceivers(tx, branchId, "sales");
 }
 
+async function insertLeadEvent(
+  tx: Tx,
+  input: {
+    leadId: string;
+    userId: string;
+    eventType: string;
+    note: string;
+    payload: Record<string, unknown>;
+  },
+) {
+  const [row] = await tx<{ id: string }[]>`
+    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+    VALUES (
+      current_setting('app.tenant_id')::uuid,
+      ${input.leadId}::uuid,
+      ${input.eventType},
+      'USER',
+      ${input.userId}::uuid,
+      ${input.note},
+      ${tx.json(input.payload)}
+    )
+    RETURNING id::text
+  `;
+  if (!row) throw new Error("The ledger row did not write.");
+  return row.id;
+}
+
+function isoStamp(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? String(value) : d.toISOString();
+}
+
+function previousOwnerPayload(lead: {
+  owner_user_id: string | null;
+  next_action_at?: Date | string | null;
+  pool_open?: boolean | null;
+  handed_on_at?: Date | string | null;
+  handed_on_by?: string | null;
+  handover_mode?: string | null;
+  handover_contact_due?: Date | string | null;
+}) {
+  return {
+    previous_owner_user_id: lead.owner_user_id,
+    previous_next_action_at: isoStamp(lead.next_action_at),
+    previous_pool_open: Boolean(lead.pool_open),
+    previous_handed_on_at: isoStamp(lead.handed_on_at),
+    previous_handed_on_by: lead.handed_on_by,
+    previous_handover_mode: lead.handover_mode,
+    previous_handover_contact_due: isoStamp(lead.handover_contact_due),
+  };
+}
+
 export async function keepAndNurture(
   tx: Tx,
   input: { leadId: string; userId: string; revisitAt: string; note?: string },
 ) {
   const revisit = revisitDayToInstant(input.revisitAt);
   if (!revisit) throw new Error("Keep and nurture needs a revisit date.");
-  const [lead] = await tx<{ owner_user_id: string | null }[]>`
-    SELECT owner_user_id::text FROM leads WHERE id = ${input.leadId}::uuid
+  const [lead] = await tx<{
+    owner_user_id: string | null;
+    next_action_at: Date | null;
+    pool_open: boolean;
+    handed_on_at: Date | null;
+    handed_on_by: string | null;
+    handover_mode: string | null;
+    handover_contact_due: Date | null;
+  }[]>`
+    SELECT
+      owner_user_id::text,
+      next_action_at,
+      pool_open,
+      handed_on_at,
+      handed_on_by::text,
+      handover_mode,
+      handover_contact_due
+    FROM leads WHERE id = ${input.leadId}::uuid
   `;
   if (!lead) throw new Error("This enquiry is not in your tenant.");
   if (lead.owner_user_id !== input.userId) {
@@ -232,19 +301,18 @@ export async function keepAndNurture(
       pool_open = false
     WHERE id = ${input.leadId}::uuid
   `;
-  await tx`
-    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
-    VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${input.leadId}::uuid,
-      'nurture',
-      'USER',
-      ${input.userId}::uuid,
-      ${input.note?.trim() || "Not ready. Kept on the telecaller book with a revisit date."},
-      ${tx.json({ mode: "nurture", revisit_at: revisit })}
-    )
-  `;
-  return { recorded: "Kept on your book. The revisit date is the next clock.", mode: "nurture" as const };
+  const eventId = await insertLeadEvent(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    eventType: "nurture",
+    note: input.note?.trim() || "Not ready. Kept on the telecaller book with a revisit date.",
+    payload: { mode: "nurture", revisit_at: revisit, ...previousOwnerPayload(lead) },
+  });
+  return {
+    recorded: "Kept on your book. The revisit date is the next clock.",
+    mode: "nurture" as const,
+    eventId,
+  };
 }
 
 export async function routeEnquiry(
@@ -276,6 +344,12 @@ export async function routeEnquiry(
     difficulty_band: string | null;
     source_key: string;
     department_key: string;
+    next_action_at: Date | null;
+    pool_open: boolean;
+    handed_on_at: Date | null;
+    handed_on_by: string | null;
+    handover_mode: string | null;
+    handover_contact_due: Date | null;
   }[]>`
     SELECT
       l.owner_user_id::text,
@@ -284,7 +358,13 @@ export async function routeEnquiry(
       c.full_name AS customer_name,
       l.difficulty_band,
       l.source_key,
-      l.department_key
+      l.department_key,
+      l.next_action_at,
+      l.pool_open,
+      l.handed_on_at,
+      l.handed_on_by::text,
+      l.handover_mode,
+      l.handover_contact_due
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     WHERE l.id = ${input.leadId}::uuid
@@ -325,6 +405,7 @@ export async function routeEnquiry(
     testdrive: card.testdrive,
     exchange: card.exchange,
     said: card.said,
+    ...previousOwnerPayload(lead),
   };
 
   if (mode === "pool") {
@@ -342,18 +423,13 @@ export async function routeEnquiry(
         next_action_at = ${dueIso}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
-    await tx`
-      INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
-      VALUES (
-        current_setting('app.tenant_id')::uuid,
-        ${input.leadId}::uuid,
-        'handoff',
-        'USER',
-        ${input.userId}::uuid,
-        ${input.note.trim() || "Meeting done. Assigned to the branch pool. First to reach owns it."},
-        ${tx.json(cardPayload)}
-      )
-    `;
+    const eventId = await insertLeadEvent(tx, {
+      leadId: input.leadId,
+      userId: input.userId,
+      eventType: "handoff",
+      note: input.note.trim() || "Meeting done. Assigned to the branch pool. First to reach owns it.",
+      payload: cardPayload,
+    });
     await recordMovement(tx, {
       userId: input.userId,
       amount: points,
@@ -380,7 +456,7 @@ export async function routeEnquiry(
         )
       `;
     }
-    return { recorded: `In the ${dept} pool. First consultant to reach owns it.`, points, mode: "pool" };
+    return { recorded: `In the ${dept} pool. First consultant to reach owns it.`, points, mode: "pool", eventId };
   }
 
   if (mode === "queue") {
@@ -398,18 +474,13 @@ export async function routeEnquiry(
         next_action_at = ${dueIso}::timestamptz
       WHERE id = ${input.leadId}::uuid
     `;
-    await tx`
-      INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
-      VALUES (
-        current_setting('app.tenant_id')::uuid,
-        ${input.leadId}::uuid,
-        'handoff',
-        'USER',
-        ${input.userId}::uuid,
-        ${input.note.trim() || "Meeting done. In the department queue for the sales manager to assign."},
-        ${tx.json(cardPayload)}
-      )
-    `;
+    const eventId = await insertLeadEvent(tx, {
+      leadId: input.leadId,
+      userId: input.userId,
+      eventType: "handoff",
+      note: input.note.trim() || "Meeting done. In the department queue for the sales manager to assign.",
+      payload: cardPayload,
+    });
     await recordMovement(tx, {
       userId: input.userId,
       amount: points,
@@ -440,6 +511,7 @@ export async function routeEnquiry(
       recorded: "In the department queue. The sales manager assigns the receiving executive.",
       points,
       mode: "queue",
+      eventId,
     };
   }
 
@@ -461,18 +533,13 @@ export async function routeEnquiry(
       next_action_at = ${dueIso}::timestamptz
     WHERE id = ${input.leadId}::uuid
   `;
-  await tx`
-    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
-    VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${input.leadId}::uuid,
-      'handoff',
-      'USER',
-      ${input.userId}::uuid,
-      ${input.note.trim() || "Meeting done. Handed to sales to convert."},
-      ${tx.json({ ...cardPayload, sales_user_id: input.salesUserId })}
-    )
-  `;
+  const eventId = await insertLeadEvent(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    eventType: "handoff",
+    note: input.note.trim() || "Meeting done. Handed to sales to convert.",
+    payload: { ...cardPayload, sales_user_id: input.salesUserId },
+  });
   await recordMovement(tx, {
     userId: input.userId,
     amount: points,
@@ -496,7 +563,103 @@ export async function routeEnquiry(
       ${"/w/rec?id=" + input.leadId}
     )
   `;
-  return { recorded: "Handed to the named executive. Conversion is now their job.", points, mode: "direct" };
+  return { recorded: "Handed to the named executive. Conversion is now their job.", points, mode: "direct", eventId };
+}
+
+export async function undoHandoff(
+  tx: Tx,
+  input: { leadId: string; userId: string; eventId: string },
+) {
+  const [event] = await tx<{
+    id: string;
+    event_type: string;
+    actor_id: string | null;
+    payload: {
+      previous_owner_user_id?: string | null;
+      previous_next_action_at?: string | null;
+      previous_pool_open?: boolean;
+      previous_handed_on_at?: string | null;
+      previous_handed_on_by?: string | null;
+      previous_handover_mode?: string | null;
+      previous_handover_contact_due?: string | null;
+      points?: number;
+      sales_user_id?: string;
+      mode?: string;
+    } | null;
+  }[]>`
+    SELECT id::text, event_type, actor_id::text, payload
+    FROM lead_events
+    WHERE id = ${input.eventId}::bigint AND lead_id = ${input.leadId}::uuid
+  `;
+  if (!event || (event.event_type !== "handoff" && event.event_type !== "nurture")) {
+    throw new Error("Nothing to undo.");
+  }
+  if (event.actor_id !== input.userId) {
+    throw new Error("Only the person who wrote that row can undo it in this window.");
+  }
+
+  const [lead] = await tx<{
+    owner_user_id: string | null;
+    handed_on_by: string | null;
+    handover_contacted_at: Date | null;
+    handover_mode: string | null;
+  }[]>`
+    SELECT owner_user_id::text, handed_on_by::text, handover_contacted_at, handover_mode
+    FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not on your book.");
+  if (event.event_type === "handoff") {
+    if (lead.handover_contacted_at) {
+      throw new Error("Sales already made first contact. Ask the digital desk.");
+    }
+    const prevOwner = event.payload?.previous_owner_user_id ?? input.userId;
+    const named = event.payload?.sales_user_id;
+    if (
+      lead.owner_user_id &&
+      lead.owner_user_id !== prevOwner &&
+      lead.owner_user_id !== named
+    ) {
+      throw new Error("Another seat already owns this enquiry. Ask the digital desk.");
+    }
+  }
+
+  const prev = event.payload;
+  const [restored] = await tx<{ ok: boolean }[]>`
+    SELECT arth_restore_handoff(${input.leadId}::uuid, ${input.eventId}::bigint) AS ok
+  `;
+  if (!restored?.ok) {
+    throw new Error("The enquiry could not be restored. Ask the digital desk.");
+  }
+
+  await insertLeadEvent(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    eventType: "correction",
+    note:
+      event.event_type === "nurture"
+        ? "Undo of last keep-and-nurture. Original row stands."
+        : "Undo of last handoff. Original row stands.",
+    payload: { undo_of: input.eventId },
+  });
+
+  const points = Number(prev?.points ?? 0);
+  if (event.event_type === "handoff" && points) {
+    await recordMovement(tx, {
+      userId: input.userId,
+      amount: -points,
+      reasonKey: "correction",
+      note: "Undo of last handoff. Original movement stays.",
+      leadId: input.leadId,
+    });
+    await writeAssistCredit(tx, {
+      userId: input.userId,
+      leadId: input.leadId,
+      amount: -points,
+      note: "Undo of last handoff. Original assist row stays.",
+    });
+  }
+
+  return { recorded: "Correction written" };
 }
 
 export async function bounceToPool(
@@ -619,19 +782,53 @@ export async function claimPool(tx: Tx, leadId: string, userId: string) {
     RETURNING id::text
   `;
   if (!row) throw new Error("This name is already claimed, or it is not in the pool.");
-  await tx`
-    INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
-    VALUES (
-      current_setting('app.tenant_id')::uuid,
-      ${leadId}::uuid,
-      'assigned',
-      'USER',
-      ${userId}::uuid,
-      'Claimed from the branch pool.',
-      ${tx.json({ claimed_from: "pool" })}
-    )
+  const eventId = await insertLeadEvent(tx, {
+    leadId,
+    userId,
+    eventType: "assigned",
+    note: "Claimed from the branch pool.",
+    payload: { claimed_from: "pool", previous_owner_user_id: null, previous_pool_open: true },
+  });
+  return { recorded: "You own this enquiry now.", eventId };
+}
+
+export async function undoPoolClaim(
+  tx: Tx,
+  input: { leadId: string; userId: string; eventId: string },
+) {
+  const [event] = await tx<{
+    event_type: string;
+    actor_id: string | null;
+    payload: { claimed_from?: string } | null;
+  }[]>`
+    SELECT event_type, actor_id::text, payload
+    FROM lead_events
+    WHERE id = ${input.eventId}::bigint AND lead_id = ${input.leadId}::uuid
   `;
-  return { recorded: "You own this enquiry now." };
+  if (!event || event.event_type !== "assigned" || event.payload?.claimed_from !== "pool") {
+    throw new Error("Nothing to undo.");
+  }
+  if (event.actor_id !== input.userId) {
+    throw new Error("Only the person who claimed this name can undo it in this window.");
+  }
+  const [lead] = await tx<{ owner_user_id: string | null }[]>`
+    SELECT owner_user_id::text FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead || lead.owner_user_id !== input.userId) {
+    throw new Error("This enquiry already left your book. Ask the digital desk.");
+  }
+  await tx`
+    UPDATE leads SET owner_user_id = NULL, pool_open = true
+    WHERE id = ${input.leadId}::uuid
+  `;
+  await insertLeadEvent(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    eventType: "correction",
+    note: "Undo of last pool claim. Original row stands.",
+    payload: { undo_of: input.eventId },
+  });
+  return { recorded: "Correction written" };
 }
 
 export async function reassignLead(

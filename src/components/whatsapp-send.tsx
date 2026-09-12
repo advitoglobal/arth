@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { WhatsAppKind } from "@/lib/whatsapp";
 import { QUICK_LINKS } from "@/domain/whatsapp-loop";
+import { CONFIRM_MS } from "@/domain/confirm";
+import { InPlaceConfirm } from "@/components/in-place-confirm";
 
 export function WhatsAppSend({
   leadId,
@@ -18,7 +20,7 @@ export function WhatsAppSend({
 
   useEffect(() => {
     if (!saved) return;
-    const t = window.setTimeout(() => setSaved(null), 1500);
+    const t = window.setTimeout(() => setSaved(null), CONFIRM_MS);
     return () => window.clearTimeout(t);
   }, [saved]);
 
@@ -57,6 +59,15 @@ export function WhatsAppSend({
           ]
         : QUICK_LINKS.map((l) => ({ kind: l.key, label: l.label }));
 
+  if (saved) {
+    return (
+      <InPlaceConfirm
+        line={saved}
+        next="After this window the templates are here again."
+      />
+    );
+  }
+
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
@@ -72,7 +83,6 @@ export function WhatsAppSend({
           </Button>
         ))}
       </div>
-      {saved ? <p className="mt-2 text-sm font-medium">{saved}</p> : null}
       {error ? <p className="mt-2 text-sm text-[var(--arth-overdue)]">{error}</p> : null}
     </div>
   );

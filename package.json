@@ -41,6 +41,7 @@
     "db:date-stamps": "npx tsx scripts/prove-date-stamps.ts",
     "db:save-bar": "npx tsx scripts/prove-save-bar.ts",
     "db:refusal": "npx tsx scripts/prove-refusal.ts",
+    "db:confirm": "npx tsx scripts/prove-confirm.ts",
     "db:figures": "npx tsx scripts/prove-figures.ts",
     "db:capacity": "npx tsx scripts/prove-capacity.ts",
     "db:load-capacity": "npx tsx scripts/load-capacity.ts",

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { stagesFor } from "@/domain/ladders";
 import { stageLabel } from "@/lib/labels";
+import { CONFIRM_MS } from "@/domain/confirm";
+import { InPlaceConfirm } from "@/components/in-place-confirm";
 
 export function StagePanel({
   leadId,
@@ -30,7 +32,7 @@ export function StagePanel({
       setConfirm(null);
       setEventId(null);
       router.refresh();
-    }, 1500);
+    }, CONFIRM_MS);
     return () => window.clearTimeout(t);
   }, [confirm, eventId, router]);
 
@@ -78,15 +80,11 @@ export function StagePanel({
 
   if (confirm) {
     return (
-      <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-4">
-        <p className="font-medium">{confirm}</p>
-        <p className="mt-2 text-sm text-[var(--arth-n60)]">
-          Undo writes a correcting entry. The original row stays. The enquiry returns to the previous stage.
-        </p>
-        <Button className="mt-4" variant="outline" onClick={undo}>
-          Undo
-        </Button>
-      </div>
+      <InPlaceConfirm
+        line={confirm}
+        next="The enquiry returns to the previous stage."
+        onUndo={() => void undo()}
+      />
     );
   }
 

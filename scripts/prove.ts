@@ -33,6 +33,7 @@ const checks: [string, string][] = [
   ["db:date-stamps", "DATE_STAMPS_OK"],
   ["db:save-bar", "SAVE_BAR_OK"],
   ["db:refusal", "REFUSAL_OK"],
+  ["db:confirm", "CONFIRM_OK"],
   ["db:figures", "FIGURES_OK"],
 ];
 
