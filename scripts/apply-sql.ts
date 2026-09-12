@@ -10,17 +10,20 @@ export function hostedDatabaseUrl() {
   return null;
 }
 
-export function assertDirectUrl(url: string) {
-  if (url.includes("-pooler")) {
-    throw new Error("Migrations need the Neon direct URL, not the pooler URL.");
-  }
+/** Neon copies the pooler URI by default. DDL needs the compute host. */
+export function directDatabaseUrl(url: string) {
+  return url
+    .replace("-pooler.", ".")
+    .replace(/[?&]channel_binding=require/, "")
+    .replace(/\?&/, "?")
+    .replace(/[?&]$/, "");
 }
 
 export async function applySqlFile(absPath: string) {
   const hosted = hostedDatabaseUrl();
   if (hosted) {
-    assertDirectUrl(hosted);
-    const sql = postgres(hosted, {
+    const direct = directDatabaseUrl(hosted);
+    const sql = postgres(direct, {
       max: 1,
       ssl: "require",
       prepare: false,

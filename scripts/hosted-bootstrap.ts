@@ -2,25 +2,28 @@
  * One-time Neon setup. Uses the owner (direct) URL in DATABASE_URL.
  * Gives arth_app a login password so Vercel does not connect as the Neon owner.
  *
- * DATABASE_URL must be the direct host, not *-pooler.*.
+ * DATABASE_URL may be Neon's pooled URI. This script switches to the direct host.
  * Do not commit ARTH_APP_PASSWORD.
  */
 import postgres from "postgres";
 import { spawnSync } from "node:child_process";
-import { assertDirectUrl, hostedDatabaseUrl } from "./apply-sql";
+import { directDatabaseUrl, hostedDatabaseUrl } from "./apply-sql";
 
 async function main() {
   const url = hostedDatabaseUrl();
   if (!url) {
-    throw new Error("Set DATABASE_URL to the Neon direct connection string first.");
+    throw new Error("Set DATABASE_URL to the Neon connection string first.");
   }
-  assertDirectUrl(url);
+  const direct = directDatabaseUrl(url);
+  if (url.includes("-pooler")) {
+    console.log("Using the Neon direct host for migrations (pooler is for Vercel only).");
+  }
   const password = process.env.ARTH_APP_PASSWORD?.trim();
   if (!password || password.length < 16) {
     throw new Error("Set ARTH_APP_PASSWORD to at least 16 characters. Do not commit it.");
   }
 
-  const sql = postgres(url, {
+  const sql = postgres(direct, {
     max: 1,
     ssl: "require",
     prepare: false,

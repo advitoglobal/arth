@@ -93,11 +93,11 @@ A shareable `https://….vercel.app/w/login` link. Not production. Hobby is for 
 
 1. Sign up at [neon.tech](https://neon.tech) on the Free plan. No card.
 2. New project. Region: Singapore if listed, otherwise the default.
-3. Open **Dashboard → Connection details**. Copy the **direct** URI (host has no `-pooler`).
-4. On your laptop, from this repo:
+3. Open **Dashboard → Connection details**. Copy the URI (pooled is fine).
+4. On your laptop, from this repo. The Neon copy button is usually the **pooled** URI. `db:hosted` switches to the direct host itself.
 
 ```bash
-export DATABASE_URL='paste-the-direct-uri-here'
+export DATABASE_URL='paste-neon-uri-here'
 export ARTH_APP_PASSWORD='at-least-16-random-characters'
 npm install
 npm run db:hosted
