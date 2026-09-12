@@ -2,25 +2,64 @@
  * One-time Neon setup. Uses the owner (direct) URL in DATABASE_URL.
  * Gives arth_app a login password so Vercel does not connect as the Neon owner.
  *
- * DATABASE_URL may be Neon's pooled URI. This script switches to the direct host.
+ * Reads `.env.local` from the Neon Cursor plugin (`DATABASE_URL_UNPOOLED`).
+ * A pooled URI still works: this script switches to the compute host.
  * Do not commit ARTH_APP_PASSWORD.
  */
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import postgres from "postgres";
 import { spawnSync } from "node:child_process";
-import { databaseHost, directDatabaseUrl, hostedDatabaseUrl } from "./apply-sql";
+import {
+  databaseHost,
+  directDatabaseUrl,
+  isNeonUrl,
+} from "./apply-sql";
+
+function envFile(name: string) {
+  const abs = path.join(process.cwd(), name);
+  if (!existsSync(abs)) return {} as Record<string, string>;
+  const out: Record<string, string> = {};
+  for (const line of readFileSync(abs, "utf8").split("\n")) {
+    if (!line || line.startsWith("#") || !line.includes("=")) continue;
+    const i = line.indexOf("=");
+    const key = line.slice(0, i).trim();
+    const val = line.slice(i + 1).trim().replace(/^['"]|['"]$/g, "");
+    if (key) out[key] = val;
+  }
+  return out;
+}
+
+function neonOwnerUrl() {
+  const file = envFile(".env.local");
+  const unpooled =
+    process.env.DATABASE_URL_UNPOOLED?.trim() || file.DATABASE_URL_UNPOOLED?.trim();
+  const pooled = isNeonUrl(process.env.DATABASE_URL)
+    ? process.env.DATABASE_URL.trim()
+    : file.DATABASE_URL?.trim();
+  if (isNeonUrl(unpooled)) {
+    return { label: "plugin unpooled", url: directDatabaseUrl(unpooled!) };
+  }
+  if (isNeonUrl(pooled)) {
+    return { label: "pooled (rewritten)", url: directDatabaseUrl(pooled!) };
+  }
+  return null;
+}
 
 async function main() {
-  const url = hostedDatabaseUrl();
-  if (!url) {
-    throw new Error("Set DATABASE_URL to the Neon connection string first.");
-  }
-  const direct = directDatabaseUrl(url);
-  if (/-pooler\.|pgbouncer=true/i.test(url)) {
-    console.log(
-      `Using the Neon direct host for migrations: ${databaseHost(direct)} (pooler is for Vercel only).`,
+  const neon = neonOwnerUrl();
+  if (!neon) {
+    throw new Error(
+      "No Neon URL. Connect the Neon plugin (writes .env.local) or set DATABASE_URL.",
     );
   }
-  const password = process.env.ARTH_APP_PASSWORD?.trim();
+  const direct = neon.url;
+  console.log(
+    `Using the Neon direct host for migrations: ${databaseHost(direct)} (${neon.label}).`,
+  );
+  const file = envFile(".env.local");
+  const password =
+    process.env.ARTH_APP_PASSWORD?.trim() || file.ARTH_APP_PASSWORD?.trim();
   if (!password || password.length < 16) {
     throw new Error("Set ARTH_APP_PASSWORD to at least 16 characters. Do not commit it.");
   }

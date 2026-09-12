@@ -93,8 +93,8 @@ A shareable `https://….vercel.app/w/login` link. Not production. Hobby is for 
 
 1. Sign up at [neon.tech](https://neon.tech) on the Free plan. No card.
 2. New project. Region: Singapore if listed, otherwise the default.
-3. Open **Dashboard → Connection details**. Copy the URI (pooled is fine).
-4. On your laptop, from this repo. The Neon copy button is usually the **pooled** URI. `db:hosted` switches to the direct host itself.
+3. Open **Dashboard → Connection details**. Copy the URI (pooled is fine), or connect the Neon Cursor plugin so it writes `.env.local` (`DATABASE_URL` plus `DATABASE_URL_UNPOOLED`).
+4. On your laptop, from this repo. The Neon copy button is usually the **pooled** URI. `db:hosted` reads `.env.local` and uses the unpooled host when present.
 
 ```bash
 export DATABASE_URL='paste-neon-uri-here'

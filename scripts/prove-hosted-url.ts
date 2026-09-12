@@ -2,10 +2,13 @@ import { databaseHost, directDatabaseUrl } from "./apply-sql";
 
 const pooled =
   "postgresql://neondb_owner:secret@ep-demo-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const bindingFirst =
+  "postgresql://neondb_owner:secret@ep-demo-pooler.ap-southeast-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
 const pgbouncer =
   "postgresql://neondb_owner:secret@ep-demo.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true";
 
 const a = directDatabaseUrl(pooled);
+const first = directDatabaseUrl(bindingFirst);
 const b = directDatabaseUrl(pgbouncer);
 
 if (a.includes("-pooler")) {
@@ -19,6 +22,9 @@ if (databaseHost(a) !== "ep-demo.ap-southeast-1.aws.neon.tech") {
 }
 if (b.includes("pgbouncer")) {
   throw new Error("pgbouncer flag was not stripped");
+}
+if (first.includes("neondb&") || !first.includes("neondb?sslmode=require")) {
+  throw new Error(`channel_binding-first query was mangled: ${first}`);
 }
 
 console.log("HOSTED_URL_OK");

@@ -10,14 +10,22 @@ export function hostedDatabaseUrl() {
   return null;
 }
 
+export function isNeonUrl(url: string | undefined | null) {
+  return Boolean(url && /neon\.tech/i.test(url));
+}
+
 /** Neon copies the pooler URI by default. DDL needs the compute host. */
 export function directDatabaseUrl(url: string) {
-  return url
+  let out = url
     .replace(/-pooler\./gi, ".")
     .replace(/[?&]pgbouncer=true/gi, "")
     .replace(/[?&]channel_binding=require/gi, "")
-    .replace(/\?&/g, "?")
-    .replace(/[?&]$/, "");
+    .replace(/\?&/g, "?");
+  if (!out.includes("?") && out.includes("&")) {
+    const amp = out.indexOf("&");
+    out = `${out.slice(0, amp)}?${out.slice(amp + 1)}`;
+  }
+  return out.replace(/[?&]$/, "");
 }
 
 export function databaseHost(url: string) {
