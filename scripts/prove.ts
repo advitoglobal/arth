@@ -30,6 +30,7 @@ const checks: [string, string][] = [
   ["db:weekly-loop", "WEEKLY_LOOP_OK"],
   ["db:pipeline-filters", "PIPE_FILTERS_OK"],
   ["db:handed-search", "HANDED_SEARCH_OK"],
+  ["db:date-stamps", "DATE_STAMPS_OK"],
   ["db:figures", "FIGURES_OK"],
 ];
 

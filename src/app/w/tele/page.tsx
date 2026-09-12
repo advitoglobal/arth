@@ -8,10 +8,11 @@ import { queuedInbound } from "@/services/whatsapp-loop";
 import { departmentOfRole } from "@/domain/ladders";
 import { CallDesk } from "@/components/call-desk";
 import { RuleHeading } from "@/components/brand/type";
-import { istDateTime, indianMobile } from "@/lib/format";
+import { indianMobile } from "@/lib/format";
 import { Forbidden } from "@/components/forbidden";
 import { LedgerLine } from "@/components/ledger-line";
 import { enquiryNo, intakeLabel } from "@/lib/labels";
+import { enquiryDateStamps } from "@/domain/date-stamp";
 import Link from "next/link";
 
 export default async function TelePage({
@@ -57,6 +58,14 @@ export default async function TelePage({
     const handedOn = Boolean(lead.handed_on_at) && String(lead.handed_on_by ?? "") === seat.userId;
     const ownerId = String(lead.owner_user_id ?? "");
     const canWork = (!ownerId || ownerId === seat.userId) && !handedOn;
+    const stamps = enquiryDateStamps({
+      createdAt: lead.created_at as Date | string | null,
+      assignedAt: lead.assigned_at as Date | string | null,
+      firstResponseDue: lead.first_response_due as Date | string | null,
+      firstRespondedAt: lead.first_responded_at as Date | string | null,
+      nextActionAt: lead.next_action_at as Date | string | null,
+      events: events as Parameters<typeof enquiryDateStamps>[0]["events"],
+    });
     const remaining = queue.filter((r) => r.id !== leadId);
     const nextUp = remaining[0];
     const handedToSales = Boolean(ownerId) && ownerId !== seat.userId && String(lead.owner_name ?? "").length > 0;
@@ -96,8 +105,8 @@ export default async function TelePage({
             ) : null}
             <p className="mt-2 text-sm text-[var(--arth-n60)]">
               {ownerId
-                ? `Owner ${lead.owner_name} · call by ${istDateTime(lead.first_response_due)}`
-                : `Shared new enquiry · call by ${istDateTime(lead.first_response_due)}. It stays on every telecaller list until someone reaches the customer.`}
+                ? `Owner ${lead.owner_name} · ${stamps.callBy}`
+                : `Shared new enquiry · ${stamps.callBy}. It stays on every telecaller list until someone reaches the customer.`}
             </p>
           </div>
           {canWork && remaining.length > 0 ? (
