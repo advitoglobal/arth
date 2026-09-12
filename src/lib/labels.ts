@@ -6,8 +6,18 @@ export const SOURCE_LABEL: Record<string, string> = {
 };
 
 export const INTAKE_LABEL: Record<string, string> = {
-  tele_push: "Pushed from telecalling",
+  tele_push: "Filed at the desk",
+  filed: "Filed at the desk",
   manager_upload: "Uploaded by manager",
+  platform: "Paid lead form",
+  paid_form: "Paid lead form",
+  inbound: "Inbound call",
+  inbound_call: "Inbound call",
+  missed_inbound: "Missed inbound",
+  whatsapp_inbound: "WhatsApp inbound",
+  website: "Website form",
+  walk_in: "Walk-in",
+  referral: "Referral",
 };
 
 export const DEPARTMENT_LABEL: Record<string, string> = {
@@ -41,6 +51,11 @@ export const STAGE_LABEL: Record<string, string> = {
   booked: "Booked",
   delivered: "Delivered",
 };
+
+export function intakeLabel(key: string | null | undefined) {
+  if (!key) return "";
+  return INTAKE_LABEL[key] ?? key.replaceAll("_", " ");
+}
 
 export function sourceLabel(key: string | null | undefined) {
   if (!key) return "";

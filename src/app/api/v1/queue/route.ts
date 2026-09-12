@@ -10,7 +10,7 @@ export async function GET() {
     const rows = await listQueue(tx, seat.userId);
     return NextResponse.json({
       source: "your queue",
-      period: "today plus late, India Standard Time",
+      period: "today plus late, six published bands, India Standard Time",
       rows,
     });
   });

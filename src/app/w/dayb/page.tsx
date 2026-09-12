@@ -8,7 +8,7 @@ import { FigureSource } from "@/components/figure-source";
 import { RuleHeading } from "@/components/brand/type";
 import { ActionButton } from "@/components/action-button";
 import { Forbidden } from "@/components/forbidden";
-import { isFirstResponseLate, isFollowUpLate } from "@/domain/clock";
+import { groupQueueByBand } from "@/domain/queue-bands";
 import type { LeadRow } from "@/services/telecalling";
 import { DailyWelcome } from "@/components/daily-welcome";
 import { loadWelcome } from "@/services/floor-register";
@@ -25,20 +25,32 @@ function listNames(rows: LeadRow[]) {
   return `${names.slice(0, 2).join(", ")} and ${names.length - 2} more`;
 }
 
-function todayBrief(late: LeadRow[], later: LeadRow[], pool: number) {
+function todayBrief(
+  bands: { key: string; rows: LeadRow[] }[],
+  pool: number,
+) {
+  const late = bands.find((b) => b.key === "late")?.rows ?? [];
+  const breaching = bands.find((b) => b.key === "breaching")?.rows ?? [];
+  const promised = bands.find((b) => b.key === "promised")?.rows ?? [];
   const parts: string[] = [];
+  if (breaching.length > 0) {
+    parts.push(
+      `${listNames(breaching)} ${breaching.length === 1 ? "is" : "are"} inside the last ten minutes of the first-response window.`,
+    );
+  }
   if (late.length > 0) {
     parts.push(
-      `${listNames(late)} ${late.length === 1 ? "is" : "are"} late. Call ${late.length === 1 ? "this one" : "these"} first.`,
+      `${listNames(late)} ${late.length === 1 ? "is" : "are"} already late. Call ${late.length === 1 ? "this one" : "these"} first.`,
     );
-  } else {
+  }
+  if (late.length === 0 && breaching.length === 0) {
     parts.push("Nothing is late.");
   }
-  if (later.length > 0) {
+  if (promised.length > 0) {
     parts.push(
-      `${listNames(later)} still ${later.length === 1 ? "needs" : "need"} a call later today.`,
+      `${listNames(promised)} still ${promised.length === 1 ? "needs" : "need"} a call later today.`,
     );
-  } else if (late.length === 0) {
+  } else if (late.length === 0 && breaching.length === 0) {
     parts.push("Nothing else is due today.");
   }
   if (pool > 0) {
@@ -48,6 +60,17 @@ function todayBrief(late: LeadRow[], later: LeadRow[], pool: number) {
   }
   return parts.join(" ");
 }
+
+const BAND_NOTE: Record<string, string> = {
+  breaching:
+    "First-response window closes in under ten minutes. Acting now still prevents a breach.",
+  late: "First call missed, or a follow-up already past its date. Worst first.",
+  promised: "You told this customer you would ring today. That promise outranks a new name.",
+  pool: "Unclaimed. Oldest first. Reaching the customer for 20 seconds or more moves it into your book.",
+  due: "Scheduled callbacks and revisits that came due today.",
+  revival:
+    "Nothing else is due. Cold names, sorted by value. This hour is still worth working.",
+};
 
 function Block({
   title,
@@ -75,7 +98,7 @@ function Block({
         <p>None in this list.</p>
       ) : (
         <div className="lg:border-0">
-          <EnquiryList rows={rows} canCall hideOverdueStamp={hideOverdueStamp} />
+          <EnquiryList rows={rows} canCall showBand hideOverdueStamp={hideOverdueStamp} />
         </div>
       )}
     </section>
@@ -88,18 +111,8 @@ export default async function DayPanelPage() {
     await armUnownedClocks(tx);
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listQueue(tx, seat.userId);
-    const breaching = rows.filter(
-      (r) => isFirstResponseLate(r) || isFollowUpLate(r.next_action_at),
-    );
-    const promised = rows.filter(
-      (r) =>
-        !isFirstResponseLate(r) &&
-        !isFollowUpLate(r.next_action_at) &&
-        r.next_action_at,
-    );
-    const seen = new Set([...breaching, ...promised].map((r) => r.id));
-    const rest = rows.filter((r) => !seen.has(r.id));
-    const pool = rows.filter((r) => !r.owner_user_id).length;
+    const bands = groupQueueByBand(rows);
+    const pool = rows.filter((r) => r.queue_band === "pool" || !r.owner_user_id).length;
     const next = rows[0];
     const perf = await loadPerformance(tx);
     const welcome = await loadWelcome(tx, seat.userId);
@@ -126,7 +139,7 @@ export default async function DayPanelPage() {
             })}
           </p>
           <p className="mt-3 max-w-[68ch]">
-            {todayBrief(breaching, promised, pool)}
+            {todayBrief(bands, pool)}
           </p>
           {next ? (
             <div className="mt-4 flex flex-wrap gap-2">
@@ -137,7 +150,7 @@ export default async function DayPanelPage() {
                 Add enquiry
               </ActionButton>
               <p className="mt-2 w-full text-sm text-[var(--arth-n60)]">
-                Lines up late names first, then the rest of Today, until the list is finished. Add enquiry stays on this screen so names are not written on paper.
+                Lines up the six published bands. You cannot re-sort this list. Add enquiry stays on this screen so names are not written on paper.
               </p>
             </div>
           ) : (
@@ -150,36 +163,27 @@ export default async function DayPanelPage() {
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Your list for today in this department. Late first, then what you promised. New names stay shared until someone reaches the customer. Qualify, then hand to the executive in the same department. Service never books a test drive. Insurance never hides a product.
+          Your list for today in this department. Six bands, always in this order. You cannot skip a band. You can still open any name in My enquiries; that call is recorded as out of order. New names stay shared until someone reaches the customer.
         </p>
         <InboundRing department={dept === "all" ? "sales" : dept} calls={ringing} />
         <FigureSource
           source="your queue"
-          period="today in India Standard Time, late first"
+          period="today in India Standard Time, six published bands"
         />
         {rows.length === 0 ? (
           <p>No enquiries are due. New names appear here for every telecaller until someone reaches the customer.</p>
         ) : (
-          <>
-            <Block
-              title="Late"
-              note="First call missed, or a follow-up already late. Start here. The section title is the stamp; rows do not repeat OVERDUE."
-              rows={breaching}
-              hideOverdueStamp
-            />
-            <Block
-              title="Due later today"
-              note="You still owe a call today. It is not late yet."
-              rows={promised}
-            />
-            {rest.length > 0 ? (
+          bands
+            .filter((band) => band.rows.length > 0)
+            .map((band) => (
               <Block
-                title="Also due"
-                note="On today without a timed follow-up."
-                rows={rest}
+                key={band.key}
+                title={band.label}
+                note={BAND_NOTE[band.key] ?? ""}
+                rows={band.rows}
+                hideOverdueStamp={band.key === "late" || band.key === "breaching"}
               />
-            ) : null}
-          </>
+            ))
         )}
         <PerformancePanel view={perf} />
       </div>

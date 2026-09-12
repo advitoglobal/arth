@@ -467,7 +467,7 @@ export async function createOwnedEnquiry(
         ${due.toISOString()}::timestamptz,
         ${due.toISOString()}::timestamptz,
         ${department},
-        'tele_push'
+        'filed'
       )
       RETURNING id::text
     `;

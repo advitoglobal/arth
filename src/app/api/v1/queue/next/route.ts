@@ -11,7 +11,7 @@ export async function GET() {
     const next = rows[0] ?? null;
     return NextResponse.json({
       source: "priority queue",
-      period: "late first, then due today",
+      period: "six published bands, late first inside each band",
       next,
       remaining: rows.length,
     });
