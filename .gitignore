@@ -48,3 +48,5 @@ next-env.d.ts
 /.cursor
 /docs/directors-review/node_modules
 /docs/directors-review/*.zip
+.neon
+neon.ts
