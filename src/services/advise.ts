@@ -2,7 +2,7 @@ import type { Tx } from "@/db/with-tenant";
 import { emiPaise } from "@/services/floor-register";
 import { onRoadFor } from "@/services/catalogue";
 
-export type AdviseTool = "price" | "emi" | "delivery" | "testdrive";
+export type AdviseTool = "price" | "emi" | "delivery" | "testdrive" | "valuation";
 
 const TRUST: Record<AdviseTool, string> = {
   price:
@@ -13,6 +13,8 @@ const TRUST: Record<AdviseTool, string> = {
     "Approximate days if booked today: 21 to 35, an estimate until sales allocation. This is not a live telephone line and not a DMS feed.",
   testdrive:
     "Next three slots at this branch from the coordinator book. Tapping a slot records interest. It is not a confirmed booking until sales books it.",
+  valuation:
+    "Indicative exchange range is from the used-car desk. This is not a commitment and not a figure you type.",
 };
 
 export async function adviseSnapshot(tx: Tx, leadId: string) {
@@ -79,7 +81,7 @@ export async function recordAdviseTap(
     values: Record<string, unknown>;
   },
 ) {
-  if (!["price", "emi", "delivery", "testdrive"].includes(input.tool)) {
+  if (!["price", "emi", "delivery", "testdrive", "valuation"].includes(input.tool)) {
     throw new Error("Unknown adviser tool.");
   }
   const snap = await adviseSnapshot(tx, input.leadId);
@@ -91,6 +93,7 @@ export async function recordAdviseTap(
     emi: "EMI discussed",
     delivery: "Delivery timing discussed",
     testdrive: "Test drive slots opened",
+    valuation: "Exchange valuation opened",
   };
   await tx`
     INSERT INTO lead_events (

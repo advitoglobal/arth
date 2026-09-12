@@ -77,6 +77,9 @@ export async function saveEnquiryDepth(
     financeBankKey?: string;
     expectedBookingDate?: string;
     expectedDeliveryDate?: string;
+    whoElseDecides?: string;
+    seenVehicle?: boolean;
+    intakeSaid?: string;
   },
 ) {
   const [lead] = await tx<{ owner_user_id: string | null }[]>`
@@ -103,10 +106,28 @@ export async function saveEnquiryDepth(
       finance_needed = COALESCE(${input.financeNeeded ?? null}, finance_needed),
       finance_bank_key = COALESCE(${input.financeBankKey || null}, finance_bank_key),
       expected_booking_date = COALESCE(${input.expectedBookingDate || null}::date, expected_booking_date),
-      expected_delivery_date = COALESCE(${input.expectedDeliveryDate || null}::date, expected_delivery_date)
+      expected_delivery_date = COALESCE(${input.expectedDeliveryDate || null}::date, expected_delivery_date),
+      who_else_decides = COALESCE(${input.whoElseDecides || null}, who_else_decides),
+      seen_vehicle = COALESCE(${input.seenVehicle ?? null}, seen_vehicle),
+      intake_said = COALESCE(${input.intakeSaid?.trim() || null}, intake_said)
     WHERE id = ${input.leadId}::uuid
   `;
-  return { recorded: "Qualification saved. The enquiry was already on the book." };
+  const said = input.intakeSaid?.trim();
+  if (said) {
+    await tx`
+      INSERT INTO lead_events (tenant_id, lead_id, event_type, actor_type, actor_id, note, payload)
+      VALUES (
+        current_setting('app.tenant_id')::uuid,
+        ${input.leadId}::uuid,
+        'note',
+        'USER',
+        ${input.userId}::uuid,
+        ${said},
+        ${tx.json({ kind: "what_he_said" })}
+      )
+    `;
+  }
+  return { recorded: "Saved on the enquiry." };
 }
 
 export async function listReceivers(tx: Tx, branchId: string, department: string) {

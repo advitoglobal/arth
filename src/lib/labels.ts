@@ -79,6 +79,8 @@ export function eventLabel(type: string) {
     whatsapp: "WhatsApp sent",
     wrap_skip: "Wrap-up skipped",
     handoff: "Handed to sales",
+    note: "What he said",
+    discussed: "Discussed",
   };
   return map[type] ?? type;
 }

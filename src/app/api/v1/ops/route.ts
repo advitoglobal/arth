@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const action = String(body.action ?? "");
   try {
     return await asSeat(async (tx, seat) => {
-      const denied = requireAnyScreen(seat, ["rec", "stock", "drive", "ins", "dayb", "tele", "gm", "prin"]);
+      const denied = requireAnyScreen(seat, ["rec", "stock", "drive", "ins", "dayb", "tele", "gm", "prin", "new"]);
       if (denied) return denied;
 
       if (action === "book_stock") {
