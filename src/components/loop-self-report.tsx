@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CONFIRM_MS } from "@/domain/confirm";
 
 export function LoopSelfReport({ initial }: { initial: string }) {
   const [text, setText] = useState(initial);
@@ -27,7 +28,7 @@ export function LoopSelfReport({ initial }: { initial: string }) {
     }
     setSaved(text);
     setMsg(data.recorded);
-    window.setTimeout(() => setMsg(null), 1500);
+    window.setTimeout(() => setMsg(null), CONFIRM_MS);
   }
 
   return (

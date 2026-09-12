@@ -7,7 +7,7 @@ import {
 import { isScoringConnect, pointsFor, pointsLine } from "@/domain/points";
 import { isPersonalRole } from "@/domain/visibility";
 import { claimOnReach, scheduleNextAction } from "@/services/assignment";
-import { recordMovement, applyConcealmentPenalties, escalateHandoverContact } from "@/services/floor-register";
+import { recordMovement, applyConcealmentPenalties, escalateHandoverContact, undoHandoff, undoPoolClaim } from "@/services/floor-register";
 import { stagesFor, SALES_STAGES, SERVICE_STAGES, INSURANCE_STAGES } from "@/domain/ladders";
 import { stageLabel, enquiryNo } from "@/lib/labels";
 import { junkReason } from "@/domain/junk";
@@ -704,6 +704,13 @@ export async function undoDisposition(
     WHERE id = ${input.eventId}::bigint AND lead_id = ${input.leadId}::uuid
   `;
   if (!event) throw new Error("Nothing to undo.");
+
+  if (event.event_type === "handoff" || event.event_type === "nurture") {
+    return undoHandoff(tx, input);
+  }
+  if (event.event_type === "assigned") {
+    return undoPoolClaim(tx, input);
+  }
 
   const isStage = event.event_type === "stage_change";
   const undoOf = { undo_of: input.eventId };

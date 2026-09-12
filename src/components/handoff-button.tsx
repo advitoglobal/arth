@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { assignmentModesEnabled, handoverModeLabel } from "@/domain/handover";
+import { CONFIRM_MS } from "@/domain/confirm";
+import { InPlaceConfirm } from "@/components/in-place-confirm";
 
 function ready(stageKey: string, department?: string | null) {
   if (department === "service") {
@@ -36,12 +38,25 @@ export function HandoffButton({
   const [revisitAt, setRevisitAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [handedOff, setHandedOff] = useState(false);
   const label =
     department === "service"
       ? "service advisor"
       : department === "insurance"
         ? "insurance executive"
         : "sales consultant";
+
+  useEffect(() => {
+    if (!confirm || !eventId) return;
+    const t = window.setTimeout(() => {
+      setConfirm(null);
+      setEventId(null);
+      if (handedOff) router.push("/w/dayb");
+      else router.refresh();
+    }, CONFIRM_MS);
+    return () => window.clearTimeout(t);
+  }, [confirm, eventId, router, handedOff]);
 
   async function send() {
     setError(null);
@@ -64,11 +79,27 @@ export function HandoffButton({
       setError(data.error ?? "Not handed over.");
       return;
     }
+    setEventId(data.eventId ?? null);
+    setHandedOff(choice === "hand");
     setConfirm(data.recorded);
-    window.setTimeout(() => {
-      if (choice === "nurture") router.refresh();
-      else router.push("/w/dayb");
-    }, 1500);
+  }
+
+  async function undo() {
+    if (!eventId) return;
+    const res = await fetch("/api/v1/undo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId, eventId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Undo failed.");
+      return;
+    }
+    setConfirm(null);
+    setEventId(null);
+    setHandedOff(false);
+    router.refresh();
   }
 
   const handCopy =
@@ -77,6 +108,20 @@ export function HandoffButton({
       : enabled === "queue"
         ? "This branch is on the department queue. The sales manager assigns the receiving executive."
         : `Direct mode. Name the receiving ${label}.`;
+
+  if (confirm) {
+    return (
+      <InPlaceConfirm
+        line={confirm}
+        next={
+          handedOff
+            ? "After this window you return to Today."
+            : "After this window you stay on this enquiry."
+        }
+        onUndo={() => void undo()}
+      />
+    );
+  }
 
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
@@ -130,13 +175,12 @@ export function HandoffButton({
           />
         </label>
       ) : null}
-      {confirm ? <p className="mt-3 font-medium">{confirm}</p> : null}
       {error ? <p className="mt-3 text-sm text-[var(--arth-overdue)]">{error}</p> : null}
       <Button
         className="mt-3"
         type="button"
-        disabled={(choice === "hand" && !canHand) || Boolean(confirm)}
-        onClick={send}
+        disabled={choice === "hand" && !canHand}
+        onClick={() => void send()}
       >
         {choice === "nurture"
           ? "Keep on my book"

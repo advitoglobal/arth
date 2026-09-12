@@ -7,6 +7,8 @@ import { JUNK_REASONS } from "@/domain/junk";
 import { needsCallbackReason } from "@/domain/clock";
 import { SaveBar, UnsavedBar } from "@/components/save-bar";
 import { saveBarLabel } from "@/domain/save-bar";
+import { CONFIRM_MS } from "@/domain/confirm";
+import { InPlaceConfirm } from "@/components/in-place-confirm";
 
 export function DispositionPanel({
   leadId,
@@ -115,7 +117,7 @@ export function DispositionPanel({
       } else {
         router.refresh();
       }
-    }, 1500);
+    }, CONFIRM_MS);
     return () => window.clearTimeout(t);
   }, [confirm, eventId, router, nextLeadId, autoContinue]);
 
@@ -200,20 +202,17 @@ export function DispositionPanel({
 
   if (confirm) {
     return (
-      <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
-        <p className="font-medium">{confirm}</p>
-        <p className="mt-2 text-sm text-[var(--arth-n60)]">
-          Undo writes a correcting entry. The original row stays.
-          {nextName
-            ? ` After this window the next enquiry is ${nextName}.`
+      <InPlaceConfirm
+        line={confirm}
+        next={
+          nextName
+            ? `After this window the next enquiry is ${nextName}.`
             : autoContinue
-              ? " The list is finished. After this window you return to Today."
-              : " After this window you stay on Today if nothing else is due."}
-        </p>
-        <Button className="mt-4" variant="outline" onClick={undo}>
-          Undo
-        </Button>
-      </div>
+              ? "The list is finished. After this window you return to Today."
+              : "After this window you stay on Today if nothing else is due."
+        }
+        onUndo={() => void undo()}
+      />
     );
   }
 

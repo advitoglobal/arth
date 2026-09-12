@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   try {
     return await asSeat(async (tx, seat) => {
-      const denied = requireAnyScreen(seat, ["tele", "rec"]);
+      const denied = requireAnyScreen(seat, ["tele", "rec", "pipe"]);
       if (denied) return denied;
       const result = await undoDisposition(tx, {
         leadId: body.leadId,
