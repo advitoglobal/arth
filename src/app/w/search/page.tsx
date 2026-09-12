@@ -56,7 +56,7 @@ export default async function SearchPage({
       <div className="space-y-6">
         <RuleHeading>Search</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Type a mobile number, a name, an enquiry number, or a model. Results stay inside your bucket: your book, your team, your branch, or this dealer. Another telecaller’s owned enquiry does not appear. Another dealer never appears.
+          Type a mobile number, a name, an enquiry number, or a model. Results stay inside your bucket: your book, names you handed on, your team, your branch, or this dealer. Another telecaller’s owned enquiry does not appear. Another dealer never appears.
         </p>
         <FigureSource
             source="your visible book"
