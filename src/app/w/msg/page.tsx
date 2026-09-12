@@ -17,7 +17,7 @@ export default async function MessagesPage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "msg")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "msg")) return <Forbidden screen="msg" />;
     const inbox = await listMessageInbox(tx, seat.userId);
     const leadId = id ?? inbox[0]?.id;
     const thread = leadId ? await getLead(tx, leadId) : { lead: null, events: [] };

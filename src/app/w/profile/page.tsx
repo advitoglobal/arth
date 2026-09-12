@@ -13,7 +13,7 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 export default async function ProfilePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "profile")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "profile")) return <Forbidden screen="profile" />;
     const hours = await branchHoursForUser(tx, seat.userId);
     const branch = hours[0]?.branch ?? seat.tenantName;
     const wallet = await walletMovements(tx, seat.userId);

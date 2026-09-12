@@ -5,7 +5,7 @@ import { ArthbotChat } from "@/components/arthbot-chat";
 
 export default async function BotPage() {
   return asSeat(async (_tx, seat) => {
-    if (!canOpen(seat.roleKey, "bot")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "bot")) return <Forbidden screen="bot" />;
     return (
       <div className="space-y-6">
         <RuleHeading>Arthbot</RuleHeading>

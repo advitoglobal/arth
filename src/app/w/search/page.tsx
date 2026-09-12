@@ -30,7 +30,7 @@ export default async function SearchPage({
 }) {
   const filters = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "search")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "search")) return <Forbidden screen="search" />;
     const rows = await searchEnquiries(tx, filters);
     const q = filters.q?.trim() ?? "";
     const phoneDigits = q.replace(/\D/g, "").slice(0, 10);

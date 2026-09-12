@@ -6,7 +6,7 @@ import { StockRelease } from "@/components/stock-release";
 
 export default async function StockPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "stock")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "stock")) return <Forbidden screen="stock" />;
     const rows = await listStock(tx);
     const canRelease = ["salesmgr", "owner", "gm", "admin"].includes(seat.roleKey);
     return (

@@ -8,7 +8,7 @@ import { inr } from "@/lib/format";
 
 export default async function InsurancePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "ins")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "ins")) return <Forbidden screen="ins" />;
     const page = await listPipeline(tx, seat.userId);
     const products = await insuranceCatalogue(tx, canSeeMargin(seat.roleKey));
     const suggested = products.filter((p) => p.suggested);

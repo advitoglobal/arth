@@ -17,10 +17,10 @@ import { FiguresStrip } from "@/components/figures-strip";
 export default async function DeskPage() {
   return asSeat(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "desk") && seat.kind !== "platform") {
-      return <Forbidden landing="/w/pipe" />;
+      return <Forbidden landing="/w/pipe" screen="desk" />;
     }
     if (seat.kind === "platform") {
-      return <Forbidden landing="/a/dealers" />;
+      return <Forbidden landing="/a/dealers" screen="desk" />;
     }
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);

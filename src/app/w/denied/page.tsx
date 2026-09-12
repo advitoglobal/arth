@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { currentSeat } from "@/db/session";
-import { hasDemoSession, landingPath } from "@/lib/seats";
+import { hasDemoSession, landingPath, screenFromPath } from "@/lib/seats";
 import { Forbidden } from "@/components/forbidden";
 
 export default async function DeniedPage() {
@@ -10,5 +10,6 @@ export default async function DeniedPage() {
     redirect("/w/login");
   }
   const seat = await currentSeat();
-  return <Forbidden landing={landingPath(seat)} />;
+  const refused = (await headers()).get("x-arth-refused");
+  return <Forbidden landing={landingPath(seat)} screen={screenFromPath(refused ?? "")} />;
 }

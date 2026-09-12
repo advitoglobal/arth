@@ -15,7 +15,7 @@ import { FiguresStrip } from "@/components/figures-strip";
 
 export default async function PrincipalPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "prin")) return <Forbidden landing="/w/pipe" />;
+    if (!canOpen(seat.roleKey, "prin")) return <Forbidden landing="/w/pipe" screen="prin" />;
     const snap = await controlSnapshot(tx);
     const showValue = canSeeValue(seat.roleKey);
     const perf = await loadPerformance(tx);

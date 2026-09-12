@@ -10,7 +10,7 @@ import { ActionButton } from "@/components/action-button";
 export default async function DealersPage() {
   return asPlatform(async (tx, seat) => {
     if (!canOpen(seat.roleKey, "adealers")) {
-      return <Forbidden landing="/w/login" />;
+      return <Forbidden landing="/w/login" screen="adealers" />;
     }
     const dealers = await listPlatformDealers(tx);
     const ranks = await dealerWallRanks(tx);

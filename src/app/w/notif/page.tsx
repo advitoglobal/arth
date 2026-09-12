@@ -7,7 +7,7 @@ import { FigureSource } from "@/components/figure-source";
 
 export default async function NotifPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "notif")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "notif")) return <Forbidden screen="notif" />;
     await raiseFirstResponseBreaches(tx, seat.userId);
     const rows = await listNotifications(tx, seat.userId);
     return (

@@ -12,7 +12,7 @@ import { FiguresStrip } from "@/components/figures-strip";
 
 export default async function GmPage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "gm")) return <Forbidden landing="/w/pipe" />;
+    if (!canOpen(seat.roleKey, "gm")) return <Forbidden landing="/w/pipe" screen="gm" />;
     const showValue = canSeeValue(seat.roleKey);
     const perf = await loadPerformance(tx);
     const costs = await costPerBooking(tx);

@@ -12,7 +12,7 @@ export default async function DeliveryPage({
 }) {
   const { id } = await searchParams;
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "delivery")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "delivery")) return <Forbidden screen="delivery" />;
     if (!id) {
       const booked = await tx<{ id: string; customer_name: string }[]>`
         SELECT l.id::text, c.full_name AS customer_name

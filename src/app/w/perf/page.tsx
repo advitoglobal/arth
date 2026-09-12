@@ -8,7 +8,7 @@ import { FiguresStrip } from "@/components/figures-strip";
 
 export default async function PerformancePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "perf")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "perf")) return <Forbidden screen="perf" />;
     const view = await loadPerformance(tx);
     const figures = await seatFigures(tx, seat.roleKey, seat.userId);
     return (

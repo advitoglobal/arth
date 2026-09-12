@@ -9,7 +9,7 @@ import Link from "next/link";
 
 export default async function ServicePage() {
   return asSeat(async (tx, seat) => {
-    if (!canOpen(seat.roleKey, "svc")) return <Forbidden />;
+    if (!canOpen(seat.roleKey, "svc")) return <Forbidden screen="svc" />;
     const page = await listPipeline(tx, seat.userId);
     return (
       <div className="space-y-6">
