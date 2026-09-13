@@ -450,7 +450,7 @@ AS $$
     AND u.is_active AND u.role_key <> 'ops' AND t.status = 'live'
   LIMIT 1;
 $$;
-ALTER FUNCTION arth_authenticate_phone(text) OWNER TO postgres;
+ALTER FUNCTION arth_authenticate_phone(text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_authenticate_phone(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_authenticate_phone(text) TO arth_app;
 GRANT EXECUTE ON FUNCTION arth_dept_ok(text) TO arth_app;
@@ -523,7 +523,7 @@ BEGIN
   LIMIT 200;
 END;
 $$;
-ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_queue_lead_ids(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_queue_lead_ids(uuid) TO arth_app;
 
@@ -594,7 +594,7 @@ BEGIN
   END IF;
 END;
 $$;
-ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_pipeline_counts(p_personal boolean)
@@ -650,7 +650,7 @@ BEGIN
   END IF;
 END;
 $$;
-ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_counts(boolean) TO arth_app;
 
 INSERT INTO customers (id, tenant_id, full_name, phone)

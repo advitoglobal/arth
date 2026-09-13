@@ -16,7 +16,7 @@ AS $$
       AND role_key IN ('adv_admin', 'adv_onboard')
   );
 $$;
-ALTER FUNCTION arth_platform_can_onboard() OWNER TO postgres;
+ALTER FUNCTION arth_platform_can_onboard() OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_platform_can_onboard() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_platform_can_onboard() TO arth_app;
 
@@ -50,7 +50,7 @@ BEGIN
   RETURN oid;
 END;
 $$;
-ALTER FUNCTION arth_platform_ops_user(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_platform_ops_user(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_platform_ops_user(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_platform_ops_user(uuid) TO arth_app;
 
@@ -163,7 +163,7 @@ BEGIN
   RETURN new_tenant;
 END;
 $$;
-ALTER FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) OWNER TO postgres;
+ALTER FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) TO arth_app;
 

@@ -162,8 +162,8 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_lead_row_visible(uuid, uuid, uuid, timestamptz) OWNER TO postgres;
-ALTER FUNCTION arth_lead_visible(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_lead_row_visible(uuid, uuid, uuid, timestamptz) OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_lead_visible(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_lead_row_visible(uuid, uuid, uuid, timestamptz) FROM PUBLIC;
 REVOKE ALL ON FUNCTION arth_lead_visible(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_lead_row_visible(uuid, uuid, uuid, timestamptz) TO arth_app;

@@ -76,6 +76,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_queue_lead_ids(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_queue_lead_ids(uuid) TO arth_app;

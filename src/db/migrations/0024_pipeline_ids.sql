@@ -58,6 +58,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer) TO arth_app;

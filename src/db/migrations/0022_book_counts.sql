@@ -95,8 +95,8 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_book_counts() OWNER TO postgres;
-ALTER FUNCTION arth_owner_load() OWNER TO postgres;
+ALTER FUNCTION arth_book_counts() OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_owner_load() OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_book_counts() FROM PUBLIC;
 REVOKE ALL ON FUNCTION arth_owner_load() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_book_counts() TO arth_app;
@@ -143,6 +143,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_pipeline_counts(boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_pipeline_counts(boolean) TO arth_app;

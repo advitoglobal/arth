@@ -20,6 +20,14 @@ if (a.includes("channel_binding")) {
 if (databaseHost(a) !== "ep-demo.ap-southeast-1.aws.neon.tech") {
   throw new Error(`unexpected host ${databaseHost(a)}`);
 }
+if (
+  "ALTER FUNCTION x() OWNER TO postgres;".replace(
+    /OWNER TO postgres;/g,
+    "OWNER TO CURRENT_USER;",
+  ) !== "ALTER FUNCTION x() OWNER TO CURRENT_USER;"
+) {
+  throw new Error("OWNER rewrite failed");
+}
 if (b.includes("pgbouncer")) {
   throw new Error("pgbouncer flag was not stripped");
 }

@@ -42,6 +42,6 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
-ALTER FUNCTION arth_restore_handoff(uuid, bigint) OWNER TO postgres;
+ALTER FUNCTION arth_restore_handoff(uuid, bigint) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_restore_handoff(uuid, bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_restore_handoff(uuid, bigint) TO arth_app;

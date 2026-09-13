@@ -1,10 +1,19 @@
-import { applySqlFile, migrationFiles } from "./apply-sql";
+import {
+  applyHostedMigrations,
+  applySqlFile,
+  hostedDatabaseUrl,
+  migrationFiles,
+} from "./apply-sql";
 
 async function main() {
   const files = migrationFiles(process.argv[2]);
   if (files.length === 0) {
     console.error("no migration matched");
     process.exit(1);
+  }
+  if (hostedDatabaseUrl()) {
+    await applyHostedMigrations(files);
+    return;
   }
   for (const file of files) {
     await applySqlFile(file);

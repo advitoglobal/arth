@@ -86,7 +86,7 @@ BEGIN
   RETURN u_role IN ('tele', 'svctele', 'instele');
 END;
 $$;
-ALTER FUNCTION arth_lead_visible(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_lead_visible(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_lead_visible(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_lead_visible(uuid) TO arth_app;
 
@@ -225,7 +225,7 @@ BEGIN
   LIMIT 80;
 END;
 $$;
-ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_queue_lead_ids(uuid) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_pipeline_lead_ids(
@@ -296,5 +296,5 @@ BEGIN
   END IF;
 END;
 $$;
-ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer) TO arth_app;
