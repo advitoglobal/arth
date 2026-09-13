@@ -51,13 +51,16 @@ export function ConsentPanel({
         WhatsApp consent
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        One tap per purpose. Offers never ride on enquiry consent.
+        One tap per purpose. Offers never ride on enquiry consent. Same row on a phone and on a wide screen.
       </p>
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {PURPOSES.map((p) => {
           const granted = rows.find((r) => r.purpose_key === p.key)?.granted ?? false;
           return (
-            <li key={p.key} className="flex items-center justify-between gap-2 text-sm">
+            <li
+              key={p.key}
+              className="flex min-h-11 items-center justify-between gap-3 border border-[var(--arth-n10)] px-3 py-2 text-sm"
+            >
               <span>{p.label}</span>
               <Button type="button" variant="outline" onClick={() => toggle(p.key, !granted)}>
                 {granted ? "Allowed" : "Off"}

@@ -26,6 +26,7 @@ export const DEPARTMENT_LABEL: Record<string, string> = {
   insurance: "Insurance",
   used: "Used car",
   accessories: "Accessories",
+  driving_school: "Driving school",
 };
 
 export const STAGE_LABEL: Record<string, string> = {
@@ -79,6 +80,7 @@ export function eventLabel(type: string) {
     whatsapp: "WhatsApp sent",
     wrap_skip: "Wrap-up skipped",
     handoff: "Handed to sales",
+    qualify: "Qualified",
     note: "What he said",
     discussed: "Discussed",
     whatsapp_inbound: "WhatsApp reply",

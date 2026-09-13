@@ -54,10 +54,10 @@ export function InboundRing({
   return (
     <div className="border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
-        Inbound on this department number
+        Desk DID
       </p>
       <p className="mt-2 text-sm text-[var(--arth-n60)]">
-        The department DID rings here. If the number matches a customer, Answer opens their console. If not, capture opens with the number filled. A live exchange waits on the telephone vendor.
+        This is the desk DID until a telephone vendor is contracted. It is not SIM pairing. If the number matches a customer, Answer opens their console. If not, capture opens with the number filled.
       </p>
       <label className="mt-3 block text-sm">
         Simulate a ring from

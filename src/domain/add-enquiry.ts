@@ -92,9 +92,18 @@ export function captureReady(input: {
   name: string;
   model: string;
   source: string;
+  department?: string;
 }) {
   const digits = input.phone.replace(/\D/g, "");
-  return digits.length === 10 && input.name.trim().length >= 2 && Boolean(input.model) && Boolean(input.source);
+  const dept = input.department ?? "sales";
+  const needsModel = dept === "sales" || dept === "used" || dept === "accessories";
+  return (
+    digits.length === 10 &&
+    input.name.trim().length >= 2 &&
+    Boolean(input.source) &&
+    Boolean(dept) &&
+    (!needsModel || Boolean(input.model))
+  );
 }
 
 export function captureFilledCount(input: {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
-import { saveEnquiryDepth } from "@/services/floor-register";
+import { saveEnquiryDepth, qualifyLead } from "@/services/floor-register";
 import { requireAnyScreen } from "@/lib/http";
 
 export async function POST(req: Request) {
@@ -9,6 +9,21 @@ export async function POST(req: Request) {
     return await asSeat(async (tx, seat) => {
       const denied = requireAnyScreen(seat, ["new", "tele"]);
       if (denied) return denied;
+      if (body.lane) {
+        const extras = (body.extras ?? {}) as Record<string, string>;
+        const result = await qualifyLead(tx, {
+          leadId: String(body.leadId),
+          userId: seat.userId,
+          lane: String(body.lane),
+          note: String(body.note ?? ""),
+          send: body.send !== false,
+          testdrivePrefDate: body.testdrivePrefDate ? String(body.testdrivePrefDate) : undefined,
+          extras,
+          salesUserId: body.salesUserId ? String(body.salesUserId) : undefined,
+          mode: body.mode ? String(body.mode) : undefined,
+        });
+        return NextResponse.json(result);
+      }
       const financeNeeded =
         body.financeNeeded === undefined && body.financePath === undefined
           ? undefined

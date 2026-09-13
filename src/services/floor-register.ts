@@ -5,6 +5,7 @@ import { pointsFor } from "@/domain/points";
 import { stagesFor } from "@/domain/ladders";
 import { consentRefusalCopy } from "@/domain/whatsapp-loop";
 import { cardNotifyWhy, handoverCard } from "@/services/handover";
+import { bookDepartmentForLane, isQualifyLane, qualifyStageForBook } from "@/domain/qualify";
 
 export function emiPaise(principalPaise: number, rateBps: number, tenureMonths: number) {
   const r = rateBps / 10000 / 12;
@@ -231,7 +232,7 @@ async function insertLeadEvent(
       'USER',
       ${input.userId}::uuid,
       ${input.note},
-      ${tx.json(input.payload)}
+      ${tx.json(JSON.parse(JSON.stringify(input.payload)))}
     )
     RETURNING id::text
   `;
@@ -325,6 +326,7 @@ export async function routeEnquiry(
     department?: string;
     mode?: string;
     revisitAt?: string;
+    qualifyDesk?: boolean;
   },
 ) {
   if (input.mode === "nurture") {
@@ -378,7 +380,7 @@ export async function routeEnquiry(
   const readyKey = dept === "service" ? "appointment" : dept === "insurance" ? "quoted" : "meeting";
   const meetingAt = ladder.indexOf(readyKey);
   const at = ladder.indexOf(lead.stage_key === "qualified" ? "meeting" : lead.stage_key);
-  if (meetingAt >= 0 && (at < 0 || at < meetingAt)) {
+  if (!input.qualifyDesk && meetingAt >= 0 && (at < 0 || at < meetingAt)) {
     throw new Error(
       dept === "service"
         ? "Move the stage to Appointment before handing it on."
@@ -564,6 +566,88 @@ export async function routeEnquiry(
     )
   `;
   return { recorded: "Handed to the named executive. Conversion is now their job.", points, mode: "direct", eventId };
+}
+
+export async function qualifyLead(
+  tx: Tx,
+  input: {
+    leadId: string;
+    userId: string;
+    lane: string;
+    note: string;
+    send?: boolean;
+    testdrivePrefDate?: string;
+    extras?: Record<string, string>;
+    salesUserId?: string;
+    mode?: string;
+  },
+) {
+  if (!isQualifyLane(input.lane)) {
+    throw new Error("Name the department this enquiry is ready for.");
+  }
+  const book = bookDepartmentForLane(input.lane);
+  const stage = qualifyStageForBook(book);
+  const pref = input.testdrivePrefDate?.trim().slice(0, 10) || null;
+  const extras = input.extras ?? {};
+  const lines = [
+    input.note.trim(),
+    input.testdrivePrefDate ? `Preferred test-drive date ${pref}. Sales books the slot.` : "",
+    extras.regNo ? `Registration ${extras.regNo}` : "",
+    extras.complaint ? `Complaint ${extras.complaint}` : "",
+    extras.policyExpiry ? `Policy expiry ${extras.policyExpiry}` : "",
+    extras.currentCar ? `Current car ${extras.currentCar}` : "",
+    extras.licence ? `Licence ${extras.licence}` : "",
+  ].filter(Boolean);
+  const note =
+    lines.join(". ") ||
+    "Qualified: information collected, customer willing, ready for that department.";
+
+  await tx`
+    UPDATE leads SET
+      department_key = ${book},
+      stage_key = ${stage},
+      testdrive_pref_date = COALESCE(${pref}::date, testdrive_pref_date)
+    WHERE id = ${input.leadId}::uuid
+  `;
+  const eventId = await insertLeadEvent(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    eventType: "qualify",
+    note,
+    payload: {
+      lane: input.lane,
+      book,
+      testdrive_pref_date: pref,
+      extras,
+    },
+  });
+  if (!input.send) {
+    return {
+      recorded: `Qualified for ${input.lane.replaceAll("_", " ")}. Still on this book until you send it.`,
+      eventId,
+      sent: false,
+    };
+  }
+  const [lead] = await tx<{ branch_id: string; source_key: string }[]>`
+    SELECT branch_id::text, source_key FROM leads WHERE id = ${input.leadId}::uuid
+  `;
+  if (!lead) throw new Error("This enquiry is not in your tenant.");
+  const mode = input.mode ?? (await assignmentMode(tx, lead.branch_id, lead.source_key));
+  let salesUserId = input.salesUserId;
+  if (mode === "direct" && !salesUserId) {
+    const people = await listReceivers(tx, lead.branch_id, book);
+    salesUserId = people[0]?.id;
+  }
+  const routed = await routeEnquiry(tx, {
+    leadId: input.leadId,
+    userId: input.userId,
+    note,
+    department: book,
+    salesUserId,
+    mode,
+    qualifyDesk: true,
+  });
+  return { ...routed, eventId: routed.eventId, qualifyEventId: eventId, sent: true };
 }
 
 export async function undoHandoff(

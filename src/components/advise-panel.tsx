@@ -64,8 +64,16 @@ export function AdvisePanel({
         Adviser panel
       </p>
       <p className="text-sm text-[var(--arth-n60)]">
-        One tap answers the customer and writes that you discussed it. You type nothing here.
+        One tap answers the customer and writes that you discussed it. You type nothing here. Catalogue figures show when they exist. If the master is empty, that is stated.
       </p>
+      {snap.price ? (
+        <p className="text-sm">
+          On-road {inr(snap.price.onRoadPaise / 100)} · {snap.price.model} {snap.price.variant}
+          {snap.price.stale ? " · A component is older than 30 days. Treat as flagged, not current." : ""}
+        </p>
+      ) : (
+        <p className="text-sm text-[var(--arth-n60)]">No on-road figure on the master for this model yet.</p>
+      )}
       <div className="flex flex-wrap gap-2">
         {["price", "emi", "delivery", "testdrive", "valuation"].map((tool) => (
           <Button key={tool} type="button" variant="outline" onClick={() => setOpen(tool)}>

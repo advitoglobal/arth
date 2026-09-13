@@ -16,6 +16,7 @@ export async function POST(req: Request) {
         salesUserId: body.salesUserId ? String(body.salesUserId) : undefined,
         mode: body.mode ? String(body.mode) : undefined,
         revisitAt: body.revisitAt ? String(body.revisitAt) : undefined,
+        qualifyDesk: Boolean(body.qualifyDesk),
       });
       return NextResponse.json(result);
     });

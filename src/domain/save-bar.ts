@@ -4,7 +4,8 @@ export const SAVE_BAR = [
   { key: "save", label: "Save" },
   { key: "discard", label: "Discard" },
   { key: "record_outcome", label: "Record outcome" },
-  { key: "save_enquiry", label: "Save enquiry" },
+  { key: "save_enquiry", label: "Save lead" },
+  { key: "save_lead", label: "Save lead" },
 ] as const;
 
 export function rendererKeys() {

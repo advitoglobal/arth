@@ -176,6 +176,8 @@ export async function handoffToSales(
     salesUserId?: string;
     mode?: string;
     revisitAt?: string;
+    qualifyDesk?: boolean;
+    department?: string;
   },
 ) {
   const [lead] = await tx<{ branch_id: string; source_key: string; department_key: string }[]>`
@@ -207,9 +209,10 @@ export async function handoffToSales(
     userId: input.userId,
     note: input.note,
     salesUserId: mode === "direct" ? salesUserId : undefined,
-    department: dept,
+    department: input.department || dept,
     mode,
     revisitAt: input.revisitAt,
+    qualifyDesk: input.qualifyDesk,
   });
 }
 
@@ -400,6 +403,7 @@ export async function createOwnedEnquiry(
     sourceKey: string;
     sourceDetail: string;
     expectedValuePaise: number;
+    departmentKey?: string;
   },
 ) {
   const digits = input.phone.replace(/\D/g, "");
@@ -451,12 +455,15 @@ export async function createOwnedEnquiry(
     const [role] = await tx<{ role_key: string }[]>`
       SELECT role_key FROM users WHERE id = ${input.userId}::uuid
     `;
+    const requested = input.departmentKey?.trim() ?? "";
     const department =
-      role?.role_key === "svctele"
-        ? "service"
-        : role?.role_key === "instele"
-          ? "insurance"
-          : "sales";
+      requested === "service" || requested === "insurance" || requested === "sales"
+        ? requested
+        : role?.role_key === "svctele"
+          ? "service"
+          : role?.role_key === "instele"
+            ? "insurance"
+            : "sales";
     const consentPurpose =
       department === "service"
         ? "service_reminders"

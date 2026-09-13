@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { asSeat } from "@/db/session";
 import { recordDisposition, skipWrapUp } from "@/services/telecalling";
+import { qualifyLead } from "@/services/floor-register";
 import { requireScreen } from "@/lib/http";
 
 export async function POST(req: Request) {
@@ -39,6 +40,23 @@ export async function POST(req: Request) {
         quoteVariant: body.quoteVariant,
         quoteValidUntil: body.quoteValidUntil,
       });
+      if (body.qualifyLane) {
+        const extras = (body.extras ?? {}) as Record<string, string>;
+        const qualified = await qualifyLead(tx, {
+          leadId: String(body.leadId),
+          userId: seat.userId,
+          lane: String(body.qualifyLane),
+          note: String(body.note ?? ""),
+          send: body.sendQualify !== false,
+          testdrivePrefDate: body.testdrivePrefDate ? String(body.testdrivePrefDate) : undefined,
+          extras,
+        });
+        return NextResponse.json({
+          ...result,
+          recorded: `${result.recorded} ${qualified.recorded}`,
+          confirm: `${result.recorded} ${qualified.recorded}`,
+        });
+      }
       return NextResponse.json(result);
     });
   } catch (err) {

@@ -34,7 +34,13 @@ export const INSURANCE_STAGES = [
   "lost",
 ] as const;
 
-export type DeptKey = "sales" | "service" | "insurance" | "used" | "accessories";
+export type DeptKey =
+  | "sales"
+  | "service"
+  | "insurance"
+  | "used"
+  | "accessories"
+  | "driving_school";
 
 export function stagesFor(dept: string | null | undefined): readonly string[] {
   if (dept === "service") return SERVICE_STAGES;

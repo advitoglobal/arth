@@ -8,6 +8,9 @@ import { ScoreWallet } from "@/components/score-wallet";
 import { ProfileForm } from "@/components/register-forms";
 import { unofficialScoresCopy, pointsAreOfficial } from "@/vendors/status";
 import { walletMovements } from "@/services/floor-register";
+import { InboundRing } from "@/components/inbound-ring";
+import { ringingCalls } from "@/services/conversion";
+import { departmentOfRole } from "@/domain/ladders";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -17,6 +20,8 @@ export default async function ProfilePage() {
     const hours = await branchHoursForUser(tx, seat.userId);
     const branch = hours[0]?.branch ?? seat.tenantName;
     const wallet = await walletMovements(tx, seat.userId);
+    const dept = departmentOfRole(seat.roleKey);
+    const ringing = dept === "all" ? [] : await ringingCalls(tx, dept);
     const [me] = await tx<{ whatsapp_phone: string | null }[]>`
       SELECT whatsapp_phone FROM users WHERE id = ${seat.userId}::uuid
     `;
@@ -32,6 +37,7 @@ export default async function ProfilePage() {
           <LeaveFloor />
         </div>
         <ProfileForm fullName={seat.name} whatsappPhone={me?.whatsapp_phone ?? ""} />
+        <InboundRing department={dept === "all" ? "sales" : dept} calls={ringing} />
         <div className="max-w-lg space-y-3">
           <h2 className="font-display text-[20px] font-semibold">Score wallet</h2>
           <p className="text-sm text-[var(--arth-n60)]">

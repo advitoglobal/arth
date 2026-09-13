@@ -14,7 +14,7 @@ function ready(stageKey: string, department?: string | null) {
   if (department === "insurance") {
     return ["quoted", "recommended", "issued"].includes(stageKey);
   }
-  return ["meeting", "qualified", "test_drive", "quotation", "negotiation"].includes(stageKey);
+  return ["contacted", "meeting", "qualified", "test_drive", "quotation", "negotiation"].includes(stageKey);
 }
 
 export function HandoffButton({
@@ -72,6 +72,7 @@ export function HandoffButton({
         mode: choice === "nurture" ? "nurture" : enabled,
         salesUserId: enabled === "direct" && choice === "hand" ? salesUserId : undefined,
         revisitAt: choice === "nurture" ? revisitAt : undefined,
+        qualifyDesk: choice === "hand",
       }),
     });
     const data = await res.json();

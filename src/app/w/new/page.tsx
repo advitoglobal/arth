@@ -27,7 +27,7 @@ export default async function NewEnquiryPage({
       <div className="space-y-6">
         <RuleHeading>Add enquiry</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Capture four fields first so the enquiry exists. Qualify on the same screen as you go. You become the owner from the first save.
+          Department first. Questions change with the lane. One Save lead files the enquiry in that department. You own it until you qualify and send it on.
         </p>
         <AddEnquiryForm
           presetPhone={phone}
