@@ -80,8 +80,8 @@ export default async function TelePage({
           <RuleHeading>Log a call</RuleHeading>
           <p className="mt-2 text-sm text-[var(--arth-n60)]">
             {autoContinue
-              ? "Auto caller is lining up priority names. Dial, record the outcome, and the next late call loads."
-              : "Dial, send WhatsApp if they asked for a brochure or quotation, then record what was said. This is not a live telephone exchange."}
+              ? "This enquiry stays open after you save. Choose Next lead when you are ready."
+              : "Dial, send WhatsApp if they asked for a brochure or quotation, then record what was said. This enquiry stays open until you choose Next lead. This is not a live telephone exchange."}
           </p>
           <div className="mt-6 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
             <Link
@@ -115,7 +115,7 @@ export default async function TelePage({
                 Still in Today
               </p>
               <p className="mt-2 text-sm text-[var(--arth-n60)]">
-                {remaining.length} after this one. The next name loads after you record an outcome, or skip wrap-up with a reason.
+                {remaining.length} after this one. This enquiry stays open until you choose Next lead.
               </p>
             </div>
           ) : null}

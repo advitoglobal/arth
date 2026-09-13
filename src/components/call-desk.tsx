@@ -7,7 +7,6 @@ import { DispositionPanel } from "@/components/disposition-panel";
 import { HandoffButton } from "@/components/handoff-button";
 import { StagePanel } from "@/components/stage-panel";
 import { WhatsAppSend } from "@/components/whatsapp-send";
-import { QuoteButton } from "@/components/register-forms";
 import { ConsentPanel } from "@/components/consent-panel";
 import { AdvisePanel } from "@/components/advise-panel";
 import { proposeFromTaps } from "@/domain/propose";
@@ -108,11 +107,7 @@ export function CallDesk({
       setSkipError(data.error ?? "Not skipped.");
       return;
     }
-    if (nextLeadId) {
-      router.push(autoContinue ? `/w/tele?id=${nextLeadId}&auto=1` : `/w/tele?id=${nextLeadId}`);
-    } else {
-      router.push("/w/dayb");
-    }
+    router.refresh();
   }
 
   return (
@@ -125,8 +120,8 @@ export function CallDesk({
           </p>
           <p className="mt-2 text-sm">
             {wrapLeft == null || wrapLeft > 0
-              ? `${wrapLeft ?? WRAP_UP_SECONDS} seconds to record the outcome. The next name does not load until you do, or until you skip with a reason.`
-              : "The wrap-up window has ended. Record an outcome or skip with a reason. The next name still waits."}
+              ? `${wrapLeft ?? WRAP_UP_SECONDS} seconds to record the outcome. This enquiry stays open until you save or choose Next lead.`
+              : "The wrap-up window has ended. Record an outcome or skip with a reason. The next name still waits until you choose it."}
           </p>
           {queuedMessages.length > 0 ? (
             <div className="mt-3 space-y-1 text-sm">
@@ -153,19 +148,21 @@ export function CallDesk({
           {skipError ? <p className="mt-2 text-sm text-[var(--arth-overdue)]">{skipError}</p> : null}
         </div>
       ) : null}
-      {sales && adviseSnap ? (
-        <AdvisePanel
-          leadId={leadId}
-          snap={adviseSnap}
-          onTap={(tool, values) => {
-            setProposal(proposeFromTaps([{ payload: { tool, values } }]));
-          }}
-        />
+      {sales ? (
+        adviseSnap ? (
+          <AdvisePanel
+            leadId={leadId}
+            snap={adviseSnap}
+            onTap={(tool, values) => {
+              setProposal(proposeFromTaps([{ payload: { tool, values } }]));
+            }}
+          />
+        ) : (
+          <p className="text-sm text-[var(--arth-n60)]">
+            No price master for this model yet. Built-in numbers appear here when the catalogue has them.
+          </p>
+        )
       ) : null}
-      {priceLine && sales && !adviseSnap ? (
-        <p className="text-sm text-[var(--arth-n60)]">{priceLine} This is not a live telephone line and not a DMS feed.</p>
-      ) : null}
-      {emiLine && sales && !adviseSnap ? <p className="text-sm">{emiLine} Rates are a maintained table, never inferred by a model.</p> : null}
       <ConsentPanel leadId={leadId} initial={consents ?? []} />
       <WhatsAppSend leadId={leadId} department={department} />
       <DispositionPanel
@@ -186,8 +183,8 @@ export function CallDesk({
           Stage, not a call
         </p>
         <p className="mt-2 mb-3 text-sm text-[var(--arth-n60)]">
-          Recording an outcome and moving a stage are two different acts.
-          {sales ? " Qualify here before you hand on. Meeting is the floor word for this step." : " Use this department ladder only."}
+          Recording an outcome, the stage, qualify, and a preferred test-drive date save together.
+          {sales ? " Qualify means the information is collected, the customer is willing, and the enquiry is ready for that department." : " Use this department ladder only."}
         </p>
         <StagePanel leadId={leadId} stageKey={stageKey} department={department} />
       </div>
@@ -198,7 +195,6 @@ export function CallDesk({
         salesPeople={salesPeople}
         mode={mode}
       />
-      {sales ? <QuoteButton leadId={leadId} /> : null}
     </div>
   );
 }

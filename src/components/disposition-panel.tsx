@@ -9,6 +9,7 @@ import { SaveBar, UnsavedBar } from "@/components/save-bar";
 import { saveBarLabel } from "@/domain/save-bar";
 import { CONFIRM_MS } from "@/domain/confirm";
 import { InPlaceConfirm } from "@/components/in-place-confirm";
+import { QUALIFY_LANES } from "@/domain/qualify";
 
 export function DispositionPanel({
   leadId,
@@ -58,6 +59,14 @@ export function DispositionPanel({
   const [quoteRupees, setQuoteRupees] = useState("");
   const [quoteVariant, setQuoteVariant] = useState("");
   const [quoteValidUntil, setQuoteValidUntil] = useState("");
+  const [qualifyLane, setQualifyLane] = useState("");
+  const [sendQualify, setSendQualify] = useState(true);
+  const [prefDrive, setPrefDrive] = useState("");
+  const [regNo, setRegNo] = useState("");
+  const [complaint, setComplaint] = useState("");
+  const [policyExpiry, setPolicyExpiry] = useState("");
+  const [currentCar, setCurrentCar] = useState("");
+  const [licence, setLicence] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +94,9 @@ export function DispositionPanel({
     key !== "" ||
     meetingAt !== "" ||
     testdriveSlot !== "" ||
-    quoteRupees !== "";
+    quoteRupees !== "" ||
+    qualifyLane !== "" ||
+    prefDrive !== "";
   const canSave = Boolean(
     key &&
       (!needsRevisit || revisit) &&
@@ -108,18 +119,10 @@ export function DispositionPanel({
     const t = window.setTimeout(() => {
       setConfirm(null);
       setEventId(null);
-      if (nextLeadId) {
-        router.push(
-          autoContinue ? `/w/tele?id=${nextLeadId}&auto=1` : `/w/tele?id=${nextLeadId}`,
-        );
-      } else if (autoContinue) {
-        router.push("/w/dayb");
-      } else {
-        router.refresh();
-      }
+      router.refresh();
     }, CONFIRM_MS);
     return () => window.clearTimeout(t);
-  }, [confirm, eventId, router, nextLeadId, autoContinue]);
+  }, [confirm, eventId, router]);
 
   function discard() {
     setKey("");
@@ -138,6 +141,13 @@ export function DispositionPanel({
     setQuoteRupees("");
     setQuoteVariant("");
     setQuoteValidUntil("");
+    setQualifyLane("");
+    setPrefDrive("");
+    setRegNo("");
+    setComplaint("");
+    setPolicyExpiry("");
+    setCurrentCar("");
+    setLicence("");
     setError(null);
   }
 
@@ -166,6 +176,16 @@ export function DispositionPanel({
         quoteRupees: quoteRupees || undefined,
         quoteVariant: quoteVariant || undefined,
         quoteValidUntil: quoteValidUntil || undefined,
+        qualifyLane: qualifyLane || undefined,
+        sendQualify,
+        testdrivePrefDate: prefDrive || testdriveSlot || undefined,
+        extras: {
+          regNo,
+          complaint,
+          policyExpiry,
+          currentCar,
+          licence,
+        },
       }),
     });
     const data = await res.json();
@@ -206,10 +226,8 @@ export function DispositionPanel({
         line={confirm}
         next={
           nextName
-            ? `After this window the next enquiry is ${nextName}.`
-            : autoContinue
-              ? "The list is finished. After this window you return to Today."
-              : "After this window you stay on Today if nothing else is due."
+            ? `This enquiry stays open. Next lead is ${nextName} when you choose it.`
+            : "This enquiry stays open. Return to Today when you are done."
         }
         onUndo={() => void undo()}
       />
@@ -451,6 +469,94 @@ export function DispositionPanel({
           ) : null}
         </>
       ) : null}
+      <label className="block text-sm">
+        Preferred test-drive date
+        <input
+          type="date"
+          className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+          value={prefDrive}
+          onChange={(e) => setPrefDrive(e.target.value)}
+        />
+      </label>
+      <p className="text-sm text-[var(--arth-n60)]">
+        The customer’s convenient date. Sales books the slot.
+      </p>
+      <label className="block text-sm">
+        Qualify for
+        <select
+          className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+          value={qualifyLane}
+          onChange={(e) => setQualifyLane(e.target.value)}
+        >
+          <option value="">Not this call</option>
+          {QUALIFY_LANES.map((row) => (
+            <option key={row.key} value={row.key}>
+              {row.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {qualifyLane === "service" ? (
+        <>
+          <label className="block text-sm">
+            Registration
+            <input
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={regNo}
+              onChange={(e) => setRegNo(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Complaint
+            <input
+              className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+              value={complaint}
+              onChange={(e) => setComplaint(e.target.value)}
+            />
+          </label>
+        </>
+      ) : null}
+      {qualifyLane === "insurance" ? (
+        <label className="block text-sm">
+          Policy expiry
+          <input
+            type="date"
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={policyExpiry}
+            onChange={(e) => setPolicyExpiry(e.target.value)}
+          />
+        </label>
+      ) : null}
+      {qualifyLane === "used" ? (
+        <label className="block text-sm">
+          Current car
+          <input
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={currentCar}
+            onChange={(e) => setCurrentCar(e.target.value)}
+          />
+        </label>
+      ) : null}
+      {qualifyLane === "driving_school" ? (
+        <label className="block text-sm">
+          Licence status
+          <input
+            className="mt-1 block h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={licence}
+            onChange={(e) => setLicence(e.target.value)}
+          />
+        </label>
+      ) : null}
+      {qualifyLane ? (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={sendQualify}
+            onChange={(e) => setSendQualify(e.target.checked)}
+          />
+          Send to that department on this save
+        </label>
+      ) : null}
       {proposal ? (
         <p className="bg-[var(--arth-n05)] px-3 py-2 text-sm">
           This looks like {proposal.dispositionKey.replaceAll("_", " ")}
@@ -466,6 +572,20 @@ export function DispositionPanel({
           {saveBarLabel("record_outcome")}
         </Button>
       </SaveBar>
+      {nextLeadId ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11"
+          onClick={() => router.push(`/w/tele?id=${nextLeadId}`)}
+        >
+          Next lead{nextName ? ` · ${nextName}` : ""}
+        </Button>
+      ) : (
+        <Button type="button" variant="outline" className="h-11" onClick={() => router.push("/w/dayb")}>
+          Back to Today
+        </Button>
+      )}
     </div>
   );
 }

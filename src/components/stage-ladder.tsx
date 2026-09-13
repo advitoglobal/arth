@@ -1,5 +1,13 @@
 import { stagesFor } from "@/domain/ladders";
-import { STAGE_LABEL } from "@/lib/labels";
+import { STAGE_LABEL, stageLabel } from "@/lib/labels";
+
+export function StageTag({ current }: { current: string }) {
+  return (
+    <span className="inline-flex rounded-[3px] bg-[var(--arth-ink)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--arth-n00)]">
+      {stageLabel(current)}
+    </span>
+  );
+}
 
 export function StageLadder({
   current,

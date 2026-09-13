@@ -330,10 +330,12 @@ export async function getLead(tx: Tx, id: string) {
       c.phone,
       u.full_name AS owner_name,
       s.label AS stage_label,
-      lr.label AS lost_reason_label
+      lr.label AS lost_reason_label,
+      b.name AS branch_name
     FROM leads l
     JOIN customers c ON c.id = l.customer_id
     LEFT JOIN users u ON u.id = l.owner_user_id
+    LEFT JOIN branches b ON b.id = l.branch_id
     LEFT JOIN config_stages s ON s.tenant_id = l.tenant_id AND s.key = l.stage_key
     LEFT JOIN config_lost_reasons lr ON lr.tenant_id = l.tenant_id AND lr.key = l.lost_reason_key
     WHERE l.id = ${id}::uuid

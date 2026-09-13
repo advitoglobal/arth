@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/action-button";
 import { AdvisePanel } from "@/components/advise-panel";
 import { ConsentPanel } from "@/components/consent-panel";
 import { DEPARTMENT_LABEL, stageLabel } from "@/lib/labels";
+import { QUALIFY_LANES } from "@/domain/qualify";
 import { istDate } from "@/lib/format";
 import {
   BUYER_TYPE_LABEL,
@@ -79,7 +80,7 @@ function Chip({
 export function AddEnquiryForm({
   presetPhone,
   rateLine,
-  department = "sales",
+  department: initialDepartment = "sales",
   models,
   variants,
   colours,
@@ -94,7 +95,8 @@ export function AddEnquiryForm({
   banks: string[];
 }) {
   const router = useRouter();
-  const sales = department === "sales";
+  const [department, setDepartment] = useState(initialDepartment);
+  const sales = department === "sales" || department === "used" || department === "driving_school";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState(presetPhone ?? "");
   const [model, setModel] = useState("");
@@ -202,8 +204,12 @@ export function AddEnquiryForm({
 
   async function capture() {
     setError(null);
-    if (!captureReady({ phone, name, model, source })) {
-      setError("Four fields first: mobile, name, model, source.");
+    if (!captureReady({ phone, name, model, source, department })) {
+      setError(
+        department === "service" || department === "insurance"
+          ? "Mobile, name, source, and department first."
+          : "Mobile, name, model, source, and department first.",
+      );
       return;
     }
     try {
@@ -214,9 +220,31 @@ export function AddEnquiryForm({
           customerName: name,
           phone,
           modelInterest: model,
-          variantInterest: "",
+          variantInterest: variant,
           sourceKey: source,
-          sourceDetail: "",
+          sourceDetail: said.trim(),
+          departmentKey: department,
+          depth: {
+            colour,
+            variant,
+            buyerType,
+            altModel,
+            expectedBookingDate: booking,
+            expectedDeliveryDate: delivery,
+            exchangeVehicle,
+            exchangePlace,
+            meetingKind,
+            meetingAt,
+            testdriveNeeded: testdriveNeeded ?? undefined,
+            testdrivePrefDate,
+            financeBankKey: bank,
+            whoElseDecides: whoElse,
+            seenVehicle: seen ?? undefined,
+            financeNeeded: financePath === "finance" ? true : financePath === "cash" ? false : undefined,
+            intakeSaid: [said.trim(), department === "service" ? `Complaint` : "", department === "insurance" ? "" : ""]
+              .filter(Boolean)
+              .join(". "),
+          },
         }),
       });
       const data = await res.json();
@@ -225,8 +253,8 @@ export function AddEnquiryForm({
         return;
       }
       setLeadId(data.leadId);
-      setSaved("The enquiry exists and you own it.");
-      await loadAdvise(data.leadId);
+      setSaved("The enquiry exists and you own it. Filed in that department.");
+      router.push(`/w/rec?id=${data.leadId}`);
     } catch {
       setError("Not saved. Try again when the line is back.");
     }
@@ -265,8 +293,8 @@ export function AddEnquiryForm({
         show={captureDirty}
         onSave={() => void capture()}
         onDiscard={discardCapture}
-        saveDisabled={Boolean(leadId) || matches.length > 0}
-        saveLabel={saveBarLabel("save_enquiry")}
+        saveDisabled={Boolean(leadId) || matches.length > 0 || !captureReady({ phone, name, model, source, department })}
+        saveLabel={saveBarLabel("save_lead")}
       />
       <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
@@ -279,19 +307,34 @@ export function AddEnquiryForm({
           />
         </div>
         <p className="text-sm text-[var(--arth-n60)]">
-          {progress.requiredDone
-            ? `Capture complete. Qualify chips ${progress.qualifyNow} of ${progress.qualifyMax}. Nothing past capture is mandatory.`
-            : `Capture ${progress.captureNow} of ${progress.captureMax}. The enquiry is usable the moment those four save.`}
+            {progress.requiredDone
+              ? `Saved. Qualify chips ${progress.qualifyNow} of ${progress.qualifyMax} were on the same save.`
+              : `Fill the department questions, then Save lead once.`}
         </p>
       </div>
 
       <div className="space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
-          Stage 1 · Capture
+          Department first
         </p>
         <p className="text-sm text-[var(--arth-n60)]">
-          Four fields. The number is checked while you type so two people do not work the same inbound call.
+          Questions change with the department. One Save lead. The enquiry is filed in that department.
         </p>
+        <label className="block text-sm">
+          Department
+          <select
+            className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            disabled={Boolean(leadId)}
+          >
+            {QUALIFY_LANES.map((row) => (
+              <option key={row.key} value={row.key}>
+                {row.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="block text-sm">
           Mobile
           <input
@@ -367,31 +410,18 @@ export function AddEnquiryForm({
           </select>
         </label>
         {error ? <p className="text-sm text-[var(--arth-overdue)]">{error}</p> : null}
-        <SaveBar hint="The enquiry exists the moment these four save.">
-          <Button
-            type="button"
-            className="h-11"
-            onClick={capture}
-            disabled={Boolean(leadId) || matches.length > 0}
-          >
-            {saveBarLabel("save_enquiry")}
-          </Button>
-        </SaveBar>
         {saved ? <p className="text-sm font-medium">{saved}</p> : null}
       </div>
 
       <div className="space-y-4 border border-[var(--arth-n10)] bg-[var(--arth-n00)] p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">
-          Stage 2 · Qualify
+          Department questions
         </p>
         <p className="text-sm text-[var(--arth-n60)]">
-          Chips, not a long form. Each chip saves as you go and opens the matching adviser. Nothing here is mandatory.
+          Chips stay on this screen. Nothing here is mandatory. One Save lead at the bottom.
         </p>
-        {!leadId ? (
-          <p className="text-sm text-[var(--arth-n60)]">Save capture first so the enquiry exists.</p>
-        ) : null}
 
-        {sales && leadId ? (
+        {sales ? (
           <>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Vehicle</p>
             <div className="flex flex-wrap gap-2">
@@ -594,6 +624,20 @@ export function AddEnquiryForm({
                 </Chip>
               ))}
             </div>
+            {testdriveNeeded ? (
+              <label className="block text-sm">
+                Preferred test-drive date
+                <input
+                  type="date"
+                  className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-2"
+                  value={testdrivePrefDate}
+                  onChange={(e) => {
+                    setTestdrivePrefDate(e.target.value);
+                    void patch({ testdriveNeeded: true, testdrivePrefDate: e.target.value }, "testdrive");
+                  }}
+                />
+              </label>
+            ) : null}
             {testdriveNeeded && advise?.slots?.length ? (
               <div className="flex flex-wrap gap-2">
                 {advise.slots.map((slot) => {
@@ -682,28 +726,54 @@ export function AddEnquiryForm({
               ))}
             </div>
           </>
-        ) : leadId && !sales ? (
-          <p className="text-sm text-[var(--arth-n60)]">
-            {department === "service"
-              ? "Service does not book test drives. That is the test drive coordinator after sales hands a car."
-              : "Insurance qualifies on quote, not on a test drive."}
-          </p>
+        ) : !sales ? (
+          <div className="space-y-3">
+            <p className="text-sm text-[var(--arth-n60)]">
+              {department === "service"
+                ? "Service: registration and complaint if you have them. No test drive from this desk."
+                : department === "insurance"
+                  ? "Insurance: policy expiry if you have it."
+                  : "Basics for this department. One Save lead files it there."}
+            </p>
+            {department === "service" ? (
+              <>
+                <label className="block text-sm">
+                  Registration
+                  <input
+                    className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-3"
+                    value={said}
+                    onChange={(e) => setSaid(e.target.value)}
+                    placeholder="KA01AB1234 and the complaint in What he said below"
+                  />
+                </label>
+              </>
+            ) : null}
+          </div>
         ) : null}
 
-        {leadId ? (
-          <label className="block text-sm">
-            What he said
-            <input
-              className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-3"
-              value={said}
-              onChange={(e) => setSaid(e.target.value)}
-              onBlur={() => {
-                if (said.trim()) void patch({ intakeSaid: said.trim() });
-              }}
-              placeholder="One line. Not model, price, EMI, or a slot."
-            />
-          </label>
-        ) : null}
+        <label className="block text-sm">
+          What he said
+          <input
+            className="mt-1 h-11 w-full rounded-[3px] border border-[var(--arth-n50)] px-3"
+            value={said}
+            onChange={(e) => setSaid(e.target.value)}
+            onBlur={() => {
+              if (leadId && said.trim()) void patch({ intakeSaid: said.trim() });
+            }}
+            placeholder="One line. Not model, price, EMI, or a slot."
+          />
+        </label>
+
+        <SaveBar hint="One save. The enquiry is filed in the department you chose.">
+          <Button
+            type="button"
+            className="h-11"
+            onClick={capture}
+            disabled={Boolean(leadId) || matches.length > 0}
+          >
+            {saveBarLabel("save_lead")}
+          </Button>
+        </SaveBar>
 
         {leadId ? (
           <Button type="button" variant="outline" onClick={() => router.push(`/w/tele?id=${leadId}`)}>

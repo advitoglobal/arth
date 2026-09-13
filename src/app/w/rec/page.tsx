@@ -4,7 +4,7 @@ import { RuleHeading, StatusStamp } from "@/components/brand/type";
 import { inr, indianMobile } from "@/lib/format";
 import { enquiryDateStamps } from "@/domain/date-stamp";
 import { ActionButton } from "@/components/action-button";
-import { enquiryNo, sourceLabel } from "@/lib/labels";
+import { enquiryNo, sourceLabel, DEPARTMENT_LABEL } from "@/lib/labels";
 import { LedgerLine } from "@/components/ledger-line";
 import { StagePanel } from "@/components/stage-panel";
 import { Forbidden } from "@/components/forbidden";
@@ -101,7 +101,9 @@ export default async function RecPage({
             {String(lead.intake_kind) === "manager_upload"
               ? `Uploaded by manager${lead.intake_batch_name ? ` · ${String(lead.intake_batch_name)}` : ""}`
               : "Pushed from telecalling"}
-            {lead.department_key ? ` · ${String(lead.department_key)}` : ""}
+            {lead.department_key
+              ? ` · ${DEPARTMENT_LABEL[String(lead.department_key)] ?? String(lead.department_key)}`
+              : ""}
           </p>
           {handedRead ? (
             <p className="mt-3 text-sm">
@@ -120,6 +122,18 @@ export default async function RecPage({
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Stage</dt>
               <dd>{lead.stage_label ?? lead.stage_key}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Department</dt>
+              <dd>{DEPARTMENT_LABEL[String(lead.department_key ?? "sales")] ?? String(lead.department_key ?? "sales")}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Concerned executive</dt>
+              <dd>{lead.owner_name ?? "Unassigned"}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Showroom</dt>
+              <dd>{String(lead.branch_name ?? "Not recorded")}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--arth-slate)]">Owner</dt>
@@ -187,7 +201,10 @@ export default async function RecPage({
                 stageKey={String(lead.stage_key)}
                 department={String(lead.department_key ?? "sales")}
               />
-              {String(lead.department_key) === "sales" ? <QuoteButton leadId={String(lead.id)} /> : null}
+              {String(lead.department_key) === "sales" &&
+              ["sales", "salesmgr", "lead", "owner", "gm", "admin"].includes(seat.roleKey) ? (
+                <QuoteButton leadId={String(lead.id)} />
+              ) : null}
             </div>
           ) : null}
           {["sales", "svc", "ins"].includes(seat.roleKey) &&

@@ -12,9 +12,6 @@ import { groupQueueByBand } from "@/domain/queue-bands";
 import type { LeadRow } from "@/services/telecalling";
 import { DailyWelcome } from "@/components/daily-welcome";
 import { loadWelcome } from "@/services/floor-register";
-import { InboundRing } from "@/components/inbound-ring";
-import { ringingCalls } from "@/services/conversion";
-import { departmentOfRole } from "@/domain/ladders";
 
 function listNames(rows: LeadRow[]) {
   const names = rows.map((r) => r.customer_name);
@@ -116,8 +113,6 @@ export default async function DayPanelPage() {
     const next = rows[0];
     const perf = await loadPerformance(tx);
     const welcome = await loadWelcome(tx, seat.userId);
-    const dept = departmentOfRole(seat.roleKey);
-    const ringing = dept === "all" ? [] : await ringingCalls(tx, dept);
 
     return (
       <div className="space-y-8">
@@ -143,7 +138,7 @@ export default async function DayPanelPage() {
           </p>
           {next ? (
             <div className="mt-4 flex flex-wrap gap-2">
-              <ActionButton href={`/w/tele?id=${next.id}&auto=1`} variant="default">
+              <ActionButton href={`/w/tele?id=${next.id}`} variant="default">
                 Start next call · {next.customer_name}
               </ActionButton>
               <ActionButton href="/w/new" variant="outline">
@@ -163,9 +158,8 @@ export default async function DayPanelPage() {
         </div>
         <RuleHeading>Today</RuleHeading>
         <p className="text-sm text-[var(--arth-n60)]">
-          Your list for today in this department. Six bands, always in this order. You cannot skip a band. You can still open any name in My enquiries; that call is recorded as out of order. New names stay shared until someone reaches the customer.
+          Your list for today in this department. Six bands, always in this order. You cannot skip a band. You can still open any name in My enquiries; that call is recorded as out of order.           New names stay shared until someone reaches the customer.
         </p>
-        <InboundRing department={dept === "all" ? "sales" : dept} calls={ringing} />
         <FigureSource
           source="your queue"
           period="today in India Standard Time, six published bands"

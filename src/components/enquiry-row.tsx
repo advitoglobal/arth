@@ -4,7 +4,8 @@ import { inr, indianMobile } from "@/lib/format";
 import { StatusStamp } from "@/components/brand/type";
 import { isParked } from "@/domain/clock";
 import { sourceLabel, enquiryNo, intakeLabel } from "@/lib/labels";
-import { StageLadder } from "@/components/stage-ladder";
+import { StageTag } from "@/components/stage-ladder";
+import { arthscoreCaption, arthscoreFromLead } from "@/domain/arthscore";
 import type { LeadRow } from "@/services/telecalling";
 
 function eventDate(row: LeadRow) {
@@ -34,14 +35,14 @@ function nextDue(row: LeadRow): { text: string; overdue: boolean } {
 
 function cols(showValue: boolean, showBand: boolean) {
   if (showBand && showValue) {
-    return "lg:grid-cols-[minmax(9rem,0.85fr)_minmax(7rem,0.65fr)_5rem_auto_minmax(7rem,0.75fr)_minmax(6rem,0.65fr)_minmax(6rem,0.65fr)_minmax(5.5rem,0.5fr)_minmax(10rem,1.2fr)_minmax(9rem,1.1fr)_minmax(0,0.5fr)_6.5rem]";
+    return "lg:grid-cols-[minmax(10rem,1fr)_minmax(7rem,0.65fr)_5rem_auto_minmax(7rem,0.75fr)_minmax(6rem,0.65fr)_minmax(6.5rem,0.7fr)_minmax(5.5rem,0.5fr)_minmax(10rem,1.2fr)_minmax(9rem,1.1fr)_minmax(0,0.5fr)_8.5rem]";
   }
   if (showBand) {
-    return "lg:grid-cols-[minmax(9rem,0.9fr)_minmax(7rem,0.65fr)_5rem_auto_minmax(7.5rem,0.8fr)_minmax(6rem,0.65fr)_minmax(6rem,0.65fr)_minmax(5.5rem,0.5fr)_minmax(10rem,1.3fr)_minmax(9rem,1.15fr)_6.5rem]";
+    return "lg:grid-cols-[minmax(10rem,1fr)_minmax(7rem,0.65fr)_5rem_auto_minmax(7.5rem,0.8fr)_minmax(6rem,0.65fr)_minmax(6.5rem,0.7fr)_minmax(5.5rem,0.5fr)_minmax(10rem,1.3fr)_minmax(9rem,1.15fr)_8.5rem]";
   }
   return showValue
-    ? "lg:grid-cols-[minmax(9rem,0.9fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(5.5rem,0.55fr)_minmax(11rem,1.35fr)_minmax(10rem,1.2fr)_minmax(0,0.55fr)_6.5rem]"
-    : "lg:grid-cols-[minmax(9rem,0.95fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(5.5rem,0.55fr)_minmax(11rem,1.4fr)_minmax(10rem,1.25fr)_6.5rem]";
+    ? "lg:grid-cols-[minmax(10rem,1fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.7fr)_minmax(11rem,1.35fr)_minmax(10rem,1.2fr)_minmax(0,0.55fr)_8.5rem]"
+    : "lg:grid-cols-[minmax(10rem,1.05fr)_minmax(7rem,0.7fr)_5rem_auto_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.7fr)_minmax(11rem,1.4fr)_minmax(10rem,1.25fr)_8.5rem]";
 }
 
 function Field({
@@ -52,8 +53,8 @@ function Field({
   wrap = false,
 }: {
   label: string;
-  value: string;
   sub?: string | null;
+  value: string;
   warn?: boolean;
   wrap?: boolean;
 }) {
@@ -111,6 +112,7 @@ export function EnquiryRow({
         ? `${row.intake_batch_name} · ${new Date(row.intake_batch_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short" })}`
         : row.intake_batch_name
       : null;
+  const score = arthscoreFromLead(row);
 
   return (
     <article
@@ -123,11 +125,11 @@ export function EnquiryRow({
       />
       <div className="flex items-start justify-between gap-3 lg:contents">
         <div className="min-w-0 lg:contents">
-          <p className="truncate font-semibold" title={row.customer_name}>
-            {row.customer_name}
-          </p>
-          <div className="mt-2 lg:col-span-full">
-            <StageLadder current={row.stage_key} compact />
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="truncate font-semibold" title={row.customer_name}>
+              {row.customer_name}
+            </p>
+            <StageTag current={row.stage_key} />
           </div>
           <p className="font-data mt-1 truncate text-[12.5px] text-[var(--arth-n60)] lg:mt-0">
             {indianMobile(row.phone)}
@@ -163,15 +165,9 @@ export function EnquiryRow({
           />
         ) : null}
         <Field
-          label="Stage"
-          value={row.stage_label ?? "Not recorded"}
-          sub={
-            row.pool_open
-              ? "In pool"
-              : row.stage_order
-                ? `${row.stage_order} of 9`
-                : null
-          }
+          label="Arthscore"
+          value={String(score)}
+          sub={arthscoreCaption()}
         />
         <Field label="Last activity" value={eventDate(row)} wrap />
         <Field label="Next" value={next.text} warn={next.overdue} wrap />
@@ -182,16 +178,15 @@ export function EnquiryRow({
           />
         ) : null}
       </div>
-      <div className="mt-4 lg:mt-0">
+      <div className="relative z-10 mt-4 flex flex-wrap gap-2 lg:mt-0">
         {showCall ? (
-          <ActionButton
-            href={`/w/tele?id=${row.id}`}
-            variant="default"
-            className="w-full lg:w-auto"
-          >
+          <ActionButton href={`/w/tele?id=${row.id}`} variant="default">
             Call
           </ActionButton>
         ) : null}
+        <ActionButton href={`/w/msg?id=${row.id}`} variant="outline">
+          Message
+        </ActionButton>
       </div>
     </article>
   );
@@ -215,7 +210,7 @@ export function RowHead({
       <span>Vehicle</span>
       <span>Intake</span>
       {showBand ? <span>Why here</span> : null}
-      <span>Stage</span>
+      <span>Arthscore</span>
       <span>Last activity</span>
       <span>Next</span>
       {showValue ? <span className="text-right">Value</span> : null}
