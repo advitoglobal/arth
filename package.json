@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 43127",
     "lint": "eslint",
-    "db:migrate": "npx tsx scripts/migrate.ts",
+    "db:hosted": "npx tsx scripts/hosted-bootstrap.ts",
     "db:seed": "npx tsx scripts/seed.ts",
     "db:isolate": "npx tsx scripts/prove-isolation.ts",
     "db:clock": "npx tsx scripts/prove-clock.ts",

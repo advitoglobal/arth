@@ -81,6 +81,6 @@ AS $$
   LIMIT 1;
 $$;
 
-ALTER FUNCTION arth_authenticate(text) OWNER TO postgres;
+ALTER FUNCTION arth_authenticate(text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_authenticate(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_authenticate(text) TO arth_app;

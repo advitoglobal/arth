@@ -37,7 +37,7 @@ AS $$
     )
     AND (p_owner IS NULL OR p_owner_user_id = p_owner);
 $$;
-ALTER FUNCTION arth_book_filter_ok(text, text, text, uuid, text, timestamptz, timestamptz, timestamptz, text, timestamptz, uuid) OWNER TO postgres;
+ALTER FUNCTION arth_book_filter_ok(text, text, text, uuid, text, timestamptz, timestamptz, timestamptz, text, timestamptz, uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_book_filter_ok(text, text, text, uuid, text, timestamptz, timestamptz, timestamptz, text, timestamptz, uuid) TO arth_app;
 
 DROP FUNCTION IF EXISTS arth_pipeline_lead_ids(boolean, text, integer);
@@ -143,7 +143,7 @@ BEGIN
   END IF;
 END;
 $$;
-ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer, text, text, text, uuid) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer, text, text, text, uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer, text, text, text, uuid) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_pipeline_lead_ids(
@@ -159,7 +159,7 @@ SET search_path = public
 AS $$
   SELECT arth_pipeline_lead_ids(p_personal, p_stage, p_limit, NULL::text, NULL::text, NULL::text, NULL::uuid);
 $$;
-ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_lead_ids(boolean, text, integer) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_lead_ids(boolean, text, integer) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_pipeline_counts(
@@ -252,7 +252,7 @@ BEGIN
   END IF;
 END;
 $$;
-ALTER FUNCTION arth_pipeline_counts(boolean, text, text, text, uuid) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_counts(boolean, text, text, text, uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_counts(boolean, text, text, text, uuid) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_pipeline_counts(p_personal boolean)
@@ -264,5 +264,5 @@ SET search_path = public
 AS $$
   SELECT * FROM arth_pipeline_counts(p_personal, NULL::text, NULL::text, NULL::text, NULL::uuid);
 $$;
-ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO postgres;
+ALTER FUNCTION arth_pipeline_counts(boolean) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_pipeline_counts(boolean) TO arth_app;

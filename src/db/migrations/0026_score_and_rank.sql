@@ -371,10 +371,10 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_behaviour_score(int, int, int, int, int, int) OWNER TO postgres;
-ALTER FUNCTION arth_score_users(uuid[]) OWNER TO postgres;
-ALTER FUNCTION arth_performance_ranks() OWNER TO postgres;
-ALTER FUNCTION arth_dealer_wall_ranks() OWNER TO postgres;
+ALTER FUNCTION arth_behaviour_score(int, int, int, int, int, int) OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_score_users(uuid[]) OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_performance_ranks() OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_dealer_wall_ranks() OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION arth_behaviour_score(int, int, int, int, int, int) FROM PUBLIC;
 REVOKE ALL ON FUNCTION arth_score_users(uuid[]) FROM PUBLIC;

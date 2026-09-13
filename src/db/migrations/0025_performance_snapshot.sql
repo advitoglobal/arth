@@ -369,6 +369,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_performance_snapshot() OWNER TO postgres;
+ALTER FUNCTION arth_performance_snapshot() OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_performance_snapshot() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_performance_snapshot() TO arth_app;

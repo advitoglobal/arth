@@ -419,7 +419,7 @@ AS $$
     'direct'
   );
 $$;
-ALTER FUNCTION arth_assignment_mode(uuid, text) OWNER TO postgres;
+ALTER FUNCTION arth_assignment_mode(uuid, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_assignment_mode(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_assignment_mode(uuid, text) TO arth_app;
 
@@ -438,7 +438,7 @@ AS $$
       AND withdrawn_at IS NULL
   );
 $$;
-ALTER FUNCTION arth_consent_ok(uuid, text) OWNER TO postgres;
+ALTER FUNCTION arth_consent_ok(uuid, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_consent_ok(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_consent_ok(uuid, text) TO arth_app;
 
@@ -776,6 +776,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) OWNER TO postgres;
+ALTER FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) TO arth_app;

@@ -31,7 +31,7 @@ BEGIN
   END LOOP;
 END;
 $$;
-ALTER FUNCTION arth_request_password_reset(text) OWNER TO postgres;
+ALTER FUNCTION arth_request_password_reset(text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_request_password_reset(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_request_password_reset(text) TO arth_app;
 GRANT EXECUTE ON FUNCTION arth_dept_ok(text) TO arth_app;

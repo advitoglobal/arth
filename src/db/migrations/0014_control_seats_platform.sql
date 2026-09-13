@@ -189,7 +189,7 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_lead_visible(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_lead_visible(uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_lead_visible(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_lead_visible(uuid) TO arth_app;
 
@@ -243,7 +243,7 @@ AS $$
   LIMIT 1;
 $$;
 
-ALTER FUNCTION arth_authenticate(text) OWNER TO postgres;
+ALTER FUNCTION arth_authenticate(text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_authenticate(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_authenticate(text) TO arth_app;
 
@@ -265,7 +265,7 @@ AS $$
   FROM arth_authenticate(p_username);
 $$;
 
-ALTER FUNCTION arth_session_seat(text) OWNER TO postgres;
+ALTER FUNCTION arth_session_seat(text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_session_seat(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_session_seat(text) TO arth_app;
 
@@ -484,12 +484,12 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_platform_is_admin() OWNER TO postgres;
-ALTER FUNCTION arth_platform_is_operator() OWNER TO postgres;
-ALTER FUNCTION arth_platform_dealers() OWNER TO postgres;
-ALTER FUNCTION arth_platform_dealer(uuid) OWNER TO postgres;
-ALTER FUNCTION arth_platform_ops_user(uuid) OWNER TO postgres;
-ALTER FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) OWNER TO postgres;
+ALTER FUNCTION arth_platform_is_admin() OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_platform_is_operator() OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_platform_dealers() OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_platform_dealer(uuid) OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_platform_ops_user(uuid) OWNER TO CURRENT_USER;
+ALTER FUNCTION arth_onboard_dealer(text, text, text, text, text, text, text, text, text, text, text, text) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION arth_platform_is_admin() FROM PUBLIC;
 REVOKE ALL ON FUNCTION arth_platform_is_operator() FROM PUBLIC;
@@ -525,6 +525,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION arth_platform_log(text, uuid, text) OWNER TO postgres;
+ALTER FUNCTION arth_platform_log(text, uuid, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_platform_log(text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_platform_log(text, uuid, text) TO arth_app;

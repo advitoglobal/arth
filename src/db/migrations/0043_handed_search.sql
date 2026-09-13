@@ -21,7 +21,7 @@ AS $$
       AND NULLIF(current_setting('app.role_key', true), '') IN ('tele', 'svctele', 'instele')
     );
 $$;
-ALTER FUNCTION arth_lead_book_visible(uuid, uuid, uuid, timestamptz, uuid) OWNER TO postgres;
+ALTER FUNCTION arth_lead_book_visible(uuid, uuid, uuid, timestamptz, uuid) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_lead_book_visible(uuid, uuid, uuid, timestamptz, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_lead_book_visible(uuid, uuid, uuid, timestamptz, uuid) TO arth_app;
 
@@ -188,6 +188,6 @@ BEGIN
   LIMIT 80;
 END;
 $$;
-ALTER FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) OWNER TO postgres;
+ALTER FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arth_search_lead_ids(text, text, text, text, text, text, text, text, text, date, date, text) TO arth_app;

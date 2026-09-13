@@ -135,5 +135,5 @@ BEGIN
   LIMIT 80;
 END;
 $$;
-ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_queue_lead_ids(uuid) TO arth_app;

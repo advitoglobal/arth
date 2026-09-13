@@ -1,0 +1,38 @@
+import { databaseHost, directDatabaseUrl } from "./apply-sql";
+
+const pooled =
+  "postgresql://neondb_owner:secret@ep-demo-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const bindingFirst =
+  "postgresql://neondb_owner:secret@ep-demo-pooler.ap-southeast-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
+const pgbouncer =
+  "postgresql://neondb_owner:secret@ep-demo.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true";
+
+const a = directDatabaseUrl(pooled);
+const first = directDatabaseUrl(bindingFirst);
+const b = directDatabaseUrl(pgbouncer);
+
+if (a.includes("-pooler")) {
+  throw new Error("pooler host was not stripped");
+}
+if (a.includes("channel_binding")) {
+  throw new Error("channel_binding was not stripped");
+}
+if (databaseHost(a) !== "ep-demo.ap-southeast-1.aws.neon.tech") {
+  throw new Error(`unexpected host ${databaseHost(a)}`);
+}
+if (
+  "ALTER FUNCTION x() OWNER TO postgres;".replace(
+    /OWNER TO postgres;/g,
+    "OWNER TO CURRENT_USER;",
+  ) !== "ALTER FUNCTION x() OWNER TO CURRENT_USER;"
+) {
+  throw new Error("OWNER rewrite failed");
+}
+if (b.includes("pgbouncer")) {
+  throw new Error("pgbouncer flag was not stripped");
+}
+if (first.includes("neondb&") || !first.includes("neondb?sslmode=require")) {
+  throw new Error(`channel_binding-first query was mangled: ${first}`);
+}
+
+console.log("HOSTED_URL_OK");

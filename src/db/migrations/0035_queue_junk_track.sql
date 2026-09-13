@@ -70,7 +70,7 @@ BEGIN
   LIMIT 200;
 END;
 $$;
-ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO postgres;
+ALTER FUNCTION arth_queue_lead_ids(uuid) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_queue_lead_ids(uuid) TO arth_app;
 
 CREATE OR REPLACE FUNCTION arth_track_by_token(p_token text)
@@ -114,7 +114,7 @@ BEGIN
     ) > now() - interval '30 days';
 END;
 $$;
-ALTER FUNCTION arth_track_by_token(text) OWNER TO postgres;
+ALTER FUNCTION arth_track_by_token(text) OWNER TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION arth_track_by_token(text) TO arth_app;
 
 GRANT SELECT ON oem_catalogue TO arth_app;
